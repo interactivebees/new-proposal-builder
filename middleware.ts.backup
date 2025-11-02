@@ -1,0 +1,25 @@
+import { auth } from '@/lib/auth'
+import { NextResponse } from 'next/server'
+
+export default auth((req) => {
+  const isLoggedIn = !!req.auth
+  const path = req.nextUrl.pathname
+
+  // Protect dashboard routes
+  if (path.startsWith('/dashboard') && !isLoggedIn) {
+    return NextResponse.redirect(new URL('/auth/signin', req.url))
+  }
+
+  // Protect API routes
+  if ((path.startsWith('/api/proposals') || 
+       path.startsWith('/api/templates') || 
+       path.startsWith('/api/comments')) && !isLoggedIn) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  return NextResponse.next()
+})
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/api/proposals/:path*', '/api/templates/:path*', '/api/comments/:path*']
+}
