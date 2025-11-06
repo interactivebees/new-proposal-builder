@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import Header from '@/components/Header'
 
 interface Proposal {
   id: string
@@ -15,6 +17,7 @@ interface Proposal {
 }
 
 export default function ProposalsPage() {
+  const { data: session } = useSession()
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -49,17 +52,38 @@ export default function ProposalsPage() {
       })
 
       if (res.ok) {
-        // Remove from list
         setProposals(proposals.filter(p => p.id !== id))
       } else {
-        const data = await res.json()
-        alert(data.error || 'Failed to delete proposal')
+        alert('Failed to delete proposal')
       }
     } catch (error) {
       console.error('Error deleting proposal:', error)
-      alert('An error occurred while deleting the proposal')
+      alert('Failed to delete proposal')
     } finally {
       setDeleting(null)
+    }
+  }
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/proposals/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (res.ok) {
+        const updatedProposal = await res.json()
+        setProposals(proposals.map(p => 
+          p.id === id ? { ...p, status: updatedProposal.status } : p
+        ))
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Failed to update status')
+      }
+    } catch (error) {
+      console.error('Error updating status:', error)
+      alert('Failed to update status')
     }
   }
 
@@ -85,6 +109,7 @@ export default function ProposalsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header user={session?.user} />
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
@@ -138,9 +163,18 @@ export default function ProposalsPage() {
                         <div className="text-sm text-gray-500">{proposal.clientName || 'N/A'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(proposal.status)}`}>
-                          {proposal.status}
-                        </span>
+                        <select
+                          value={proposal.status}
+                          onChange={(e) => handleStatusChange(proposal.id, e.target.value)}
+                          className={`px-2 py-1 text-xs font-semibold rounded border-0 focus:ring-2 focus:ring-blue-500 ${getStatusColor(proposal.status)}`}
+                        >
+                          <option value="DRAFT">DRAFT</option>
+                          <option value="IN_REVIEW">IN REVIEW</option>
+                          <option value="PENDING_APPROVAL">PENDING APPROVAL</option>
+                          <option value="APPROVED">APPROVED</option>
+                          <option value="REJECTED">REJECTED</option>
+                          <option value="SENT">SENT</option>
+                        </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {proposal.creator.name}

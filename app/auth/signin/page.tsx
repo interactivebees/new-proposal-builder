@@ -37,12 +37,16 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
-        <div>
-          <h2 className="text-center text-3xl font-bold text-gray-900">
-            Sign in to Proposal Builder
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center mb-4">
+            <span className="text-white font-bold text-2xl">P</span>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900">
+            Proposal Builder
           </h2>
+          <p className="mt-2 text-sm text-gray-600">Sign in to your account</p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (

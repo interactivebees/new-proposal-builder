@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 
-const ProposalEditor = dynamic(() => import('@/components/ProposalEditor'), {
+const Word365Editor = dynamic(() => import('@/components/Word365Editor'), {
   ssr: false,
-  loading: () => <div>Loading editor...</div>
+  loading: () => <div className="flex items-center justify-center p-8"><div className="text-gray-600">Loading editor...</div></div>
 })
 
 interface Section {
@@ -184,9 +184,9 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
                   </div>
                 )}
 
-                <ProposalEditor
+                <Word365Editor
                   content={section.content}
-                  onChange={(content) => updateSection(section.id, { content })}
+                  onChange={(content: any) => updateSection(section.id, { content })}
                   readOnly={readOnly}
                 />
               </div>
