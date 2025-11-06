@@ -174,9 +174,33 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    await prisma.proposal.delete({
-      where: { id }
-    })
+    // Delete related records first to avoid foreign key constraint errors
+    await prisma.$transaction([
+      // Delete version history
+      prisma.versionHistory.deleteMany({
+        where: { proposalId: id }
+      }),
+      // Delete comments
+      prisma.comment.deleteMany({
+        where: { proposalId: id }
+      }),
+      // Delete pricing items
+      prisma.pricingItem.deleteMany({
+        where: { proposalId: id }
+      }),
+      // Delete images
+      prisma.image.deleteMany({
+        where: { proposalId: id }
+      }),
+      // Delete shares
+      prisma.proposalShare.deleteMany({
+        where: { proposalId: id }
+      }),
+      // Finally delete the proposal
+      prisma.proposal.delete({
+        where: { id }
+      })
+    ])
 
     return NextResponse.json({ message: 'Proposal deleted successfully' })
   } catch (error) {
