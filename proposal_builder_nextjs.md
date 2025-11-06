@@ -342,4 +342,5 @@ Same as before: faster proposal creation, higher approval efficiency, export acc
 **Tech Stack:** Next.js + Prisma + PostgreSQL  
 **Last Updated:** November 2025  
 **Status:** Migrated from Laravel to Next.js Architecture
+Mihir
 
