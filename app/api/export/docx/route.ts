@@ -175,11 +175,8 @@ export async function POST(req: NextRequest) {
                     const style = node.attributes.style || '';
                     const textColor = getColor(style);
                     if (textColor) newFormatting.color = textColor;
-
-                    // [NEW] Add font family extraction
                     const fontFamily = getFontFamily(style);
                     if (fontFamily) newFormatting.font = fontFamily;
-
                     const bgMatch = style.match(/background-color:\s*([^;]+)/i);
                     if (node.tag === 'mark' || bgMatch) {
                         let highlightColor = 'yellow';
@@ -342,7 +339,6 @@ export async function POST(req: NextRequest) {
               case 'textStyle': {
                 let style = '';
                 if (mark.attrs?.color) style += `color: ${mark.attrs.color};`;
-                // [NEW] Add font family to the generated style
                 if (mark.attrs?.fontFamily) style += `font-family: ${mark.attrs.fontFamily};`;
                 if (style) html = `<span style="${style}">${html}</span>`;
                 break;
@@ -396,7 +392,13 @@ export async function POST(req: NextRequest) {
       const logoBuffer = await loadImage(proposal.clientLogoUrl)
       if (logoBuffer) {
         docChildren.push(new Paragraph({
-          children: [new ImageRun({ data: logoBuffer, transformation: { width: 150, height: 75 } })],
+          children: [
+            new ImageRun({
+              data: logoBuffer,
+              transformation: { width: 150, height: 75 },
+              type: 'png' // [FIXED] Added the required 'type' property
+            })
+          ],
           alignment: AlignmentType.CENTER,
           spacing: { after: 400 }
         }));
