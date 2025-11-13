@@ -44,6 +44,131 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+
+
+
+    // A simple node type for our parsed HTML
+    interface HtmlNode {
+      tag?: string;
+      text?: string;
+      children: HtmlNode[];
+    }
+
+    // Helper function to parse inline nodes (strong, em, text, etc.) into docx TextRuns
+    const parseInlineNodes = (nodes: HtmlNode[]): TextRun[] => {
+      const runs: TextRun[] = [];
+
+      const buildRuns = (node: HtmlNode, formatting: any = {}) => {
+        if (node.text) {
+          // Decode HTML entities that might be present
+          const decodedText = node.text
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
+          if (decodedText) {
+            runs.push(new TextRun({ text: decodedText, ...formatting }));
+          }
+          return;
+        }
+
+        const newFormatting = { ...formatting };
+        switch (node.tag) {
+          case 'strong':
+          case 'b':
+            newFormatting.bold = true;
+            break;
+          case 'em':
+          case 'i':
+            newFormatting.italics = true;
+            break;
+          case 'u':
+            newFormatting.underline = {};
+            break;
+          case 's':
+            newFormatting.strike = true;
+            break;
+        }
+
+        for (const child of node.children) {
+          buildRuns(child, newFormatting);
+        }
+      };
+
+      for (const node of nodes) {
+        buildRuns(node);
+      }
+
+      return runs;
+    };
+
+
+
+    // A lightweight HTML parser that creates a structured node tree (DOM)
+    const parseHtmlToNodes = (html: string): HtmlNode[] => {
+      const stack: HtmlNode[] = [{ children: [] }]; // Start with a root node
+      // This regex captures opening tags, closing tags, and text content
+      const tagRegex = /<(\/)?([a-zA-Z0-9]+)[^>]*>|([^<]+)/g;
+      let match;
+
+      while ((match = tagRegex.exec(html)) !== null) {
+        const [fullMatch, isClosing, tagName, text] = match;
+
+        if (text) {
+          // It's a text node, add it to the current parent
+          stack[stack.length - 1].children.push({ text, children: [] });
+        } else if (tagName) {
+          if (isClosing) {
+            // Closing tag: pop the current node and attach it to its parent
+            if (stack.length > 1) {
+              const closedNode = stack.pop()!;
+              stack[stack.length - 1].children.push(closedNode);
+            }
+          } else {
+            // Opening tag: create a new node and push it to the stack
+            const newNode: HtmlNode = { tag: tagName.toLowerCase(), children: [] };
+            stack.push(newNode);
+          }
+        }
+      }
+
+      // Consolidate any unclosed tags back into the root
+      while (stack.length > 1) {
+        const node = stack.pop()!;
+        stack[stack.length - 1].children.push(node);
+      }
+
+      return stack[0].children;
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // Helper function to load image from URL or local path
     const loadImage = async (imageUrl: string): Promise<Buffer | null> => {
       try {
@@ -423,209 +548,91 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // [UPDATED] Helper function to parse HTML and create formatted paragraphs with full formatting support
     // Helper function to parse HTML and create formatted paragraphs with full formatting support
+    // [FINAL VERSION] Helper function to parse HTML and create formatted paragraphs
     const htmlToParagraphs = (html: string): (Paragraph | Table)[] => {
-      const elements: (Paragraph | Table)[] = []
+      const elements: (Paragraph | Table)[] = [];
 
-      const processListItem = (itemHtml: string, isOrdered: boolean, itemNumber: number, indentLevel: number = 0) => {
-        let content = itemHtml.replace(/^<li[^>]*>/i, '').replace(/<\/li>$/i, '')
+      const processNodes = (nodes: HtmlNode[], level: number = -1) => {
+        for (const node of nodes) {
+          switch (node.tag) {
+            case 'p':
+              const pRuns = parseInlineNodes(node.children);
+              if (pRuns.length > 0) {
+                elements.push(new Paragraph({ children: pRuns, spacing: { after: 150 } }));
+              }
+              break;
 
-        // Split out nested lists
-        const nestedListRegex = /<(ul|ol)[^>]*>[\s\S]*?<\/\1>/gi
-        const nestedLists: { match: string, index: number, tag: string }[] = []
-        let match
+            case 'ol':
+            case 'ul':
+              const isOrdered = node.tag === 'ol';
+              const listItems = node.children.filter(child => child.tag === 'li');
 
-        while ((match = nestedListRegex.exec(content)) !== null) {
-          nestedLists.push({
-            match: match[0],
-            index: match.index,
-            tag: match[1]
-          })
-        }
+              for (const li of listItems) {
+                // Separate the direct content of the <li> from any nested lists inside it
+                const contentNodes = li.children.filter(c => c.tag !== 'ol' && c.tag !== 'ul');
+                const nestedListNodes = li.children.filter(c => c.tag === 'ol' || c.tag === 'ul');
 
-        // Extract main text (before nested list)
-        const mainText =
-          nestedLists.length > 0
-            ? content.substring(0, nestedLists[0].index)
-            : content
+                // The text of a list item is often inside a `<p>` tag. We need to get the content from inside that paragraph.
+                let nodesForRuns: HtmlNode[] = [];
+                if (contentNodes.length === 1 && contentNodes[0].tag === 'p') {
+                  nodesForRuns = contentNodes[0].children;
+                } else {
+                  nodesForRuns = contentNodes; // Fallback for `<li>text</li>`
+                }
 
-        const cleanedText = mainText
-          .replace(/<p[^>]*>/gi, '')
-          .replace(/<\/p>/gi, '')
-          .trim()
+                const liRuns = parseInlineNodes(nodesForRuns);
+                if (liRuns.length > 0) {
+                  elements.push(new Paragraph({
+                    children: liRuns,
+                    numbering: {
+                      reference: isOrdered ? 'ordered-list' : 'unordered-list',
+                      level: level + 1, // Increment the level for correct indentation
+                    },
+                    spacing: { after: 80 }
+                  }));
+                }
 
-        if (cleanedText) {
-          const runs = parseInlineHTML(cleanedText)
-          const prefix = isOrdered ? `${itemNumber}. ` : '• '
+                // Now, recursively process any nested lists found inside this <li>
+                if (nestedListNodes.length > 0) {
+                  processNodes(nestedListNodes, level + 1);
+                }
+              }
+              break;
 
-          elements.push(
-            new Paragraph({
-              children: [
-                new TextRun({ text: prefix }),
-                ...(runs.length ? runs : [new TextRun({ text: cleanedText })])
-              ],
-              spacing: { after: 100 },
-              indent: { left: 400 * (indentLevel + 1) }
-            })
-          )
-        }
-
-        // Process nested lists recursively
-        for (const nested of nestedLists) {
-          const nestedIsOrdered = nested.tag === 'ol'
-          const nestedItems = nested.match.match(/<li[^>]*>[\s\S]*?<\/li>/gi) || []
-          nestedItems.forEach((nestedItem, i) =>
-            processListItem(nestedItem, nestedIsOrdered, i + 1, indentLevel + 1)
-          )
-        }
-
-        // Process remaining text after nested list
-        if (nestedLists.length > 0) {
-          const last = nestedLists[nestedLists.length - 1]
-          const afterText = content.substring(last.index + last.match.length).trim()
-          if (afterText) {
-            const runs = parseInlineHTML(afterText)
-            elements.push(
-              new Paragraph({
-                children: runs.length ? runs : [new TextRun({ text: afterText })],
-                spacing: { after: 100 },
-                indent: { left: 400 * (indentLevel + 1) }
-              })
-            )
+            // Add other block-level tags like h1, h2, etc., if needed
+            case 'h1':
+            case 'h2':
+            case 'h3':
+              const headingRuns = parseInlineNodes(node.children);
+              if (headingRuns.length > 0) {
+                elements.push(new Paragraph({
+                  children: headingRuns,
+                  heading: node.tag === 'h1' ? HeadingLevel.HEADING_1 : node.tag === 'h2' ? HeadingLevel.HEADING_2 : HeadingLevel.HEADING_3,
+                  spacing: { before: 200, after: 100 }
+                }));
+              }
+              break;
           }
+        }
+      };
+
+      // We can still split by tables first, as they are distinct blocks
+      const sections = html.split(/(<table[^>]*>[\s\S]*?<\/table>)/gi);
+
+      for (const section of sections) {
+        if (section.trim().startsWith('<table')) {
+          const table = parseTable(section);
+          if (table) elements.push(table);
+        } else if (section.trim()) {
+          const nodes = parseHtmlToNodes(section);
+          processNodes(nodes);
         }
       }
 
-
-      // Split by major block elements including tables
-      const sections = html.split(/(<table[^>]*>[\s\S]*?<\/table>|<h[1-3][^>]*>[\s\S]*?<\/h[1-3]>|<p[^>]*>[\s\S]*?<\/p>|<ul[^>]*>[\s\S]*?<\/ul>|<ol[^>]*>[\s\S]*?<\/ol>|<blockquote[^>]*>[\s\S]*?<\/blockquote>|<pre[^>]*>[\s\S]*?<\/pre>|<hr\s*\/?>)/gi)
-
-      sections.forEach(section => {
-        if (!section.trim()) return
-
-        // Tables
-        if (section.match(/<table[^>]*>/i)) {
-          const table = parseTable(section)
-          if (table) {
-            elements.push(table)
-          }
-          return
-        }
-
-        // Extract style attribute for alignment
-        const styleMatch = section.match(/style="([^"]*)"/i)
-        const style = styleMatch ? styleMatch[1] : ''
-        const alignment = getAlignment(style)
-
-        // Headings
-        if (section.match(/<h1[^>]*>/i)) {
-          const content = section.replace(/<\/?h1[^>]*>/gi, '')
-          const runs = parseInlineHTML(content)
-          if (runs.length > 0 || content.trim()) {
-            elements.push(new Paragraph({
-              children: runs.length > 0 ? runs : [new TextRun({ text: content.replace(/<[^>]+>/g, '').trim() })],
-              heading: HeadingLevel.HEADING_1,
-              alignment,
-              spacing: { before: 400, after: 200 }
-            }))
-          }
-        } else if (section.match(/<h2[^>]*>/i)) {
-          const content = section.replace(/<\/?h2[^>]*>/gi, '')
-          const runs = parseInlineHTML(content)
-          if (runs.length > 0 || content.trim()) {
-            elements.push(new Paragraph({
-              children: runs.length > 0 ? runs : [new TextRun({ text: content.replace(/<[^>]+>/g, '').trim() })],
-              heading: HeadingLevel.HEADING_2,
-              alignment,
-              spacing: { before: 300, after: 150 }
-            }))
-          }
-        } else if (section.match(/<h3[^>]*>/i)) {
-          const content = section.replace(/<\/?h3[^>]*>/gi, '')
-          const runs = parseInlineHTML(content)
-          if (runs.length > 0 || content.trim()) {
-            elements.push(new Paragraph({
-              children: runs.length > 0 ? runs : [new TextRun({ text: content.replace(/<[^>]+>/g, '').trim() })],
-              heading: HeadingLevel.HEADING_3,
-              alignment,
-              spacing: { before: 200, after: 100 }
-            }))
-          }
-        }
-        // Lists
-        else if (section.match(/<ul[^>]*>/i)) {
-          const items = section.match(/<li[^>]*>[\s\S]*?<\/li>/gi) || []
-          items.forEach((item) => {
-            processListItem(item, false, 0, 0)
-          })
-        }
-        else if (section.match(/<ol[^>]*>/i)) {
-          const items = section.match(/<li[^>]*>[\s\S]*?<\/li>/gi) || []
-          items.forEach((item, index) => {
-            processListItem(item, true, index + 1, 0)
-          })
-        }
-        // Blockquote
-        else if (section.match(/<blockquote[^>]*>/i)) {
-          const content = section.replace(/<\/?blockquote[^>]*>/gi, '')
-          const runs = parseInlineHTML(content)
-          if (runs.length > 0 || content.trim()) {
-            elements.push(new Paragraph({
-              children: runs.length > 0 ? runs : [new TextRun({ text: content.replace(/<[^>]+>/g, '').trim(), italics: true })],
-              spacing: { after: 200 },
-              indent: { left: 720, right: 720 },
-              border: {
-                left: {
-                  color: 'D1D5DB',
-                  space: 1,
-                  style: BorderStyle.SINGLE,
-                  size: 6
-                }
-              }
-            }))
-          }
-        }
-        // Code block
-        else if (section.match(/<pre[^>]*>/i)) {
-          const content = section.replace(/<\/?pre[^>]*>/gi, '').replace(/<\/?code[^>]*>/gi, '')
-          const text = content.replace(/<[^>]+>/g, '').trim()
-          if (text) {
-            elements.push(new Paragraph({
-              children: [new TextRun({ text, font: 'Courier New' })],
-              spacing: { after: 200 }
-            }))
-          }
-        }
-        // Horizontal rule
-        else if (section.match(/<hr\s*\/?>/i)) {
-          elements.push(new Paragraph({
-            border: {
-              bottom: {
-                color: 'D1D5DB',
-                space: 1,
-                style: BorderStyle.SINGLE,
-                size: 6
-              }
-            },
-            spacing: { before: 200, after: 200 }
-          }))
-        }
-        // Regular paragraph
-        else if (section.match(/<p[^>]*>/i)) {
-          const content = section.replace(/<\/?p[^>]*>/gi, '')
-          const runs = parseInlineHTML(content)
-          if (runs.length > 0 || content.trim()) {
-            elements.push(new Paragraph({
-              children: runs.length > 0 ? runs : [new TextRun({ text: content.replace(/<[^>]+>/g, '').trim() })],
-              alignment,
-              spacing: { after: 150 }
-            }))
-          }
-        }
-      })
-
-      return elements
-    }
+      return elements;
+    };
 
     // Build document children
     const docChildren: any[] = []
@@ -772,8 +779,72 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // [UPDATED] Create DOCX document with numbering styles defined
     // Create DOCX document
     const doc = new Document({
+      numbering: {
+        config: [
+          {
+            reference: 'ordered-list',
+            levels: [
+              {
+                level: 0,
+                format: 'decimal',
+                text: '%1.',
+                alignment: AlignmentType.START,
+                style: { paragraph: { indent: { left: 720, hanging: 360 } } },
+              },
+              {
+                level: 1,
+                format: 'decimal', // Use decimal for level 1
+                text: '%2.',
+                alignment: AlignmentType.START,
+                style: { paragraph: { indent: { left: 1440, hanging: 360 } } },
+              },
+              {
+                level: 2,
+                format: 'decimal', // Use decimal for level 2
+                text: '%3.',
+                alignment: AlignmentType.START,
+                style: { paragraph: { indent: { left: 2160, hanging: 360 } } },
+              },
+              {
+                level: 3,
+                format: 'decimal', // Use decimal for level 3
+                text: '%4.',
+                alignment: AlignmentType.START,
+                style: { paragraph: { indent: { left: 2880, hanging: 360 } } },
+              },
+            ],
+          },
+          {
+            reference: 'unordered-list',
+            levels: [
+              {
+                level: 0,
+                format: 'bullet',
+                text: '•',
+                alignment: AlignmentType.START,
+                style: { paragraph: { indent: { left: 720, hanging: 360 } } },
+              },
+              {
+                level: 1,
+                format: 'bullet',
+                text: '•',
+                alignment: AlignmentType.START,
+                style: { paragraph: { indent: { left: 1440, hanging: 360 } } },
+              },
+              {
+                level: 2,
+                format: 'bullet',
+                text: '▪',
+                alignment: AlignmentType.START,
+                style: { paragraph: { indent: { left: 2160, hanging: 360 } } },
+              },
+            ],
+          },
+        ],
+      },
       sections: [{
         properties: {},
         children: docChildren
