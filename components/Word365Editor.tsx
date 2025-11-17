@@ -559,6 +559,22 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                   </button>
                   <button
                     type="button"
+                    onClick={() => editor.chain().focus().mergeCells().run()}
+                    className="px-2 py-1.5 rounded text-xs bg-white text-gray-700 hover:bg-gray-100"
+                    title="Merge Selected Cells"
+                  >
+                    Merge
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().splitCell().run()}
+                    className="px-2 py-1.5 rounded text-xs bg-white text-gray-700 hover:bg-gray-100"
+                    title="Split Cell"
+                  >
+                    Split
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => editor.chain().focus().deleteTable().run()}
                     className="px-2 py-1.5 rounded text-xs bg-red-50 text-red-700 hover:bg-red-100"
                     title="Delete Table"

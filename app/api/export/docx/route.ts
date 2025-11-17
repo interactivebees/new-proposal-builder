@@ -243,29 +243,41 @@ export async function POST(req: NextRequest) {
             if (!trMatches) return null;
             trMatches.forEach(trHtml => {
                 const cells: TableCell[] = [];
-                const cellMatches = trHtml.match(/<(th|td)[^>]*>([\s\S]*?)<\/\1>/gi);
-                if (!cellMatches) return;
-                cellMatches.forEach(cellHtml => {
-                    const isHeader = cellHtml.startsWith('<th');
-                    let content = cellHtml.replace(/<\/?t[hd][^>]*>/gi, '');
-                    const cellNodes = parseHtmlToNodes(content);
+                const cellRegex = /<(th|td)([^>]*)>([\s\S]*?)<\/\1>/gi;
+                let cellMatch: RegExpExecArray | null;
+                while ((cellMatch = cellRegex.exec(trHtml)) !== null) {
+                    const [, cellTag, attrText = '', innerHtml = '' ] = cellMatch;
+                    const isHeader = cellTag.toLowerCase() === 'th';
+                    const attributes = parseAttributes(attrText);
+                    const colspan = attributes.colspan ? parseInt(attributes.colspan, 10) : undefined;
+                    const rowspan = attributes.rowspan ? parseInt(attributes.rowspan, 10) : undefined;
+
+                    const cellNodes = parseHtmlToNodes(innerHtml);
                     const runs = parseInlineNodes(cellNodes);
-                    cells.push(
-                        new TableCell({
-                            children: [new Paragraph({ children: runs, spacing: { before: 100, after: 100 } })],
-                            shading: isHeader ? { fill: 'E5E7EB' } : undefined,
-                            margins: { top: 200, bottom: 200, left: 200, right: 200 },
-                            borders: {
-                                top: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
-                                bottom: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
-                                left: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
-                                right: { style: BorderStyle.SINGLE, size: 1, color: '000000' }
-                            }
-                        })
-                    );
-                });
+                    const cellOptions: any = {
+                        children: [new Paragraph({ children: runs, spacing: { before: 100, after: 100 } })],
+                        shading: isHeader ? { fill: 'E5E7EB' } : undefined,
+                        margins: { top: 200, bottom: 200, left: 200, right: 200 },
+                        borders: {
+                            top: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                            bottom: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                            left: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                            right: { style: BorderStyle.SINGLE, size: 1, color: '000000' }
+                        }
+                    };
+
+                    if (colspan && colspan > 1) {
+                        cellOptions.columnSpan = colspan;
+                    }
+                    if (rowspan && rowspan > 1) {
+                        cellOptions.rowSpan = rowspan;
+                    }
+
+                    cells.push(new TableCell(cellOptions));
+                }
                 if (cells.length > 0) rows.push(new TableRow({ children: cells }));
             });
+
             if (rows.length === 0) return null;
             return new Table({
                 rows,
@@ -420,8 +432,16 @@ export async function POST(req: NextRequest) {
         }
         case 'table': return `<table><tbody>${childrenHtml}</tbody></table>`;
         case 'tableRow': return `<tr>${childrenHtml}</tr>`;
-        case 'tableCell': return `<td>${childrenHtml || '<p></p>'}</td>`;
-        case 'tableHeader': return `<th>${childrenHtml || '<p></p>'}</th>`;
+        case 'tableCell': {
+          const colspan = attrs?.colspan && attrs.colspan > 1 ? ` colspan="${attrs.colspan}"` : ''
+          const rowspan = attrs?.rowspan && attrs.rowspan > 1 ? ` rowspan="${attrs.rowspan}"` : ''
+          return `<td${colspan}${rowspan}>${childrenHtml || '<p></p>'}</td>`
+        }
+        case 'tableHeader': {
+          const colspan = attrs?.colspan && attrs.colspan > 1 ? ` colspan="${attrs.colspan}"` : ''
+          const rowspan = attrs?.rowspan && attrs.rowspan > 1 ? ` rowspan="${attrs.rowspan}"` : ''
+          return `<th${colspan}${rowspan}>${childrenHtml || '<p></p>'}</th>`
+        }
         default: return childrenHtml;
       }
     };
