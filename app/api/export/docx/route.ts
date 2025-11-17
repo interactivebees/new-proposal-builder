@@ -99,6 +99,35 @@ export async function POST(req: NextRequest) {
       return undefined
     }
 
+    const getFontSize = (styleAttr: string): number | undefined => {
+      const match = styleAttr.match(/font-size:\s*([^;]+)/i)
+      if (!match) return undefined
+      const raw = match[1].trim().toLowerCase()
+      const parseValue = (value: string) => {
+        const num = parseFloat(value)
+        if (Number.isNaN(num)) return undefined
+        return num
+      }
+
+      if (raw.endsWith('px')) {
+        const px = parseValue(raw.replace('px', ''))
+        if (px === undefined) return undefined
+        return Math.round(px * 1.5)
+      }
+
+      if (raw.endsWith('pt')) {
+        const pt = parseValue(raw.replace('pt', ''))
+        if (pt === undefined) return undefined
+        return Math.round(pt * 2)
+      }
+
+      const numeric = parseValue(raw)
+      if (numeric !== undefined) {
+        return Math.round(numeric * 1.5)
+      }
+      return undefined
+    }
+
     const getColor = (styleAttr: string): string | undefined => {
       const match = styleAttr.match(/color:\s*([^;]+)/i)
       if (match) {
@@ -180,6 +209,8 @@ export async function POST(req: NextRequest) {
                     const style = node.attributes.style || '';
                     const textColor = getColor(style);
                     if (textColor) newFormatting.color = textColor;
+                    const fontSize = getFontSize(style);
+                    if (fontSize) newFormatting.size = fontSize;
                     const fontFamily = getFontFamily(style);
                     if (fontFamily) newFormatting.font = fontFamily;
                     const bgMatch = style.match(/background-color:\s*([^;]+)/i);
@@ -340,7 +371,7 @@ export async function POST(req: NextRequest) {
         html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         if (marks && Array.isArray(marks)) {
           marks.forEach((mark: any) => {
-            switch (mark.type) {
+            switch (type) {
               case 'bold': html = `<strong>${html}</strong>`; break;
               case 'italic': html = `<em>${html}</em>`; break;
               case 'underline': html = `<u>${html}</u>`; break;
@@ -350,6 +381,7 @@ export async function POST(req: NextRequest) {
                 let style = '';
                 if (mark.attrs?.color) style += `color: ${mark.attrs.color};`;
                 if (mark.attrs?.fontFamily) style += `font-family: ${mark.attrs.fontFamily};`;
+                if (mark.attrs?.fontSize) style += `font-size: ${mark.attrs.fontSize};`;
                 if (style) html = `<span style="${style}">${html}</span>`;
                 break;
               }
@@ -481,7 +513,7 @@ export async function POST(req: NextRequest) {
 
     // Cover Page Title
     docChildren.push(new Paragraph({
-      children: [new TextRun({ text: proposal.title, bold: true, color: '000000', size: 32 })],
+      children: [new TextRun({ text: proposal.title, bold: true, color: '000000', size: 40 })],
       alignment: AlignmentType.CENTER, 
       spacing: { after: 300, before: 800 }
     }));

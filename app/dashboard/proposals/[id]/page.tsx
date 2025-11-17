@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { formatDate } from '@/lib/formatDate'
 
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
   ssr: false,
@@ -273,27 +274,27 @@ export default function ProposalDetailPage() {
                     <button
                       onClick={() => setEditing(true)}
                       disabled={saving || exporting}
-                      className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-lg shadow-blue-200 border border-white/20 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-md shadow-blue-200 border border-white/20 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {saving ? 'Saving...' : 'Edit'}
                     </button>
                     <button
                       onClick={() => setShowDuplicateModal(true)}
                       disabled={duplicating}
-                      className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 shadow-lg shadow-purple-200 border border-white/20 hover:from-purple-500 hover:via-fuchsia-500 hover:to-pink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 shadow-md shadow-purple-200 border border-white/20 hover:from-purple-500 hover:via-fuchsia-500 hover:to-pink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {duplicating ? 'Duplicating...' : 'Duplicate'}
                     </button>
                     <button
                       onClick={handleExport}
                       disabled={exporting}
-                      className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 via-green-600 to-teal-500 shadow-lg shadow-emerald-200 border border-white/20 hover:from-emerald-500 hover:via-green-500 hover:to-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 via-green-600 to-teal-500 shadow-md shadow-emerald-200 border border-white/20 hover:from-emerald-500 hover:via-green-500 hover:to-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {exporting ? 'Exporting...' : 'Export DOCX'}
                     </button>
                     <button
                       onClick={() => router.push('/dashboard/proposals')}
-                      className="px-4 py-2 rounded-lg font-semibold text-gray-800 bg-gradient-to-r from-gray-100 via-gray-50 to-white border border-gray-200 shadow-lg shadow-gray-100 hover:from-gray-50 hover:via-white hover:to-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 transition-all"
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-800 bg-gradient-to-r from-gray-100 via-gray-50 to-white border border-gray-200 shadow-md shadow-gray-100 hover:from-gray-50 hover:via-white hover:to-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 transition-all"
                     >
                       Back
                     </button>
@@ -367,9 +368,7 @@ export default function ProposalDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Created</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {new Date(proposal.createdAt).toLocaleDateString()}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900">{formatDate(proposal.createdAt)}</p>
                 </div>
               </div>
             </div>
@@ -426,9 +425,7 @@ export default function ProposalDetailPage() {
                   <div key={comment.id} className="border-l-4 border-blue-500 pl-4">
                     <div className="flex items-center space-x-2 mb-1">
                       <span className="text-sm font-medium text-gray-900">{comment.user.name}</span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(comment.createdAt).toLocaleDateString()}
-                      </span>
+                      <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
                     </div>
                     <p className="text-sm text-gray-700">{comment.content}</p>
                   </div>

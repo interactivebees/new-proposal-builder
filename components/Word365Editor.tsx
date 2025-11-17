@@ -1,6 +1,7 @@
 'use client'
 
 import { useEditor, EditorContent } from '@tiptap/react'
+import { Extension } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Link from '@tiptap/extension-link'
@@ -22,8 +23,49 @@ interface Word365EditorProps {
   readOnly?: boolean
 }
 
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addOptions() {
+    return {
+      types: ['textStyle']
+    }
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: element => element.style.fontSize || null,
+            renderHTML: attributes => {
+              if (!attributes.fontSize) {
+                return {}
+              }
+              return {
+                style: `font-size: ${attributes.fontSize}`
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  addCommands() {
+    return {
+      setFontSize:
+        size => ({ chain }) =>
+          chain()
+            .setMark('textStyle', { fontSize: size })
+            .run(),
+      unsetFontSize: () => ({ chain }) => chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run()
+    }
+  }
+})
+
 export default function Word365Editor({ content, onChange, readOnly = false }: Word365EditorProps) {
   const [selectedFont, setSelectedFont] = useState('Arial')
+  const [selectedFontSize, setSelectedFontSize] = useState('default')
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showHighlightPicker, setShowHighlightPicker] = useState(false)
 
@@ -44,6 +86,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
         multicolor: true
       }),
       TextStyle,
+      FontSize,
       FontFamily.configure({
         types: ['textStyle']
       }),
@@ -75,16 +118,6 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
     }
   }, [content, editor])
 
-  useEffect(() => {
-    if (editor) {
-      editor.setEditable(!readOnly)
-    }
-  }, [readOnly, editor])
-
-  if (!editor) {
-    return null
-  }
-
   const fonts = [
     'Arial',
     'Times New Roman',
@@ -98,6 +131,8 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
     'Palatino'
   ]
 
+  const fontSizes = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '40px']
+
   const colors = [
     '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF',
     '#800000', '#008000', '#000080', '#808000', '#800080', '#008080', '#808080'
@@ -110,7 +145,41 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
 
   const applyFont = (font: string) => {
     setSelectedFont(font)
+    if (!editor) return
     editor.chain().focus().setFontFamily(font).run()
+  }
+
+  const applyFontSize = (size: string) => {
+    setSelectedFontSize(size)
+    if (!editor) return
+    if (size === 'default') {
+      editor.chain().focus().unsetFontSize().run()
+      return
+    }
+    editor.chain().focus().setFontSize(size).run()
+  }
+
+  useEffect(() => {
+    if (!editor) return
+    editor.setEditable(!readOnly)
+  }, [readOnly, editor])
+
+  useEffect(() => {
+    if (!editor) return
+    const updateFontSizeState = () => {
+      const current = editor.getAttributes('textStyle').fontSize || 'default'
+      setSelectedFontSize(current)
+    }
+    editor.on('selectionUpdate', updateFontSizeState)
+    editor.on('transaction', updateFontSizeState)
+    return () => {
+      editor.off('selectionUpdate', updateFontSizeState)
+      editor.off('transaction', updateFontSizeState)
+    }
+  }, [editor])
+
+  if (!editor) {
+    return null
   }
 
   return (
@@ -131,6 +200,20 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                   <option key={font} value={font} style={{ fontFamily: font }}>
                     {font}
                   </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Font Size Dropdown */}
+            <div className="relative">
+              <select
+                value={selectedFontSize}
+                onChange={(e) => applyFontSize(e.target.value)}
+                className="px-3 py-1.5 pr-8 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="default">Font Size</option>
+                {fontSizes.map(size => (
+                  <option key={size} value={size}>{size}</option>
                 ))}
               </select>
             </div>

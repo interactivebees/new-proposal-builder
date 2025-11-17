@@ -1,7 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { auth } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { formatDate } from '@/lib/formatDate'
+import { useEffect, useState } from 'react'
 
 interface Proposal {
   id: string
@@ -176,7 +179,7 @@ export default function ProposalsPage() {
                         {proposal.creator.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(proposal.createdAt).toLocaleDateString()}
+                        {formatDate(proposal.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-3">
