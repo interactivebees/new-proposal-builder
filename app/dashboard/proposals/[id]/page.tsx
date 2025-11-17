@@ -52,6 +52,8 @@ export default function ProposalDetailPage() {
   const [uploading, setUploading] = useState(false)
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     fetchProposal()
@@ -105,6 +107,7 @@ export default function ProposalDetailPage() {
   }
 
   const handleSave = async () => {
+    setSaving(true)
     try {
       const res = await fetch(`/api/proposals/${params.id}`, {
         method: 'PUT',
@@ -124,10 +127,13 @@ export default function ProposalDetailPage() {
       }
     } catch (error) {
       console.error('Error updating proposal:', error)
+    } finally {
+      setSaving(false)
     }
   }
 
   const handleExport = async () => {
+    setExporting(true)
     try {
       const res = await fetch('/api/export/docx', {
         method: 'POST',
@@ -148,6 +154,8 @@ export default function ProposalDetailPage() {
       }
     } catch (error) {
       console.error('Error exporting proposal:', error)
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -242,9 +250,10 @@ export default function ProposalDetailPage() {
                   <>
                     <button
                       onClick={handleSave}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      disabled={saving}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Save
+                      {saving ? 'Saving...' : 'Save'}
                     </button>
                     <button
                       onClick={() => {
@@ -253,7 +262,8 @@ export default function ProposalDetailPage() {
                         setEditedContent(proposal.content)
                         setEditedClientLogoUrl(proposal.clientLogoUrl || '')
                       }}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                      disabled={saving}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       Cancel
                     </button>
@@ -262,25 +272,28 @@ export default function ProposalDetailPage() {
                   <>
                     <button
                       onClick={() => setEditing(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      disabled={saving || exporting}
+                      className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-lg shadow-blue-200 border border-white/20 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Edit
+                      {saving ? 'Saving...' : 'Edit'}
                     </button>
                     <button
                       onClick={() => setShowDuplicateModal(true)}
-                      className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                      disabled={duplicating}
+                      className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 shadow-lg shadow-purple-200 border border-white/20 hover:from-purple-500 hover:via-fuchsia-500 hover:to-pink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Duplicate
+                      {duplicating ? 'Duplicating...' : 'Duplicate'}
                     </button>
                     <button
                       onClick={handleExport}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                      disabled={exporting}
+                      className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 via-green-600 to-teal-500 shadow-lg shadow-emerald-200 border border-white/20 hover:from-emerald-500 hover:via-green-500 hover:to-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Export DOCX
+                      {exporting ? 'Exporting...' : 'Export DOCX'}
                     </button>
                     <button
                       onClick={() => router.push('/dashboard/proposals')}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                      className="px-4 py-2 rounded-lg font-semibold text-gray-800 bg-gradient-to-r from-gray-100 via-gray-50 to-white border border-gray-200 shadow-lg shadow-gray-100 hover:from-gray-50 hover:via-white hover:to-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 transition-all"
                     >
                       Back
                     </button>

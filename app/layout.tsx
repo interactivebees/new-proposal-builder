@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { auth } from "@/lib/auth";
+import Header from "@/components/Header";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
@@ -18,17 +20,22 @@ export const metadata: Metadata = {
   description: "Create and manage professional business proposals",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers session={session}>
+          <Header user={session?.user} />
+          {children}
+        </Providers>
       </body>
     </html>
   );
