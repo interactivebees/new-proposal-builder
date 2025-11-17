@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, TabStopType } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, TabStopType, Header, Footer, PageNumber } from 'docx'
+
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import https from 'https'
@@ -33,6 +34,10 @@ export async function POST(req: NextRequest) {
     if (!proposal) {
       return NextResponse.json({ error: 'Proposal not found' }, { status: 404 })
     }
+
+    const companySettings = await prisma.companySetting.findUnique({
+      where: { userId: session.user.id }
+    })
 
     const hasAccess =
       proposal.createdBy === session.user.id ||
@@ -216,9 +221,15 @@ export async function POST(req: NextRequest) {
                     const runs = parseInlineNodes(cellNodes);
                     cells.push(
                         new TableCell({
-                            children: [new Paragraph({ children: runs })],
+                            children: [new Paragraph({ children: runs, spacing: { before: 100, after: 100 } })],
                             shading: isHeader ? { fill: 'E5E7EB' } : undefined,
-                            margins: { top: 100, bottom: 100, left: 150, right: 150 }
+                            margins: { top: 200, bottom: 200, left: 200, right: 200 },
+                            borders: {
+                                top: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                                bottom: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                                left: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                                right: { style: BorderStyle.SINGLE, size: 1, color: '000000' }
+                            }
                         })
                     );
                 });
@@ -229,12 +240,12 @@ export async function POST(req: NextRequest) {
                 rows,
                 width: { size: 100, type: WidthType.PERCENTAGE },
                 borders: {
-                    top: { style: BorderStyle.SINGLE, size: 1, color: 'D1D5DB' },
-                    bottom: { style: BorderStyle.SINGLE, size: 1, color: 'D1D5DB' },
-                    left: { style: BorderStyle.SINGLE, size: 1, color: 'D1D5DB' },
-                    right: { style: BorderStyle.SINGLE, size: 1, color: 'D1D5DB' },
-                    insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: 'D1D5DB' },
-                    insideVertical: { style: BorderStyle.SINGLE, size: 1, color: 'D1D5DB' }
+                    top: { style: BorderStyle.SINGLE, size: 2, color: '000000' },
+                    bottom: { style: BorderStyle.SINGLE, size: 2, color: '000000' },
+                    left: { style: BorderStyle.SINGLE, size: 2, color: '000000' },
+                    right: { style: BorderStyle.SINGLE, size: 2, color: '000000' },
+                    insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                    insideVertical: { style: BorderStyle.SINGLE, size: 1, color: '000000' }
                 }
             });
         } catch (error) {
@@ -272,9 +283,8 @@ export async function POST(req: NextRequest) {
                             if (headingRuns.length > 0) {
                                 elements.push(new Paragraph({
                                     children: headingRuns,
-                                    heading: node.tag === 'h1' ? HeadingLevel.HEADING_1 : node.tag === 'h2' ? HeadingLevel.HEADING_2 : HeadingLevel.HEADING_3,
                                     alignment,
-                                    spacing: { before: 200, after: 100 }
+                                    spacing: { before: 300, after: 150 }
                                 }));
                             }
                         }
@@ -386,7 +396,71 @@ export async function POST(req: NextRequest) {
 
 
     // ################### DOCUMENT ASSEMBLY ######################
-    const docChildren: any[] = []
+    const docChildren: (Paragraph | Table)[] = []
+    const sessionCompanyName = (session.user as { companyName?: string })?.companyName
+    const companyLogoBuffer = companySettings?.logoUrl ? await loadImage(companySettings.logoUrl) : null
+
+    const headerChildren: Paragraph[] = []
+
+    if (companyLogoBuffer) {
+      headerChildren.push(new Paragraph({
+        children: [
+          new ImageRun({
+            data: companyLogoBuffer,
+            transformation: { width: 120, height: 40 },
+            type: 'png'
+          })
+        ],
+        alignment: AlignmentType.RIGHT,
+        spacing: { after: 200 },
+        border: {
+          top: { style: BorderStyle.NONE, size: 0 },
+          bottom: { style: BorderStyle.NONE, size: 0 },
+          left: { style: BorderStyle.NONE, size: 0 },
+          right: { style: BorderStyle.NONE, size: 0 }
+        }
+      }))
+    } else if (companySettings?.companyName || sessionCompanyName) {
+      headerChildren.push(new Paragraph({
+        children: [
+          new TextRun({ text: companySettings?.companyName || sessionCompanyName || '', bold: true })
+        ],
+        alignment: AlignmentType.RIGHT,
+        spacing: { after: 0 }
+      }))
+    }
+
+    const formattedDate = new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(new Date())
+
+    const footerAccentColor = '8E5B5B'
+    const footerParagraphs: Paragraph[] = [
+      new Paragraph({
+        border: {
+          top: { style: BorderStyle.SINGLE, size: 1, color: '000000' }
+        },
+        spacing: { after: 120 }
+      }),
+      new Paragraph({
+        tabStops: [
+          { type: TabStopType.LEFT, position: 0 },
+          { type: TabStopType.CENTER, position: 5400 },
+          { type: TabStopType.RIGHT, position: 10500 }
+        ],
+        children: [
+          new TextRun({ text: formattedDate, size: 20 }),
+          new TextRun({ text: '\t' }),
+          new TextRun({ text: proposal.title.length > 50 ? proposal.title.substring(0, 47) + '...' : proposal.title, size: 20, bold: true }),
+          new TextRun({ text: '\t' }),
+          new TextRun({ children: [PageNumber.CURRENT], size: 20 })
+        ],
+        spacing: { before: 0 }
+      })
+    ]
 
     if (proposal.clientLogoUrl) {
       const logoBuffer = await loadImage(proposal.clientLogoUrl)
@@ -396,7 +470,7 @@ export async function POST(req: NextRequest) {
             new ImageRun({
               data: logoBuffer,
               transformation: { width: 150, height: 75 },
-              type: 'png' // [FIXED] Added the required 'type' property
+              type: 'png'
             })
           ],
           alignment: AlignmentType.CENTER,
@@ -405,16 +479,74 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    docChildren.push(new Paragraph({ text: proposal.title, heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, spacing: { after: 400 } }));
-    docChildren.push(new Paragraph({ text: 'Client Information', heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 200 } }));
+    // Cover Page Title
     docChildren.push(new Paragraph({
-      children: [
-        new TextRun({ text: `Client: ${proposal.clientName || 'N/A'}`, break: 1 }),
-        new TextRun({ text: `Company: ${proposal.clientCompany || 'N/A'}`, break: 1 }),
-        new TextRun({ text: `Email: ${proposal.clientEmail || 'N/A'}`, break: 1 }),
-        new TextRun({ text: `Address: ${proposal.clientAddress || 'N/A'}`, break: 1 })
-      ],
-      spacing: { after: 400 }
+      children: [new TextRun({ text: proposal.title, bold: true, color: '000000', size: 32 })],
+      alignment: AlignmentType.CENTER, 
+      spacing: { after: 300, before: 800 }
+    }));
+
+    // Add horizontal line under title
+    docChildren.push(new Paragraph({
+      border: {
+        bottom: { style: BorderStyle.SINGLE, size: 6, color: '000000' }
+      },
+      spacing: { after: 600 }
+    }));
+
+    // Submitted to section
+    docChildren.push(new Paragraph({
+      children: [new TextRun({ text: 'Submitted to:', bold: true, size: 24 })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 }
+    }));
+
+    docChildren.push(new Paragraph({
+      children: [new TextRun({ text: proposal.clientName || 'N/A', bold: true, size: 28 })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 100 }
+    }));
+
+    docChildren.push(new Paragraph({
+      children: [new TextRun({ text: proposal.clientCompany || 'N/A', size: 24 })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 50 }
+    }));
+
+    if (proposal.clientAddress) {
+      docChildren.push(new Paragraph({
+        children: [new TextRun({ text: proposal.clientAddress, size: 20 })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 400 }
+      }));
+    }
+
+    // Submitted by section
+    docChildren.push(new Paragraph({
+      children: [new TextRun({ text: 'Submitted by:', bold: true, size: 24 })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 }
+    }));
+
+    const creatorName = proposal.creator?.name || session.user.name || 'N/A';
+    const companyName = companySettings?.companyName || sessionCompanyName || 'N/A';
+    
+    docChildren.push(new Paragraph({
+      children: [new TextRun({ text: creatorName, bold: true, size: 28 })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 100 }
+    }));
+
+    docChildren.push(new Paragraph({
+      children: [new TextRun({ text: companyName, size: 24 })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 800 }
+    }));
+
+    // Page break before content
+    docChildren.push(new Paragraph({
+      children: [new TextRun({ text: '', break: 2 })],
+      pageBreakBefore: true
     }));
 
     const content = proposal.content as any
@@ -422,7 +554,10 @@ export async function POST(req: NextRequest) {
       content.sections
         .sort((a: any, b: any) => a.order - b.order)
         .forEach((section: any) => {
-          docChildren.push(new Paragraph({ text: section.title, heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }));
+          docChildren.push(new Paragraph({ 
+            children: [new TextRun({ text: section.title, bold: true, color: '000000', size: 24 })],
+            spacing: { before: 200, after: 100 } 
+          }));
           const sectionContent = section.content?.html || section.content || '';
           const htmlContent = typeof sectionContent === 'object' ? tiptapJsonToHtml(sectionContent) : sectionContent;
           const sectionParagraphs = htmlToParagraphs(htmlContent);
@@ -431,7 +566,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (proposal.pricingItems && proposal.pricingItems.length > 0) {
-      docChildren.push(new Paragraph({ text: 'Pricing Breakdown', heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }));
+      docChildren.push(new Paragraph({ 
+        children: [new TextRun({ text: 'Pricing Breakdown', bold: true, color: '000000', size: 24 })],
+        spacing: { before: 200, after: 100 } 
+      }));
       proposal.pricingItems.forEach((item: any) => {
         docChildren.push(new Paragraph({ children: [new TextRun({ text: `${item.serviceDescription}: $${item.cost.toLocaleString()} ${item.frequency || 'one-time'}`, break: 1 })] }));
       });
@@ -463,7 +601,20 @@ export async function POST(req: NextRequest) {
       },
       sections: [{
         children: docChildren,
-        properties: {},
+        properties: {
+          page: {
+            margin: {
+              top: 720,
+              right: 1080,
+              bottom: 720,
+              left: 1080,
+              header: 360,
+              footer: 360
+            }
+          }
+        },
+        headers: headerChildren.length > 0 ? { default: new Header({ children: headerChildren }) } : undefined,
+        footers: { default: new Footer({ children: footerParagraphs }) }
       }]
     });
 
