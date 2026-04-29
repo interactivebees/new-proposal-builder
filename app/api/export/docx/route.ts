@@ -324,8 +324,10 @@ export async function POST(req: NextRequest) {
                         if (hasVisibleText(node.children)) {
                             const headingRuns = parseInlineNodes(node.children);
                             if (headingRuns.length > 0) {
+                                const level = node.tag === 'h1' ? HeadingLevel.HEADING_1 : node.tag === 'h2' ? HeadingLevel.HEADING_2 : HeadingLevel.HEADING_3;
                                 elements.push(new Paragraph({
                                     children: headingRuns,
+                                    heading: level,
                                     alignment,
                                     spacing: { before: 300, after: 150 }
                                 }));
@@ -383,7 +385,7 @@ export async function POST(req: NextRequest) {
         html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         if (marks && Array.isArray(marks)) {
           marks.forEach((mark: any) => {
-            switch (type) {
+            switch (mark.type) {
               case 'bold': html = `<strong>${html}</strong>`; break;
               case 'italic': html = `<em>${html}</em>`; break;
               case 'underline': html = `<u>${html}</u>`; break;
@@ -604,14 +606,16 @@ export async function POST(req: NextRequest) {
     const content = proposal.content as any
     if (content?.sections && Array.isArray(content.sections)) {
       content.sections
-        .sort((a: any, b: any) => a.order - b.order)
+        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
         .forEach((section: any) => {
+          if (!section.title) return
           docChildren.push(new Paragraph({ 
             children: [new TextRun({ text: section.title, bold: true, color: '000000', size: 24 })],
             spacing: { before: 200, after: 100 } 
           }));
           const sectionContent = section.content?.html || section.content || '';
           const htmlContent = typeof sectionContent === 'object' ? tiptapJsonToHtml(sectionContent) : sectionContent;
+          if (!htmlContent) return
           const sectionParagraphs = htmlToParagraphs(htmlContent);
           docChildren.push(...sectionParagraphs);
         });
@@ -673,7 +677,9 @@ export async function POST(req: NextRequest) {
     const buffer = await Packer.toBuffer(doc);
     const sanitizedFilename = proposal.title.replace(/[^a-zA-Z0-9\s-]/g, '_').replace(/\s+/g, '_').substring(0, 100);
 
-    return new NextResponse(new Uint8Array(buffer), {
+    const uint8Array = new Uint8Array(buffer);
+
+    return new NextResponse(uint8Array, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${sanitizedFilename}.docx"`
