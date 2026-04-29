@@ -84,6 +84,18 @@ export default function Header({ user, showNav = true }: HeaderProps) {
                     Users
                   </Link>
                 )}
+                {user.role === 'OWNER' && (
+                  <Link
+                    href="/dashboard/roles"
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                      isActive('/dashboard/roles')
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    Roles
+                  </Link>
+                )}
                 <Link
                   href="/dashboard/settings"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition ${
@@ -150,19 +162,31 @@ export default function Header({ user, showNav = true }: HeaderProps) {
             >
               Templates
             </Link>
-            {user.role === 'OWNER' && (
-              <Link
-                href="/dashboard/users"
-                className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition ${
-                  isActive('/dashboard/users')
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Users
-              </Link>
-            )}
-            <Link
+{user.role === 'OWNER' && (
+                  <Link
+                    href="/dashboard/users"
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition ${
+                      isActive('/dashboard/users')
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    Users
+                  </Link>
+                )}
+                {user.role === 'OWNER' && (
+                  <Link
+                    href="/dashboard/roles"
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition ${
+                      isActive('/dashboard/roles')
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    Roles
+                  </Link>
+                )}
+                <Link
               href="/dashboard/settings"
               className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition ${
                 isActive('/dashboard/settings')

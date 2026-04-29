@@ -6,6 +6,121 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
+  // Create permissions
+  const viewPermission = await prisma.permission.upsert({
+    where: { name: 'VIEW' },
+    update: {},
+    create: {
+      name: 'VIEW',
+      description: 'View resources',
+      category: 'General'
+    }
+  })
+
+  const editPermission = await prisma.permission.upsert({
+    where: { name: 'EDIT' },
+    update: {},
+    create: {
+      name: 'EDIT',
+      description: 'Edit resources',
+      category: 'General'
+    }
+  })
+
+  const createPermission = await prisma.permission.upsert({
+    where: { name: 'CREATE' },
+    update: {},
+    create: {
+      name: 'CREATE',
+      description: 'Create new resources',
+      category: 'General'
+    }
+  })
+
+  const deletePermission = await prisma.permission.upsert({
+    where: { name: 'DELETE' },
+    update: {},
+    create: {
+      name: 'DELETE',
+      description: 'Delete resources',
+      category: 'General'
+    }
+  })
+
+  const manageUsersPermission = await prisma.permission.upsert({
+    where: { name: 'MANAGE_USERS' },
+    update: {},
+    create: {
+      name: 'MANAGE_USERS',
+      description: 'Manage users and roles',
+      category: 'Administration'
+    }
+  })
+
+  const approveProposalPermission = await prisma.permission.upsert({
+    where: { name: 'APPROVE_PROPOSAL' },
+    update: {},
+    create: {
+      name: 'APPROVE_PROPOSAL',
+      description: 'Approve proposals',
+      category: 'Proposals'
+    }
+  })
+
+  // Create roles with default permissions
+  const ownerRole = await prisma.role.upsert({
+    where: { name: 'OWNER' },
+    update: {},
+    create: {
+      name: 'OWNER',
+      description: 'Full system access',
+      isDefault: false,
+      permissions: {
+        connect: [
+          { name: 'VIEW' },
+          { name: 'EDIT' },
+          { name: 'CREATE' },
+          { name: 'DELETE' },
+          { name: 'MANAGE_USERS' },
+          { name: 'APPROVE_PROPOSAL' }
+        ]
+      }
+    }
+  })
+
+  const salesTeamRole = await prisma.role.upsert({
+    where: { name: 'SALES_TEAM' },
+    update: {},
+    create: {
+      name: 'SALES_TEAM',
+      description: 'Sales team - can create and manage own proposals',
+      isDefault: true,
+      permissions: {
+        connect: [
+          { name: 'VIEW' },
+          { name: 'EDIT' },
+          { name: 'CREATE' }
+        ]
+      }
+    }
+  })
+
+  const businessExpertRole = await prisma.role.upsert({
+    where: { name: 'BUSINESS_EXPERT' },
+    update: {},
+    create: {
+      name: 'BUSINESS_EXPERT',
+      description: 'Business expert - can view all and approve proposals',
+      isDefault: false,
+      permissions: {
+        connect: [
+          { name: 'VIEW' },
+          { name: 'APPROVE_PROPOSAL' }
+        ]
+      }
+    }
+  })
+
   // Create users with different roles
   const ownerPassword = await hash('owner123', 10)
   const owner = await prisma.user.upsert({
@@ -15,7 +130,7 @@ async function main() {
       email: 'owner@example.com',
       password: ownerPassword,
       name: 'John Owner',
-      role: 'OWNER',
+      role: { connect: { id: ownerRole.id } },
       companyName: 'Acme Corp'
     }
   })
@@ -28,7 +143,7 @@ async function main() {
       email: 'sales@example.com',
       password: salesPassword,
       name: 'Jane Sales',
-      role: 'SALES_TEAM',
+      role: { connect: { id: salesTeamRole.id } },
       companyName: 'Acme Corp'
     }
   })
@@ -41,7 +156,7 @@ async function main() {
       email: 'expert@example.com',
       password: expertPassword,
       name: 'Bob Expert',
-      role: 'BUSINESS_EXPERT',
+      role: { connect: { id: businessExpertRole.id } },
       companyName: 'Acme Corp'
     }
   })
