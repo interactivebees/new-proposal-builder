@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { formatDate } from '@/lib/formatDate'
+import { Download, FileText, FileDown } from 'lucide-react'
 
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
   ssr: false,
@@ -55,10 +56,24 @@ export default function ProposalDetailPage() {
   const [duplicating, setDuplicating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchProposal()
   }, [params.id])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const fetchProposal = async () => {
     try {
@@ -133,8 +148,9 @@ export default function ProposalDetailPage() {
     }
   }
 
-  const handleExport = async () => {
+  const handleExportDocx = async () => {
     setExporting(true)
+    setShowExportMenu(false)
     try {
       const res = await fetch('/api/export/docx', {
         method: 'POST',
@@ -157,6 +173,42 @@ export default function ProposalDetailPage() {
       console.error('Error exporting proposal:', error)
     } finally {
       setExporting(false)
+    }
+  }
+
+  const handleExportPdf = async () => {
+    setExporting(true)
+    setShowExportMenu(false)
+    try {
+      const res = await fetch('/api/export/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proposalId: params.id })
+      })
+
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${proposal?.title || 'proposal'}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleExport = async (format: 'docx' | 'pdf') => {
+    if (format === 'docx') {
+      await handleExportDocx()
+    } else {
+      await handleExportPdf()
     }
   }
 
@@ -285,13 +337,36 @@ export default function ProposalDetailPage() {
                     >
                       {duplicating ? 'Duplicating...' : 'Duplicate'}
                     </button>
-                    <button
-                      onClick={handleExport}
-                      disabled={exporting}
-                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 via-green-600 to-teal-500 shadow-md shadow-emerald-200 border border-white/20 hover:from-emerald-500 hover:via-green-500 hover:to-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {exporting ? 'Exporting...' : 'Export DOCX'}
-                    </button>
+                    <div className="relative" ref={exportMenuRef}>
+                      <button
+                        onClick={() => setShowExportMenu(!showExportMenu)}
+                        disabled={exporting}
+                        className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 via-green-600 to-teal-500 shadow-md shadow-emerald-200 border border-white/20 hover:from-emerald-500 hover:via-green-500 hover:to-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1"
+                      >
+                        <Download className="w-4 h-4" />
+                        {exporting ? 'Exporting...' : 'Export'}
+                      </button>
+                      {showExportMenu && (
+                        <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                          <button
+                            onClick={handleExportDocx}
+                            disabled={exporting}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 rounded-t-lg disabled:opacity-60"
+                          >
+                            <FileText className="w-4 h-4" />
+                            Export DOCX
+                          </button>
+                          <button
+                            onClick={handleExportPdf}
+                            disabled={exporting}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 rounded-b-lg disabled:opacity-60"
+                          >
+                            <FileDown className="w-4 h-4" />
+                            Export PDF
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <button
                       onClick={() => router.push('/dashboard/proposals')}
                       className="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-800 bg-gradient-to-r from-gray-100 via-gray-50 to-white border border-gray-200 shadow-md shadow-gray-100 hover:from-gray-50 hover:via-white hover:to-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 transition-all"
