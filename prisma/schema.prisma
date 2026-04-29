@@ -31,28 +31,32 @@ model Permission {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
+  id              String    @id @default(cuid())
+  email           String    @unique
   password       String
   name           String
-  roleId         String?
-  role          Role?    @relation(fields: [roleId], references: [id])
+  roleId          String?
+  role           Role?     @relation(fields: [roleId], references: [id])
   customPermissions Permission[] @relation("UserPermissions")
   companyName    String?
   phone         String?
-  avatarUrl     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  avatarUrl      String?
+  isActive       Boolean   @default(true)
+  resetToken     String?
+  resetTokenExpiry DateTime?
+  lastLoginAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   templates      Template[]
-  proposals      Proposal[] @relation("CreatedProposals")
+  proposals     Proposal[] @relation("CreatedProposals")
   approvedProposals Proposal[] @relation("ApprovedProposals")
-  comments       Comment[]
-  images         Image[]
+  comments      Comment[]
+  images        Image[]
   companySetting CompanySetting?
-  shares        ProposalShare[] @relation("SharedWithUser")
-  sharedBy      ProposalShare[] @relation("SharedByUser")
-  versions      VersionHistory[]
+  shares       ProposalShare[] @relation("SharedWithUser")
+  sharedBy     ProposalShare[] @relation("SharedByUser")
+  versions     VersionHistory[]
 }
 
 enum ProposalStatus {

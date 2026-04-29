@@ -1,15 +1,24 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function SignInPage() {
   const router = useRouter()
+  const { status } = useSession()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard')
+    }
+  }, [status, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,6 +26,7 @@ export default function SignInPage() {
     setLoading(true)
 
     try {
+      // NextAuth v5 handles CSRF internally - no need to pass it manually
       const result = await signIn('credentials', {
         email,
         password,
@@ -24,8 +34,14 @@ export default function SignInPage() {
       })
 
       if (result?.error) {
-        setError('Invalid email or password')
-      } else {
+        if (result.error === 'CredentialsSignin') {
+          setError('Invalid email or password')
+        } else if (result.error === 'ACCOUNT_DEACTIVATED') {
+          setError('Your account has been deactivated. Please contact admin.')
+        } else {
+          setError(result.error)
+        }
+      } else if (result?.ok) {
         router.push('/dashboard')
         router.refresh()
       }
@@ -34,6 +50,17 @@ export default function SignInPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -64,6 +91,7 @@ export default function SignInPage() {
                 name="email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -78,6 +106,7 @@ export default function SignInPage() {
                 name="password"
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -93,6 +122,12 @@ export default function SignInPage() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+
+        <div className="text-center mt-4">
+          <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
+            Forgot Password?
+          </Link>
+        </div>
       </div>
     </div>
   )

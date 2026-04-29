@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 interface CompanySettings {
   id?: string
@@ -17,6 +18,7 @@ interface CompanySettings {
 }
 
 export default function SettingsPage() {
+  const { data: session } = useSession()
   const [settings, setSettings] = useState<CompanySettings>({
     companyName: '',
     logoUrl: '',
@@ -32,6 +34,14 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [logoPreview, setLogoPreview] = useState<string>('')
+  
+  // Change password states
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   useEffect(() => {
     fetchSettings()
@@ -112,6 +122,52 @@ export default function SettingsPage() {
     }
   }
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordMessage(null)
+
+    if (newPassword.length < 6) {
+      setPasswordMessage({ type: 'error', text: 'Password must be at least 6 characters' })
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'Passwords do not match' })
+      return
+    }
+
+    setPasswordLoading(true)
+
+    try {
+      const response = await fetch(`/api/users/${session?.user?.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'changePassword',
+          currentPassword,
+          newPassword,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setPasswordMessage({ type: 'error', text: data.error || 'Failed to change password' })
+        return
+      }
+
+      setPasswordMessage({ type: 'success', text: 'Password changed successfully!' })
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setShowPasswordForm(false)
+    } catch (err) {
+      setPasswordMessage({ type: 'error', text: 'Failed to change password' })
+    } finally {
+      setPasswordLoading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -133,6 +189,101 @@ export default function SettingsPage() {
               {message.text}
             </div>
           )}
+
+          {/* Change Password Section */}
+          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <span>🔒</span> Change Password
+              </h2>
+              {!showPasswordForm && (
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordForm(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  Change Password
+                </button>
+              )}
+            </div>
+            
+            {showPasswordForm && (
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                {passwordMessage && (
+                  <div className={`px-4 py-3 rounded-lg ${
+                    passwordMessage.type === 'success' 
+                      ? 'bg-green-50 border border-green-200 text-green-700' 
+                      : 'bg-red-50 border border-red-200 text-red-700'
+                  }`}>
+                    {passwordMessage.text}
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    minLength={6}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordForm(false)
+                      setCurrentPassword('')
+                      setNewPassword('')
+                      setConfirmPassword('')
+                      setPasswordMessage(null)
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {passwordLoading ? 'Saving...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white shadow-md rounded-lg p-6">

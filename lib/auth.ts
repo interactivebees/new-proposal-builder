@@ -32,6 +32,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
+        if (user.isActive === false) {
+          return null
+        }
+
         const isPasswordValid = await compare(credentials.password as string, user.password)
 
         if (!isPasswordValid) {
@@ -55,7 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60 // 24 hours
+    maxAge: 24 * 60 * 60
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -76,7 +80,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }
   },
   pages: {
-    signIn: '/auth/signin',
-    error: '/auth/signin'
+    signIn: '/auth/signin'
   }
 })

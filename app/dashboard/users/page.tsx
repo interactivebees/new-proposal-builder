@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { Edit2, Power, PowerOff, Trash2 } from 'lucide-react'
 
 interface Permission {
   id: string
@@ -25,6 +26,7 @@ interface User {
   roleId?: string
   role?: Role
   customPermissions: Permission[]
+  isActive?: boolean
   companyName?: string
   phone?: string
   createdAt: string
@@ -41,6 +43,7 @@ export default function UsersPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [statusConfirm, setStatusConfirm] = useState<{ id: string; name: string; activate: boolean } | null>(null)
 
   useEffect(() => {
     fetchUsers()
@@ -74,6 +77,30 @@ export default function UsersPage() {
       }
       setUsers(users.filter(u => u.id !== userId))
       setDeleteConfirm(null)
+    } catch (err: any) {
+      alert(err.message)
+    }
+  }
+
+  const handleToggleStatus = async (userId: string, currentStatus: boolean, userName: string) => {
+    setStatusConfirm({ id: userId, name: userName, activate: !currentStatus })
+  }
+
+  const confirmStatusChange = async () => {
+    if (!statusConfirm) return
+    
+    try {
+      const response = await fetch(`/api/users/${statusConfirm.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggleStatus', isActive: statusConfirm.activate }),
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to update status')
+      }
+      setUsers(users.map(u => u.id === statusConfirm.id ? { ...u, isActive: statusConfirm.activate } : u))
+      setStatusConfirm(null)
     } catch (err: any) {
       alert(err.message)
     }
@@ -199,22 +226,47 @@ export default function UsersPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {user.phone || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button
-                          onClick={() => {
-                            setSelectedUser(user)
-                            setShowEditModal(true)
-                          }}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirm(user.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {/* All action buttons in a single row */}
+                        <div className="flex items-center gap-1">
+                          {/* Edit Button */}
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user)
+                              setShowEditModal(true)
+                            }}
+                            className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition"
+                            title="Edit User"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          
+                          {/* Deactivate/Activate Button */}
+                          <button
+                            onClick={() => handleToggleStatus(user.id, user.isActive !== false, user.name)}
+                            className={`p-2 rounded-lg transition ${
+                              user.isActive === false 
+                                ? 'text-green-600 hover:text-green-900 hover:bg-green-50' 
+                                : 'text-orange-600 hover:text-orange-900 hover:bg-orange-50'
+                            }`}
+                            title={user.isActive === false ? 'Activate User' : 'Deactivate User'}
+                          >
+                            {user.isActive === false ? (
+                              <Power className="w-4 h-4" />
+                            ) : (
+                              <PowerOff className="w-4 h-4" />
+                            )}
+                          </button>
+                          
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => setDeleteConfirm(user.id)}
+                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition"
+                            title="Delete User"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -269,6 +321,56 @@ export default function UsersPage() {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Change Confirmation Modal */}
+      {statusConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              {statusConfirm.activate ? (
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                </div>
+              )}
+              <h3 className="text-lg font-semibold text-gray-900">
+                {statusConfirm.activate ? 'Activate User' : 'Deactivate User'}
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              {statusConfirm.activate 
+                ? 'Are you sure you want to activate this user? They will be able to sign in again.'
+                : 'Are you sure you want to deactivate this user? They will not be able to sign in until activated again.'
+              }
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setStatusConfirm(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => confirmStatusChange()}
+                className={`px-4 py-2 text-white rounded-lg ${
+                  statusConfirm.activate 
+                    ? 'bg-green-600 hover:bg-green-700' 
+                    : 'bg-orange-600 hover:bg-orange-700'
+                }`}
+              >
+                {statusConfirm.activate ? 'Activate' : 'Deactivate'}
               </button>
             </div>
           </div>
