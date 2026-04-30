@@ -1,5 +1,9 @@
 import React from 'react'
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+import https from 'https'
+import http from 'http'
 
 // Register fonts
 Font.register({
@@ -9,6 +13,45 @@ Font.register({
     { src: 'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlfBBc9.woff2', fontWeight: 'bold' }
   ]
 })
+
+// Image loading utility
+const loadImageAsBase64 = async (imageUrl: string): Promise<string | null> => {
+  try {
+    if (imageUrl.startsWith('/uploads/')) {
+      // Local file
+      const filePath = join(process.cwd(), 'public', imageUrl)
+      const buffer = readFileSync(filePath)
+      const base64 = buffer.toString('base64')
+      const ext = imageUrl.split('.').pop()?.toLowerCase() || 'png'
+      const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'png' ? 'image/png' : 'image/gif'
+      return `data:${mimeType};base64,${base64}`
+    } else if (imageUrl.startsWith('http')) {
+      // External URL - fetch and convert to base64
+      return new Promise((resolve, reject) => {
+        const protocol = imageUrl.startsWith('https') ? https : http
+        protocol.get(imageUrl, (response) => {
+          if (response.statusCode !== 200) {
+            resolve(null)
+            return
+          }
+          const chunks: Buffer[] = []
+          response.on('data', (chunk) => chunks.push(chunk))
+          response.on('end', () => {
+            const buffer = Buffer.concat(chunks)
+            const base64 = buffer.toString('base64')
+            const contentType = response.headers['content-type'] || 'image/jpeg'
+            resolve(`data:${contentType};base64,${base64}`)
+          })
+          response.on('error', reject)
+        }).on('error', reject)
+      })
+    }
+    return null
+  } catch (error) {
+    console.error('Error loading image:', error)
+    return null
+  }
+}
 
 interface Section {
   title?: string
@@ -230,7 +273,7 @@ const parseInlineFormatting = (html: string): TextRun[] => {
 
 // Parse block-level elements
 interface BlockElement {
-  type: 'heading' | 'paragraph' | 'blockquote' | 'code' | 'list' | 'table'
+  type: 'heading' | 'paragraph' | 'blockquote' | 'code' | 'list' | 'table' | 'image'
   level?: number
   text?: string
   runs?: TextRun[]
@@ -238,26 +281,82 @@ interface BlockElement {
   listItems?: string[]
   rows?: any[]
   styles?: any
+  src?: string
+  alt?: string
+  width?: number
+  height?: number
+}
+
+// Strip leading h1/h2/h3 tags from content (since section title is rendered separately)
+const stripLeadingHeadings = (html: string): string => {
+  return html.replace(/^<h[1-3][^>]*>[\s\S]*?<\/h[1-3]>/i, '').trim()
 }
 
 const parseHtmlContent = (html: string): BlockElement[] => {
   const elements: BlockElement[] = []
   if (!html) return elements
   
-  // Clean up HTML
-  let text = html
+  // Clean up HTML and strip leading headings (to avoid duplication with section title)
+  let text = stripLeadingHeadings(html)
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
   
-  // Split by block elements
+  // If all content was stripped, return empty
+  if (!text) return elements
+  
+  // First, extract all standalone <img> tags from anywhere in the content
+  const standaloneImgRegex = /<img([^>]*)>/gi
+  let imgMatch
+  while ((imgMatch = standaloneImgRegex.exec(text)) !== null) {
+    const imgAttrs = imgMatch[1]
+    const srcMatch = imgAttrs.match(/src="([^"]*)"/i)
+    const altMatch = imgAttrs.match(/alt="([^"]*)"/i)
+    const widthMatch = imgAttrs.match(/width="(\d+)"/i)
+    const heightMatch = imgAttrs.match(/height="(\d+)"/i)
+    
+    if (srcMatch) {
+      elements.push({
+        type: 'image',
+        src: srcMatch[1],
+        alt: altMatch ? altMatch[1] : '',
+        width: widthMatch ? parseInt(widthMatch[1]) : undefined,
+        height: heightMatch ? parseInt(heightMatch[1]) : undefined,
+        styles: {}
+      })
+    }
+  }
+  
+  // Then process block elements (without images to avoid duplicates)
   const blockRegex = /<(h[1-3]|p|blockquote|pre|ul|ol|table|div)(?:\s+[^>]*)?>([\s\S]*?)<\/\1>/gi
   
   let lastIndex = 0
   let match
   
   while ((match = blockRegex.exec(text)) !== null) {
+    // Check if it's an image (self-closing img tag)
+    if (match[0].startsWith('<img')) {
+      const imgAttrs = match[3] || ''
+      const srcMatch = imgAttrs.match(/src="([^"]*)"/i)
+      const altMatch = imgAttrs.match(/alt="([^"]*)"/i)
+      const widthMatch = imgAttrs.match(/width="(\d+)"/i)
+      const heightMatch = imgAttrs.match(/height="(\d+)"/i)
+      
+      if (srcMatch) {
+        elements.push({
+          type: 'image',
+          src: srcMatch[1],
+          alt: altMatch ? altMatch[1] : '',
+          width: widthMatch ? parseInt(widthMatch[1]) : undefined,
+          height: heightMatch ? parseInt(heightMatch[1]) : undefined,
+          styles: {}
+        })
+      }
+      lastIndex = match.index + match[0].length
+      continue
+    }
+    
     const tag = match[1].toLowerCase()
     const content = match[2]
     const fullMatch = match[0]
@@ -534,6 +633,10 @@ const styles = StyleSheet.create({
   listText: {
     flex: 1
   },
+  image: {
+    marginVertical: 10,
+    objectFit: 'contain'
+  },
   footer: {
     position: 'absolute',
     bottom: 30,
@@ -541,6 +644,13 @@ const styles = StyleSheet.create({
     right: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    fontSize: 9,
+    color: '#999999',
+    borderTopWidth: 1,
+    borderTopColor: '#cccccc',
+    paddingTop: 6
+  },
+  footerText: {
     fontSize: 9,
     color: '#999999'
   }
@@ -553,6 +663,7 @@ interface ProposalDocumentProps {
     clientName?: string | null
     clientCompany?: string | null
     clientAddress?: string | null
+    clientLogoUrl?: string | null
     pricingItems?: Array<{
       serviceDescription: string
       cost: number
@@ -565,6 +676,9 @@ interface ProposalDocumentProps {
   companySettings: {
     companyName?: string | null
   } | null
+  images?: Record<string, string> // URL to base64 mapping
+  companyLogo?: string | null // Base64 encoded company logo
+  clientLogo?: string | null // Base64 encoded client logo
 }
 
 // Render formatted text runs
@@ -591,7 +705,7 @@ const renderFormattedText = (runs: TextRun[], baseStyle: any) => {
 }
 
 // PDF Document Component
-export const ProposalDocument = ({ proposal, companySettings }: ProposalDocumentProps) => {
+export const ProposalDocument = ({ proposal, companySettings, images = {}, companyLogo, clientLogo }: ProposalDocumentProps) => {
   const content: Content = proposal.content as Content
   const sections = content?.sections?.sort((a, b) => (a.order || 0) - (b.order || 0)) || []
 
@@ -680,6 +794,32 @@ export const ProposalDocument = ({ proposal, companySettings }: ProposalDocument
             ))}
           </View>
         )
+      case 'image':
+        const imageSrc = element.src
+        const imageData = images[imageSrc]
+        if (!imageData) return null
+        
+        const maxWidth = 450
+        const providedWidth = element.width || 0
+        const providedHeight = element.height || 0
+        
+        const imgStyle: any = { ...styles.image }
+        if (providedWidth && providedHeight) {
+          imgStyle.width = Math.min(providedWidth, maxWidth)
+          imgStyle.height = (providedHeight / providedWidth) * imgStyle.width
+        } else if (providedWidth) {
+          imgStyle.width = Math.min(providedWidth, maxWidth)
+        } else {
+          imgStyle.width = maxWidth
+        }
+        
+        return (
+          <Image 
+            key={index} 
+            src={imageData} 
+            style={imgStyle}
+          />
+        )
       default:
         return null
     }
@@ -700,12 +840,23 @@ export const ProposalDocument = ({ proposal, companySettings }: ProposalDocument
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerText}>{companyName}</Text>
+          {companyLogo ? (
+            <Image src={companyLogo} style={{ width: 100, height: 35, objectFit: 'contain' }} />
+          ) : (
+            <Text style={styles.headerText}>{companyName}</Text>
+          )}
           <Text style={styles.headerText}>{formattedDate}</Text>
         </View>
 
         {/* Title */}
         <Text style={styles.title}>{proposal.title}</Text>
+
+        {/* Client Logo on Cover */}
+        {clientLogo && (
+          <View style={{ alignItems: 'center', marginBottom: 15 }}>
+            <Image src={clientLogo} style={{ width: 150, height: 75, objectFit: 'contain' }} />
+          </View>
+        )}
 
         {/* Client Info */}
         {(proposal.clientName || proposal.clientCompany) && (
@@ -728,7 +879,12 @@ export const ProposalDocument = ({ proposal, companySettings }: ProposalDocument
 
         {/* Content Sections */}
         {sections.map((section, index) => (
-          <View key={index} style={styles.section}>
+          <View 
+            key={index} 
+            style={styles.section}
+            // Add page break before first content section (after cover page)
+            break={index === 0 ? true : undefined}
+          >
             {section.title && (
               <Text style={styles.sectionTitle}>{section.title}</Text>
             )}
@@ -759,8 +915,9 @@ export const ProposalDocument = ({ proposal, companySettings }: ProposalDocument
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text>{proposal.title}</Text>
-          <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+          <Text style={styles.footerText}>{formattedDate}</Text>
+          <Text style={styles.footerText}>{proposal.title}</Text>
+          <Text render={({ pageNumber }) => `${pageNumber}`} style={styles.footerText} />
         </View>
       </Page>
     </Document>

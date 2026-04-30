@@ -605,20 +605,51 @@ export async function POST(req: NextRequest) {
 
     const content = proposal.content as any
     if (content?.sections && Array.isArray(content.sections)) {
-      content.sections
-        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
-        .forEach((section: any) => {
-          if (!section.title) return
+      for (const section of content.sections.sort((a: any, b: any) => (a.order || 0) - (b.order || 0))) {
+          if (!section.title) continue
           docChildren.push(new Paragraph({ 
             children: [new TextRun({ text: section.title, bold: true, color: '000000', size: 24 })],
             spacing: { before: 200, after: 100 } 
           }));
-          const sectionContent = section.content?.html || section.content || '';
+          let sectionContent = section.content?.html || section.content || '';
+          // Strip leading h1/h2/h3 tags to avoid duplication with section title
+          sectionContent = sectionContent.replace(/^<h[1-3][^>]*>[\s\S]*?<\/h[1-3]>/i, '');
+          
+          // Extract and process images first
+          const imgRegex = /<img([^>]*)>/gi
+          let imgMatch
+          while ((imgMatch = imgRegex.exec(sectionContent)) !== null) {
+            const imgAttrs = imgMatch[1]
+            const srcMatch = imgAttrs.match(/src="([^"]*)"/)
+            const widthMatch = imgAttrs.match(/width="(\d+)"/)
+            const heightMatch = imgAttrs.match(/height="(\d+)"/)
+            
+            if (srcMatch) {
+              const imgSrc = srcMatch[1]
+              const width = widthMatch ? parseInt(widthMatch[1]) : 400
+              const height = heightMatch ? parseInt(heightMatch[1]) : 300
+              
+              const imgBuffer = await loadImage(imgSrc)
+              if (imgBuffer) {
+                docChildren.push(new Paragraph({
+                  children: [
+                    new ImageRun({
+                      data: imgBuffer,
+                      transformation: { width, height },
+                      type: 'png'
+                    })
+                  ],
+                  spacing: { after: 200 }
+                }))
+              }
+            }
+          }
+          
           const htmlContent = typeof sectionContent === 'object' ? tiptapJsonToHtml(sectionContent) : sectionContent;
-          if (!htmlContent) return
+          if (!htmlContent) continue
           const sectionParagraphs = htmlToParagraphs(htmlContent);
           docChildren.push(...sectionParagraphs);
-        });
+      }
     }
 
     if (proposal.pricingItems && proposal.pricingItems.length > 0) {
