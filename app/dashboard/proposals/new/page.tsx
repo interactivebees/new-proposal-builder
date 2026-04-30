@@ -3,10 +3,15 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { extractVariables, replaceVariablesInSections } from '@/lib/template-variables'
 
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
   ssr: false,
   loading: () => <div>Loading editor...</div>
+})
+
+const VariableInputForm = dynamic(() => import('@/components/VariableInputForm'), {
+  ssr: false
 })
 
 function NewProposalForm() {
@@ -40,6 +45,11 @@ function NewProposalForm() {
   const [error, setError] = useState('')
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; category?: string }>>([])
   const [selectedTemplateId, setSelectedTemplateId] = useState(templateId || '')
+  
+  // Variable detection state
+  const [showVariableForm, setShowVariableForm] = useState(false)
+  const [variableContent, setVariableContent] = useState('')
+  const [pendingTemplateSections, setPendingTemplateSections] = useState<any[] | null>(null)
 
   // Fetch available templates
   useEffect(() => {
@@ -71,12 +81,71 @@ function NewProposalForm() {
       if (res.ok) {
         const template = await res.json()
         if (template.sections?.sections) {
-          setSections(template.sections.sections)
+          const templateSections = template.sections.sections
+          
+          // Store pending sections for variable replacement
+          setPendingTemplateSections(templateSections)
+          
+          // Extract all text content to check for variables
+          let allContent = ''
+          templateSections.forEach((section: any) => {
+            allContent += (section.title || '') + ' '
+            allContent += (section.content?.html || '') + ' '
+          })
+          
+          // Check if there are any variables
+          const variables = extractVariables(allContent)
+          
+          if (variables.length > 0) {
+            // Show variable form with the raw content
+            setVariableContent(allContent)
+            setShowVariableForm(true)
+          } else {
+            // No variables, set sections directly with IDs
+            const sectionsWithIds = templateSections.map((section: any, index: number) => ({
+              ...section,
+              id: section.id || `section-${index + 1}`,
+              title: section.title || '',
+              type: section.type || 'text'
+            }))
+            setSections(sectionsWithIds)
+          }
         }
       }
     } catch (error) {
       console.error('Error loading template:', error)
     }
+  }
+
+  const handleVariableSubmit = (values: Record<string, string>) => {
+    if (pendingTemplateSections) {
+      const replacedSections = replaceVariablesInSections(pendingTemplateSections, values)
+      // Add IDs to sections
+      const sectionsWithIds = replacedSections.map((section: any, index: number) => ({
+        ...section,
+        id: section.id || `section-${index + 1}`,
+        title: section.title || '',
+        type: section.type || 'text'
+      }))
+      setSections(sectionsWithIds)
+    }
+    setShowVariableForm(false)
+    setPendingTemplateSections(null)
+  }
+
+  const handleVariableSkip = () => {
+    // Use template as-is without replacing variables
+    if (pendingTemplateSections) {
+      const sectionsWithIds = pendingTemplateSections.map((section: any, index: number) => ({
+        ...section,
+        id: section.id || `section-${index + 1}`,
+        title: section.title || '',
+        type: section.type || 'text'
+      }))
+      setSections(sectionsWithIds)
+    }
+    setShowVariableForm(false)
+    setPendingTemplateSections(null)
   }
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -301,6 +370,15 @@ function NewProposalForm() {
           </form>
         </div>
       </div>
+
+      {/* Variable Input Form Modal */}
+      {showVariableForm && (
+        <VariableInputForm
+          content={variableContent}
+          onSubmit={handleVariableSubmit}
+          onSkip={handleVariableSkip}
+        />
+      )}
     </div>
   )
 }
