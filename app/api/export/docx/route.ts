@@ -72,6 +72,80 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const getImageDimensions = (buffer: Buffer): { width: number; height: number } | null => {
+      try {
+        if (!buffer || buffer.length < 24) return null
+        
+        const signature = buffer.toString('ascii', 0, 8)
+        
+        if (signature === '\x89PNG\r\n\x1a\n') {
+          const width = buffer.readUInt32BE(16)
+          const height = buffer.readUInt32BE(20)
+          return { width, height }
+        }
+        
+        if (buffer[0] === 0xFF && buffer[1] === 0xD8) {
+          let offset = 2
+          while (offset < buffer.length) {
+            if (buffer[offset] !== 0xFF) break
+            const marker = buffer[offset + 1]
+            if (marker === 0xC0 || marker === 0xC2) {
+              const height = buffer.readUInt16BE(offset + 5)
+              const width = buffer.readUInt16BE(offset + 7)
+              return { width, height }
+            }
+            const length = buffer.readUInt16BE(offset + 2)
+            offset += 2 + length
+          }
+        }
+        
+        if (signature.startsWith('GIF')) {
+          const width = buffer.readUInt16LE(6)
+          const height = buffer.readUInt16LE(8)
+          return { width, height }
+        }
+        
+        return null
+      } catch {
+        return null
+      }
+    }
+
+    const calculateImageSize = (buffer: Buffer): { width: number; height: number } => {
+      const dims = getImageDimensions(buffer)
+      
+      if (!dims || !dims.width || !dims.height) {
+        return { width: 120, height: 40 }
+      }
+      
+      // Scale to 21% of original (for company logo)
+      const scale = 0.21
+      const scaledWidth = Math.round(dims.width * scale)
+      const scaledHeight = Math.round(dims.height * scale)
+      
+      return {
+        width: scaledWidth,
+        height: scaledHeight,
+      }
+    }
+
+    const calculateClientLogoSize = (buffer: Buffer): { width: number; height: number } => {
+      const dims = getImageDimensions(buffer)
+      
+      if (!dims || !dims.width || !dims.height) {
+        return { width: 150, height: 75 }
+      }
+      
+      const scale = 0.5
+      const scaledWidth = Math.round(dims.width * scale)
+      const scaledHeight = Math.round(dims.height * scale)
+      
+      return {
+        width: scaledWidth,
+        height: scaledHeight,
+      }
+    }
+
     const getAlignment = (styleAttr: string): typeof AlignmentType[keyof typeof AlignmentType] => {
       if (styleAttr.includes('text-align: center') || styleAttr.includes('text-align:center')) {
         return AlignmentType.CENTER
@@ -457,11 +531,12 @@ export async function POST(req: NextRequest) {
     const headerChildren: Paragraph[] = []
 
     if (companyLogoBuffer) {
+      const logoSize = calculateImageSize(companyLogoBuffer)
       headerChildren.push(new Paragraph({
         children: [
           new ImageRun({
             data: companyLogoBuffer,
-            transformation: { width: 120, height: 40 },
+            transformation: { width: logoSize.width, height: logoSize.height },
             type: 'png'
           })
         ],
@@ -516,23 +591,6 @@ export async function POST(req: NextRequest) {
       })
     ]
 
-    if (proposal.clientLogoUrl) {
-      const logoBuffer = await loadImage(proposal.clientLogoUrl)
-      if (logoBuffer) {
-        docChildren.push(new Paragraph({
-          children: [
-            new ImageRun({
-              data: logoBuffer,
-              transformation: { width: 150, height: 75 },
-              type: 'png'
-            })
-          ],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 400 }
-        }));
-      }
-    }
-
     // Cover Page Title
     docChildren.push(new Paragraph({
       children: [new TextRun({ text: proposal.title, bold: true, color: '000000', size: 40 })],
@@ -547,6 +605,25 @@ export async function POST(req: NextRequest) {
       },
       spacing: { after: 600 }
     }));
+
+    // Client logo below title
+    if (proposal.clientLogoUrl) {
+      const logoBuffer = await loadImage(proposal.clientLogoUrl)
+      if (logoBuffer) {
+        const clientLogoSize = calculateClientLogoSize(logoBuffer)
+        docChildren.push(new Paragraph({
+          children: [
+            new ImageRun({
+              data: logoBuffer,
+              transformation: { width: clientLogoSize.width, height: clientLogoSize.height },
+              type: 'png'
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        }));
+      }
+    }
 
     // Submitted to section
     docChildren.push(new Paragraph({
