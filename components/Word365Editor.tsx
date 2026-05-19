@@ -5,7 +5,6 @@ import { Extension } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Link from '@tiptap/extension-link'
-import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Highlight from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
@@ -71,14 +70,21 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+        link: false,
+        underline: false
+      }),
       Placeholder.configure({
         placeholder: 'Start typing your document...'
       }),
       Link.configure({
-        openOnClick: false
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-blue-600 underline'
+        }
       }),
-      Underline,
+      // Underline already in StarterKit
       TextAlign.configure({
         types: ['heading', 'paragraph']
       }),
