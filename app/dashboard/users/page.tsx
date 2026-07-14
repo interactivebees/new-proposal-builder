@@ -2,14 +2,33 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import toast from 'react-hot-toast'
+import { Edit2, Power, PowerOff, Trash2 } from 'lucide-react'
+import PasswordInput from '@/components/PasswordInput'
+
+interface Permission {
+  id: string
+  name: string
+  description?: string
+  category: string
+}
+
+interface Role {
+  id: string
+  name: string
+  description?: string
+  permissions: Permission[]
+}
 
 interface User {
   id: string
   email: string
   name: string
-  role: string
+  roleId?: string
+  role?: Role
+  customPermissions: Permission[]
+  isActive?: boolean
   companyName?: string
   phone?: string
   createdAt: string
@@ -26,6 +45,7 @@ export default function UsersPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [statusConfirm, setStatusConfirm] = useState<{ id: string; name: string; activate: boolean } | null>(null)
 
   useEffect(() => {
     fetchUsers()
@@ -59,13 +79,39 @@ export default function UsersPage() {
       }
       setUsers(users.filter(u => u.id !== userId))
       setDeleteConfirm(null)
+      toast.success('User deleted successfully')
     } catch (err: any) {
-      alert(err.message)
+      toast.error(err.message)
     }
   }
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
+  const handleToggleStatus = async (userId: string, currentStatus: boolean, userName: string) => {
+    setStatusConfirm({ id: userId, name: userName, activate: !currentStatus })
+  }
+
+  const confirmStatusChange = async () => {
+    if (!statusConfirm) return
+    
+    try {
+      const response = await fetch(`/api/users/${statusConfirm.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggleStatus', isActive: statusConfirm.activate }),
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to update status')
+      }
+      setUsers(users.map(u => u.id === statusConfirm.id ? { ...u, isActive: statusConfirm.activate } : u))
+      setStatusConfirm(null)
+      toast.success(statusConfirm.activate ? 'User activated' : 'User deactivated')
+    } catch (err: any) {
+      toast.error(err.message)
+    }
+  }
+
+  const getRoleBadgeColor = (roleName: string) => {
+    switch (roleName) {
       case 'OWNER':
         return 'bg-purple-100 text-purple-800'
       case 'SALES_TEAM':
@@ -77,8 +123,16 @@ export default function UsersPage() {
     }
   }
 
-  const formatRole = (role: string) => {
-    return role.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+  const formatRole = (roleName: string) => {
+    return roleName.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+  }
+
+  const getEffectivePermissions = (user: User) => {
+    const rolePerms = user.role?.permissions || []
+    const customPerms = user.customPermissions || []
+    const allPerms = [...rolePerms, ...customPerms]
+    const uniquePerms = allPerms.filter((p, index, self) => index === self.findIndex((x) => x.id === p.id))
+    return uniquePerms
   }
 
   if (loading) {
@@ -123,6 +177,9 @@ export default function UsersPage() {
                     Role
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Permissions
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Company
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -134,51 +191,96 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{user.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(user.role)}`}>
-                        {formatRole(user.role)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {user.companyName || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {user.phone || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setShowEditModal(true)
-                        }}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(user.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((user) => {
+                  const effectivePerms = getEffectivePermissions(user)
+                  return (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{user.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(user.role?.name || '')}`}>
+                          {formatRole(user.role?.name || 'No Role')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {effectivePerms.slice(0, 4).map((perm) => (
+                            <span
+                              key={perm.id}
+                              className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded"
+                              title={perm.description}
+                            >
+                              {perm.name}
+                            </span>
+                          ))}
+                          {effectivePerms.length > 4 && (
+                            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-500 rounded">
+                              +{effectivePerms.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {user.companyName || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {user.phone || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {/* All action buttons in a single row */}
+                        <div className="flex items-center gap-1">
+                          {/* Edit Button */}
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user)
+                              setShowEditModal(true)
+                            }}
+                            className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition"
+                            title="Edit User"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          
+                          {/* Deactivate/Activate Button */}
+                          <button
+                            onClick={() => handleToggleStatus(user.id, user.isActive !== false, user.name)}
+                            className={`p-2 rounded-lg transition ${
+                              user.isActive === false 
+                                ? 'text-green-600 hover:text-green-900 hover:bg-green-50' 
+                                : 'text-orange-600 hover:text-orange-900 hover:bg-orange-50'
+                            }`}
+                            title={user.isActive === false ? 'Activate User' : 'Deactivate User'}
+                          >
+                            {user.isActive === false ? (
+                              <Power className="w-4 h-4" />
+                            ) : (
+                              <PowerOff className="w-4 h-4" />
+                            )}
+                          </button>
+                          
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => setDeleteConfirm(user.id)}
+                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition"
+                            title="Delete User"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
         </div>
       </main>
 
-      {/* Create User Modal */}
       {showCreateModal && (
         <CreateUserModal
           onClose={() => setShowCreateModal(false)}
@@ -189,7 +291,6 @@ export default function UsersPage() {
         />
       )}
 
-      {/* Edit User Modal */}
       {showEditModal && selectedUser && (
         <EditUserModal
           user={selectedUser}
@@ -205,7 +306,6 @@ export default function UsersPage() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
@@ -230,6 +330,56 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+
+      {/* Status Change Confirmation Modal */}
+      {statusConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              {statusConfirm.activate ? (
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                </div>
+              )}
+              <h3 className="text-lg font-semibold text-gray-900">
+                {statusConfirm.activate ? 'Activate User' : 'Deactivate User'}
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              {statusConfirm.activate 
+                ? 'Are you sure you want to activate this user? They will be able to sign in again.'
+                : 'Are you sure you want to deactivate this user? They will not be able to sign in until activated again.'
+              }
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setStatusConfirm(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => confirmStatusChange()}
+                className={`px-4 py-2 text-white rounded-lg ${
+                  statusConfirm.activate 
+                    ? 'bg-green-600 hover:bg-green-700' 
+                    : 'bg-orange-600 hover:bg-orange-700'
+                }`}
+              >
+                {statusConfirm.activate ? 'Activate' : 'Deactivate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -239,12 +389,43 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
     email: '',
     password: '',
     name: '',
-    role: 'SALES_TEAM',
+    roleId: '',
+    customPermissionIds: [] as string[],
     companyName: '',
     phone: '',
   })
+  const [roles, setRoles] = useState<Role[]>([])
+  const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetchRoles()
+    fetchPermissions()
+  }, [])
+
+  const fetchRoles = async () => {
+    try {
+      const res = await fetch('/api/roles')
+      const data = await res.json()
+      setRoles(data)
+      if (data.length > 0) {
+        setFormData(prev => ({ ...prev, roleId: data[0].id }))
+      }
+    } catch (err) {
+      console.error('Failed to fetch roles')
+    }
+  }
+
+  const fetchPermissions = async () => {
+    try {
+      const res = await fetch('/api/permissions')
+      const data = await res.json()
+      setPermissions(data)
+    } catch (err) {
+      console.error('Failed to fetch permissions')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -264,6 +445,7 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
       }
 
       onSuccess()
+      toast.success('User created successfully')
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -271,9 +453,24 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
     }
   }
 
+  const toggleCustomPermission = (permId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      customPermissionIds: prev.customPermissionIds.includes(permId)
+        ? prev.customPermissionIds.filter(id => id !== permId)
+        : [...prev.customPermissionIds, permId]
+    }))
+  }
+
+  const groupedPermissions = permissions.reduce((acc, perm) => {
+    if (!acc[perm.category]) acc[perm.category] = []
+    acc[perm.category].push(perm)
+    return acc
+  }, {} as Record<string, Permission[]>)
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New User</h3>
         
         {error && (
@@ -309,18 +506,14 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password *
-            </label>
-            <input
-              type="password"
-              required
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <PasswordInput
+            id="create-password"
+            label="Password *"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required
+            className="rounded-lg"
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -328,14 +521,42 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
             </label>
             <select
               required
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              value={formData.roleId}
+              onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="SALES_TEAM">Sales Team</option>
-              <option value="BUSINESS_EXPERT">Business Expert</option>
-              <option value="OWNER">Owner</option>
+              {roles.map(role => (
+                <option key={role.id} value={role.id}>
+                  {formatRole(role.name)} {role.description && `- ${role.description}`}
+                </option>
+              ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Additional Permissions
+            </label>
+            <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-2 space-y-2">
+              {Object.entries(groupedPermissions).map(([category, perms]) => (
+                <div key={category}>
+                  <div className="text-xs font-medium text-gray-500 uppercase mb-1">{category}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {perms.map(perm => (
+                      <label key={perm.id} className="flex items-center space-x-1 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={formData.customPermissionIds.includes(perm.id)}
+                          onChange={() => toggleCustomPermission(perm.id)}
+                          className="rounded border-gray-300"
+                        />
+                        <span>{perm.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div>
@@ -389,12 +610,40 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
     email: user.email,
     password: '',
     name: user.name,
-    role: user.role,
+    roleId: user.role?.id || '',
+    customPermissionIds: user.customPermissions?.map(p => p.id) || [],
     companyName: user.companyName || '',
     phone: user.phone || '',
   })
+  const [roles, setRoles] = useState<Role[]>([])
+  const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetchRoles()
+    fetchPermissions()
+  }, [])
+
+  const fetchRoles = async () => {
+    try {
+      const res = await fetch('/api/roles')
+      const data = await res.json()
+      setRoles(data)
+    } catch (err) {
+      console.error('Failed to fetch roles')
+    }
+  }
+
+  const fetchPermissions = async () => {
+    try {
+      const res = await fetch('/api/permissions')
+      const data = await res.json()
+      setPermissions(data)
+    } catch (err) {
+      console.error('Failed to fetch permissions')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -405,12 +654,12 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
       const updateData: any = {
         email: formData.email,
         name: formData.name,
-        role: formData.role,
+        roleId: formData.roleId,
+        customPermissionIds: formData.customPermissionIds,
         companyName: formData.companyName,
         phone: formData.phone,
       }
 
-      // Only include password if it's been changed
       if (formData.password) {
         updateData.password = formData.password
       }
@@ -427,6 +676,7 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
       }
 
       onSuccess()
+      toast.success('User updated successfully')
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -434,9 +684,24 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
     }
   }
 
+  const toggleCustomPermission = (permId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      customPermissionIds: prev.customPermissionIds.includes(permId)
+        ? prev.customPermissionIds.filter(id => id !== permId)
+        : [...prev.customPermissionIds, permId]
+    }))
+  }
+
+  const groupedPermissions = permissions.reduce((acc, perm) => {
+    if (!acc[perm.category]) acc[perm.category] = []
+    acc[perm.category].push(perm)
+    return acc
+  }, {} as Record<string, Permission[]>)
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit User</h3>
         
         {error && (
@@ -472,17 +737,13 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              New Password (leave blank to keep current)
-            </label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <PasswordInput
+            id="edit-password"
+            label="New Password (leave blank to keep current)"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            className="rounded-lg"
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -490,14 +751,42 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
             </label>
             <select
               required
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              value={formData.roleId}
+              onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="SALES_TEAM">Sales Team</option>
-              <option value="BUSINESS_EXPERT">Business Expert</option>
-              <option value="OWNER">Owner</option>
+              {roles.map(role => (
+                <option key={role.id} value={role.id}>
+                  {formatRole(role.name)} {role.description && `- ${role.description}`}
+                </option>
+              ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Additional Permissions
+            </label>
+            <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-2 space-y-2">
+              {Object.entries(groupedPermissions).map(([category, perms]) => (
+                <div key={category}>
+                  <div className="text-xs font-medium text-gray-500 uppercase mb-1">{category}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {perms.map(perm => (
+                      <label key={perm.id} className="flex items-center space-x-1 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={formData.customPermissionIds.includes(perm.id)}
+                          onChange={() => toggleCustomPermission(perm.id)}
+                          className="rounded border-gray-300"
+                        />
+                        <span>{perm.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div>
@@ -544,4 +833,8 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
       </div>
     </div>
   )
+}
+
+function formatRole(roleName: string) {
+  return roleName.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
 }

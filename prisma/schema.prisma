@@ -7,10 +7,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  SALES_TEAM
-  BUSINESS_EXPERT
-  OWNER
+model Role {
+  id          String   @id @default(cuid())
+  name       String   @unique
+  description String?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  users       User[]
+  permissions Permission[] @relation("RolePermissions")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  category   String
+  createdAt  DateTime @default(now())
+
+  roles       Role[] @relation("RolePermissions")
+  users      User[] @relation("UserPermissions")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password       String
+  name           String
+  roleId          String?
+  role           Role?     @relation(fields: [roleId], references: [id])
+  customPermissions Permission[] @relation("UserPermissions")
+  companyName    String?
+  phone         String?
+  avatarUrl      String?
+  isActive       Boolean   @default(true)
+  resetToken     String?
+  resetTokenExpiry DateTime?
+  lastLoginAt    DateTime?
+  tokenVersion  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  templates      Template[]
+  proposals     Proposal[] @relation("CreatedProposals")
+  approvedProposals Proposal[] @relation("ApprovedProposals")
+  comments      Comment[]
+  images        Image[]
+  companySetting CompanySetting?
+  shares       ProposalShare[] @relation("SharedWithUser")
+  sharedBy     ProposalShare[] @relation("SharedByUser")
+  versions     VersionHistory[]
 }
 
 enum ProposalStatus {
@@ -22,46 +69,18 @@ enum ProposalStatus {
   SENT
 }
 
-enum Permission {
-  VIEW
-  EDIT
-}
-
-model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  password       String
-  name           String
-  role           Role
-  companyName    String?
-  phone          String?
-  avatarUrl      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  templates      Template[]
-  proposals      Proposal[] @relation("CreatedProposals")
-  approvedProposals Proposal[] @relation("ApprovedProposals")
-  comments       Comment[]
-  images         Image[]
-  companySetting CompanySetting?
-  shares         ProposalShare[] @relation("SharedWithUser")
-  sharedBy       ProposalShare[] @relation("SharedByUser")
-  versions       VersionHistory[]
-}
-
 model Template {
   id          String   @id @default(cuid())
   name        String
-  category    String?
+  category   String?
   sections    Json
   thumbnailUrl String?
-  isActive    Boolean  @default(true)
-  createdBy   String?
-  creator     User?    @relation(fields: [createdBy], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  proposals   Proposal[]
+  isActive   Boolean  @default(true)
+  createdBy  String?
+  creator    User?    @relation(fields: [createdBy], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  proposals  Proposal[]
 }
 
 model Proposal {
@@ -98,7 +117,7 @@ model ProposalShare {
   proposal          Proposal @relation(fields: [proposalId], references: [id])
   sharedWithUserId  String
   sharedWith        User     @relation("SharedWithUser", fields: [sharedWithUserId], references: [id])
-  permission        Permission @default(VIEW)
+  sharePermission   String   @default("VIEW")
   sharedById        String
   sharedBy          User     @relation("SharedByUser", fields: [sharedById], references: [id])
   sharedAt          DateTime @default(now())

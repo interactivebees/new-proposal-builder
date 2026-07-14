@@ -6,8 +6,11 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding Century Ply Warranty Portal Proposal...')
 
-  // Create users
   const ownerPassword = await hash('owner123', 10)
+
+  const ownerRole = await prisma.role.findUnique({ where: { name: 'OWNER' } })
+  const salesRole = await prisma.role.findUnique({ where: { name: 'SALES_TEAM' } })
+
   const owner = await prisma.user.upsert({
     where: { email: 'owner@example.com' },
     update: {},
@@ -15,7 +18,7 @@ async function main() {
       email: 'owner@example.com',
       password: ownerPassword,
       name: 'John Owner',
-      role: 'OWNER',
+      roleId: ownerRole?.id,
       companyName: 'Interactive Bees Pvt. Ltd.'
     }
   })
@@ -28,12 +31,11 @@ async function main() {
       email: 'sales@example.com',
       password: salesPassword,
       name: 'Monica Gupta',
-      role: 'SALES_TEAM',
+      roleId: salesRole?.id,
       companyName: 'Interactive Bees Pvt. Ltd.'
     }
   })
 
-  // Create template
   const template = await prisma.template.create({
     data: {
       name: 'Web Portal Development Template',
@@ -52,7 +54,6 @@ async function main() {
     }
   })
 
-  // Create Century Ply proposal
   const proposal = await prisma.proposal.create({
     data: {
       title: 'Proposal for Century Ply — Warranty Portal Scope of Work',
@@ -396,58 +397,15 @@ async function main() {
     }
   })
 
-  // Add pricing items
   await prisma.pricingItem.createMany({
     data: [
-      {
-        proposalId: proposal.id,
-        serviceDescription: 'Landing Page Development',
-        cost: 75000,
-        frequency: 'one-time',
-        orderIndex: 1
-      },
-      {
-        proposalId: proposal.id,
-        serviceDescription: 'Customer Portal (Warranty Registration)',
-        cost: 250000,
-        frequency: 'one-time',
-        orderIndex: 2
-      },
-      {
-        proposalId: proposal.id,
-        serviceDescription: 'Backend Dashboard & Validation System',
-        cost: 350000,
-        frequency: 'one-time',
-        orderIndex: 3
-      },
-      {
-        proposalId: proposal.id,
-        serviceDescription: 'Integration & Testing',
-        cost: 125000,
-        frequency: 'one-time',
-        orderIndex: 4
-      },
-      {
-        proposalId: proposal.id,
-        serviceDescription: 'Training & Documentation',
-        cost: 50000,
-        frequency: 'one-time',
-        orderIndex: 5
-      },
-      {
-        proposalId: proposal.id,
-        serviceDescription: 'Project Management',
-        cost: 50000,
-        frequency: 'one-time',
-        orderIndex: 6
-      },
-      {
-        proposalId: proposal.id,
-        serviceDescription: 'Annual Maintenance & Support',
-        cost: 100000,
-        frequency: 'yearly',
-        orderIndex: 7
-      }
+      { proposalId: proposal.id, serviceDescription: 'Landing Page Development', cost: 75000, frequency: 'one-time', orderIndex: 1 },
+      { proposalId: proposal.id, serviceDescription: 'Customer Portal (Warranty Registration)', cost: 250000, frequency: 'one-time', orderIndex: 2 },
+      { proposalId: proposal.id, serviceDescription: 'Backend Dashboard & Validation System', cost: 350000, frequency: 'one-time', orderIndex: 3 },
+      { proposalId: proposal.id, serviceDescription: 'Integration & Testing', cost: 125000, frequency: 'one-time', orderIndex: 4 },
+      { proposalId: proposal.id, serviceDescription: 'Training & Documentation', cost: 50000, frequency: 'one-time', orderIndex: 5 },
+      { proposalId: proposal.id, serviceDescription: 'Project Management', cost: 50000, frequency: 'one-time', orderIndex: 6 },
+      { proposalId: proposal.id, serviceDescription: 'Annual Maintenance & Support', cost: 100000, frequency: 'yearly', orderIndex: 7 }
     ]
   })
 

@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import toast from 'react-hot-toast'
+import PasswordInput from '@/components/PasswordInput'
 
 interface CompanySettings {
   id?: string
@@ -17,6 +20,7 @@ interface CompanySettings {
 }
 
 export default function SettingsPage() {
+  const { data: session } = useSession()
   const [settings, setSettings] = useState<CompanySettings>({
     companyName: '',
     logoUrl: '',
@@ -30,8 +34,14 @@ export default function SettingsPage() {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [logoPreview, setLogoPreview] = useState<string>('')
+  
+  // Change password states
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordLoading, setPasswordLoading] = useState(false)
 
   useEffect(() => {
     fetchSettings()
@@ -59,12 +69,12 @@ export default function SettingsPage() {
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      setMessage({ type: 'error', text: 'Please select an image file' })
+      toast.error('Please select an image file')
       return
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      setMessage({ type: 'error', text: 'Image size should be less than 2MB' })
+      toast.error('Image size should be less than 2MB')
       return
     }
 
@@ -82,16 +92,15 @@ export default function SettingsPage() {
       const data = await response.json()
       setSettings({ ...settings, logoUrl: data.url })
       setLogoPreview(data.url)
-      setMessage({ type: 'success', text: 'Logo uploaded successfully' })
+      toast.success('Logo uploaded successfully')
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to upload logo' })
+      toast.error('Failed to upload logo')
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    setMessage(null)
 
     try {
       const response = await fetch('/api/settings', {
@@ -104,11 +113,56 @@ export default function SettingsPage() {
 
       const data = await response.json()
       setSettings(data)
-      setMessage({ type: 'success', text: 'Settings saved successfully!' })
+      toast.success('Settings saved successfully')
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to save settings' })
+      toast.error('Failed to save settings')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    setPasswordLoading(true)
+
+    try {
+      const response = await fetch(`/api/users/${session?.user?.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'changePassword',
+          currentPassword,
+          newPassword,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to change password')
+        return
+      }
+
+      toast.success('Password changed successfully')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setShowPasswordForm(false)
+    } catch (err) {
+      toast.error('Failed to change password')
+    } finally {
+      setPasswordLoading(false)
     }
   }
 
@@ -124,15 +178,78 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {message && (
-            <div className={`mb-6 px-4 py-3 rounded-lg ${
-              message.type === 'success' 
-                ? 'bg-green-50 border border-green-200 text-green-700' 
-                : 'bg-red-50 border border-red-200 text-red-700'
-            }`}>
-              {message.text}
+          {/* Change Password Section */}
+          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <span>🔒</span> Change Password
+              </h2>
+              {!showPasswordForm && (
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordForm(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  Change Password
+                </button>
+              )}
             </div>
-          )}
+            
+            {showPasswordForm && (
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                
+                <PasswordInput
+                  id="currentPassword"
+                  label="Current Password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  required
+                  className="rounded-lg"
+                />
+
+                <PasswordInput
+                  id="newPassword"
+                  label="New Password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="rounded-lg"
+                />
+
+                <PasswordInput
+                  id="confirmPassword"
+                  label="Confirm New Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="rounded-lg"
+                />
+                
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordForm(false)
+                      setCurrentPassword('')
+                      setNewPassword('')
+                      setConfirmPassword('')
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {passwordLoading ? 'Saving...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white shadow-md rounded-lg p-6">

@@ -3,7 +3,37 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { hash } from 'bcrypt'
 
-// GET all users (Owner only)
+async function getUserWithPermissions(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      roleId: true,
+      role: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          permissions: {
+            select: { id: true, name: true, description: true, category: true },
+          },
+        },
+      },
+      customPermissions: {
+        select: { id: true, name: true, description: true, category: true },
+      },
+      companyName: true,
+      phone: true,
+      avatarUrl: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  })
+  return user
+}
+
 export async function GET() {
   try {
     const session = await auth()
@@ -17,16 +47,27 @@ export async function GET() {
         id: true,
         email: true,
         name: true,
-        role: true,
+        roleId: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            permissions: {
+              select: { id: true, name: true, description: true, category: true },
+            },
+          },
+        },
+        customPermissions: {
+          select: { id: true, name: true, description: true, category: true },
+        },
         companyName: true,
         phone: true,
         avatarUrl: true,
         createdAt: true,
         updatedAt: true,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     })
 
     return NextResponse.json(users)
@@ -36,7 +77,6 @@ export async function GET() {
   }
 }
 
-// POST create new user (Owner only)
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
@@ -46,46 +86,36 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, password, name, role, companyName, phone } = body
+    const { email, password, name, roleId, customPermissionIds, companyName, phone } = body
 
-    // Validate required fields
-    if (!email || !password || !name || !role) {
+    if (!email || !password || !name || !roleId) {
       return NextResponse.json(
         { error: 'Email, password, name, and role are required' },
         { status: 400 }
       )
     }
 
-    // Validate role
-    if (!['SALES_TEAM', 'BUSINESS_EXPERT', 'OWNER'].includes(role)) {
-      return NextResponse.json(
-        { error: 'Invalid role' },
-        { status: 400 }
-      )
+    const role = await prisma.role.findUnique({ where: { id: roleId } })
+    if (!role) {
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    })
-
+    const existingUser = await prisma.user.findUnique({ where: { email } })
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'User with this email already exists' }, { status: 400 })
     }
 
-    // Hash password
     const hashedPassword = await hash(password, 10)
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
-        role,
+        role: { connect: { id: roleId } },
+        customPermissions: customPermissionIds?.length
+          ? { connect: customPermissionIds.map((id: string) => ({ id })) }
+          : undefined,
         companyName,
         phone,
       },
@@ -93,11 +123,17 @@ export async function POST(request: NextRequest) {
         id: true,
         email: true,
         name: true,
-        role: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+            permissions: true,
+          },
+        },
+        customPermissions: true,
         companyName: true,
         phone: true,
         createdAt: true,
-        updatedAt: true,
       },
     })
 

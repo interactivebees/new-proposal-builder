@@ -6,8 +6,12 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database from Word document...')
 
-  // Create users with different roles
   const ownerPassword = await hash('owner123', 10)
+  
+  const ownerRole = await prisma.role.findUnique({ where: { name: 'OWNER' } })
+  const salesRole = await prisma.role.findUnique({ where: { name: 'SALES_TEAM' } })
+  const expertRole = await prisma.role.findUnique({ where: { name: 'BUSINESS_EXPERT' } })
+
   const owner = await prisma.user.upsert({
     where: { email: 'owner@example.com' },
     update: {},
@@ -15,7 +19,7 @@ async function main() {
       email: 'owner@example.com',
       password: ownerPassword,
       name: 'John Owner',
-      role: 'OWNER',
+      roleId: ownerRole?.id,
       companyName: 'Acme Corp'
     }
   })
@@ -28,7 +32,7 @@ async function main() {
       email: 'sales@example.com',
       password: salesPassword,
       name: 'Jane Sales',
-      role: 'SALES_TEAM',
+      roleId: salesRole?.id,
       companyName: 'Acme Corp'
     }
   })
@@ -41,7 +45,7 @@ async function main() {
       email: 'expert@example.com',
       password: expertPassword,
       name: 'Bob Expert',
-      role: 'BUSINESS_EXPERT',
+      roleId: expertRole?.id,
       companyName: 'Acme Corp'
     }
   })

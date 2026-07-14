@@ -17,10 +17,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string }
+          where: { email: credentials.email as string },
+          include: {
+            role: {
+              include: {
+                permissions: true
+              }
+            },
+            customPermissions: true
+          }
         })
 
         if (!user) {
+          return null
+        }
+
+        if (user.isActive === false) {
           return null
         }
 
@@ -30,37 +42,66 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
+        const rolePerms = user.role?.permissions || []
+        const customPerms = user.customPermissions || []
+        const allPerms = [...rolePerms, ...customPerms]
+        const permissions = allPerms.map(p => p.name)
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role
+          role: user.role?.name || 'UNKNOWN',
+          permissions,
+          tokenVersion: user.tokenVersion
         }
       }
     })
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60 // 24 hours
+    maxAge: 24 * 60 * 60
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
         token.role = user.role
+        token.permissions = user.permissions
+        token.tokenVersion = user.tokenVersion
       }
+
+      if (trigger === 'update') {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { tokenVersion: true, isActive: true }
+        })
+        if (dbUser) {
+          token.tokenVersion = dbUser.tokenVersion
+        }
+      }
+
+      const dbUser = await prisma.user.findUnique({
+        where: { id: token.id as string },
+        select: { tokenVersion: true, isActive: true }
+      })
+
+      if (!dbUser || !dbUser.isActive || dbUser.tokenVersion !== token.tokenVersion) {
+        return null
+      }
+
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.permissions = token.permissions as string[]
       }
       return session
     }
   },
   pages: {
-    signIn: '/auth/signin',
-    error: '/auth/signin'
+    signIn: '/auth/signin'
   }
 })

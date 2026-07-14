@@ -72,6 +72,80 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const getImageDimensions = (buffer: Buffer): { width: number; height: number } | null => {
+      try {
+        if (!buffer || buffer.length < 24) return null
+        
+        const signature = buffer.toString('ascii', 0, 8)
+        
+        if (signature === '\x89PNG\r\n\x1a\n') {
+          const width = buffer.readUInt32BE(16)
+          const height = buffer.readUInt32BE(20)
+          return { width, height }
+        }
+        
+        if (buffer[0] === 0xFF && buffer[1] === 0xD8) {
+          let offset = 2
+          while (offset < buffer.length) {
+            if (buffer[offset] !== 0xFF) break
+            const marker = buffer[offset + 1]
+            if (marker === 0xC0 || marker === 0xC2) {
+              const height = buffer.readUInt16BE(offset + 5)
+              const width = buffer.readUInt16BE(offset + 7)
+              return { width, height }
+            }
+            const length = buffer.readUInt16BE(offset + 2)
+            offset += 2 + length
+          }
+        }
+        
+        if (signature.startsWith('GIF')) {
+          const width = buffer.readUInt16LE(6)
+          const height = buffer.readUInt16LE(8)
+          return { width, height }
+        }
+        
+        return null
+      } catch {
+        return null
+      }
+    }
+
+    const calculateImageSize = (buffer: Buffer): { width: number; height: number } => {
+      const dims = getImageDimensions(buffer)
+      
+      if (!dims || !dims.width || !dims.height) {
+        return { width: 120, height: 40 }
+      }
+      
+      // Scale to 21% of original (for company logo)
+      const scale = 0.21
+      const scaledWidth = Math.round(dims.width * scale)
+      const scaledHeight = Math.round(dims.height * scale)
+      
+      return {
+        width: scaledWidth,
+        height: scaledHeight,
+      }
+    }
+
+    const calculateClientLogoSize = (buffer: Buffer): { width: number; height: number } => {
+      const dims = getImageDimensions(buffer)
+      
+      if (!dims || !dims.width || !dims.height) {
+        return { width: 150, height: 75 }
+      }
+      
+      const scale = 0.5
+      const scaledWidth = Math.round(dims.width * scale)
+      const scaledHeight = Math.round(dims.height * scale)
+      
+      return {
+        width: scaledWidth,
+        height: scaledHeight,
+      }
+    }
+
     const getAlignment = (styleAttr: string): typeof AlignmentType[keyof typeof AlignmentType] => {
       if (styleAttr.includes('text-align: center') || styleAttr.includes('text-align:center')) {
         return AlignmentType.CENTER
@@ -324,8 +398,10 @@ export async function POST(req: NextRequest) {
                         if (hasVisibleText(node.children)) {
                             const headingRuns = parseInlineNodes(node.children);
                             if (headingRuns.length > 0) {
+                                const level = node.tag === 'h1' ? HeadingLevel.HEADING_1 : node.tag === 'h2' ? HeadingLevel.HEADING_2 : HeadingLevel.HEADING_3;
                                 elements.push(new Paragraph({
                                     children: headingRuns,
+                                    heading: level,
                                     alignment,
                                     spacing: { before: 300, after: 150 }
                                 }));
@@ -383,7 +459,7 @@ export async function POST(req: NextRequest) {
         html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         if (marks && Array.isArray(marks)) {
           marks.forEach((mark: any) => {
-            switch (type) {
+            switch (mark.type) {
               case 'bold': html = `<strong>${html}</strong>`; break;
               case 'italic': html = `<em>${html}</em>`; break;
               case 'underline': html = `<u>${html}</u>`; break;
@@ -455,11 +531,12 @@ export async function POST(req: NextRequest) {
     const headerChildren: Paragraph[] = []
 
     if (companyLogoBuffer) {
+      const logoSize = calculateImageSize(companyLogoBuffer)
       headerChildren.push(new Paragraph({
         children: [
           new ImageRun({
             data: companyLogoBuffer,
-            transformation: { width: 120, height: 40 },
+            transformation: { width: logoSize.width, height: logoSize.height },
             type: 'png'
           })
         ],
@@ -514,23 +591,6 @@ export async function POST(req: NextRequest) {
       })
     ]
 
-    if (proposal.clientLogoUrl) {
-      const logoBuffer = await loadImage(proposal.clientLogoUrl)
-      if (logoBuffer) {
-        docChildren.push(new Paragraph({
-          children: [
-            new ImageRun({
-              data: logoBuffer,
-              transformation: { width: 150, height: 75 },
-              type: 'png'
-            })
-          ],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 400 }
-        }));
-      }
-    }
-
     // Cover Page Title
     docChildren.push(new Paragraph({
       children: [new TextRun({ text: proposal.title, bold: true, color: '000000', size: 40 })],
@@ -545,6 +605,25 @@ export async function POST(req: NextRequest) {
       },
       spacing: { after: 600 }
     }));
+
+    // Client logo below title
+    if (proposal.clientLogoUrl) {
+      const logoBuffer = await loadImage(proposal.clientLogoUrl)
+      if (logoBuffer) {
+        const clientLogoSize = calculateClientLogoSize(logoBuffer)
+        docChildren.push(new Paragraph({
+          children: [
+            new ImageRun({
+              data: logoBuffer,
+              transformation: { width: clientLogoSize.width, height: clientLogoSize.height },
+              type: 'png'
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        }));
+      }
+    }
 
     // Submitted to section
     docChildren.push(new Paragraph({
@@ -603,18 +682,51 @@ export async function POST(req: NextRequest) {
 
     const content = proposal.content as any
     if (content?.sections && Array.isArray(content.sections)) {
-      content.sections
-        .sort((a: any, b: any) => a.order - b.order)
-        .forEach((section: any) => {
+      for (const section of content.sections.sort((a: any, b: any) => (a.order || 0) - (b.order || 0))) {
+          if (!section.title) continue
           docChildren.push(new Paragraph({ 
             children: [new TextRun({ text: section.title, bold: true, color: '000000', size: 24 })],
             spacing: { before: 200, after: 100 } 
           }));
-          const sectionContent = section.content?.html || section.content || '';
+          let sectionContent = section.content?.html || section.content || '';
+          // Strip leading h1/h2/h3 tags to avoid duplication with section title
+          sectionContent = sectionContent.replace(/^<h[1-3][^>]*>[\s\S]*?<\/h[1-3]>/i, '');
+          
+          // Extract and process images first
+          const imgRegex = /<img([^>]*)>/gi
+          let imgMatch
+          while ((imgMatch = imgRegex.exec(sectionContent)) !== null) {
+            const imgAttrs = imgMatch[1]
+            const srcMatch = imgAttrs.match(/src="([^"]*)"/)
+            const widthMatch = imgAttrs.match(/width="(\d+)"/)
+            const heightMatch = imgAttrs.match(/height="(\d+)"/)
+            
+            if (srcMatch) {
+              const imgSrc = srcMatch[1]
+              const width = widthMatch ? parseInt(widthMatch[1]) : 400
+              const height = heightMatch ? parseInt(heightMatch[1]) : 300
+              
+              const imgBuffer = await loadImage(imgSrc)
+              if (imgBuffer) {
+                docChildren.push(new Paragraph({
+                  children: [
+                    new ImageRun({
+                      data: imgBuffer,
+                      transformation: { width, height },
+                      type: 'png'
+                    })
+                  ],
+                  spacing: { after: 200 }
+                }))
+              }
+            }
+          }
+          
           const htmlContent = typeof sectionContent === 'object' ? tiptapJsonToHtml(sectionContent) : sectionContent;
+          if (!htmlContent) continue
           const sectionParagraphs = htmlToParagraphs(htmlContent);
           docChildren.push(...sectionParagraphs);
-        });
+      }
     }
 
     if (proposal.pricingItems && proposal.pricingItems.length > 0) {
@@ -673,7 +785,9 @@ export async function POST(req: NextRequest) {
     const buffer = await Packer.toBuffer(doc);
     const sanitizedFilename = proposal.title.replace(/[^a-zA-Z0-9\s-]/g, '_').replace(/\s+/g, '_').substring(0, 100);
 
-    return new NextResponse(new Uint8Array(buffer), {
+    const uint8Array = new Uint8Array(buffer);
+
+    return new NextResponse(uint8Array, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${sanitizedFilename}.docx"`

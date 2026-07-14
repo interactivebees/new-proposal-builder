@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { formatDate } from '@/lib/formatDate'
+import toast from 'react-hot-toast'
+import { Download, FileText, FileDown, Save } from 'lucide-react'
 
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
   ssr: false,
@@ -55,10 +57,28 @@ export default function ProposalDetailPage() {
   const [duplicating, setDuplicating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false)
+  const [templateName, setTemplateName] = useState('')
+  const [templateCategory, setTemplateCategory] = useState('')
+  const [savingAsTemplate, setSavingAsTemplate] = useState(false)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchProposal()
   }, [params.id])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const fetchProposal = async () => {
     try {
@@ -133,8 +153,9 @@ export default function ProposalDetailPage() {
     }
   }
 
-  const handleExport = async () => {
+  const handleExportDocx = async () => {
     setExporting(true)
+    setShowExportMenu(false)
     try {
       const res = await fetch('/api/export/docx', {
         method: 'POST',
@@ -157,6 +178,73 @@ export default function ProposalDetailPage() {
       console.error('Error exporting proposal:', error)
     } finally {
       setExporting(false)
+    }
+  }
+
+  const handleExportPdf = async () => {
+    setExporting(true)
+    setShowExportMenu(false)
+    try {
+      const res = await fetch('/api/export/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proposalId: params.id })
+      })
+
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${proposal?.title || 'proposal'}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleExport = async (format: 'docx' | 'pdf') => {
+    if (format === 'docx') {
+      await handleExportDocx()
+    } else {
+      await handleExportPdf()
+    }
+  }
+
+  const handleSaveAsTemplate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingAsTemplate(true)
+    try {
+      const res = await fetch(`/api/proposals/${params.id}/save-as-template`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: templateName,
+          category: templateCategory || undefined
+        })
+      })
+
+      if (res.ok) {
+        const template = await res.json()
+        setShowSaveAsTemplateModal(false)
+        setTemplateName('')
+        setTemplateCategory('')
+        toast.success(`Template "${template.name}" created successfully`)
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Failed to save as template')
+      }
+    } catch (error) {
+      console.error('Error saving as template:', error)
+      toast.error('An error occurred')
+    } finally {
+      setSavingAsTemplate(false)
     }
   }
 
@@ -286,12 +374,46 @@ export default function ProposalDetailPage() {
                       {duplicating ? 'Duplicating...' : 'Duplicate'}
                     </button>
                     <button
-                      onClick={handleExport}
-                      disabled={exporting}
-                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 via-green-600 to-teal-500 shadow-md shadow-emerald-200 border border-white/20 hover:from-emerald-500 hover:via-green-500 hover:to-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        setTemplateName(proposal?.title || 'New Template')
+                        setShowSaveAsTemplateModal(true)
+                      }}
+                      disabled={savingAsTemplate}
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 shadow-md shadow-orange-200 border border-white/20 hover:from-orange-400 hover:via-amber-400 hover:to-yellow-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-orange-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1"
                     >
-                      {exporting ? 'Exporting...' : 'Export DOCX'}
+                      <Save className="w-4 h-4" />
+                      {savingAsTemplate ? 'Saving...' : 'Save as Template'}
                     </button>
+                    <div className="relative" ref={exportMenuRef}>
+                      <button
+                        onClick={() => setShowExportMenu(!showExportMenu)}
+                        disabled={exporting}
+                        className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 via-green-600 to-teal-500 shadow-md shadow-emerald-200 border border-white/20 hover:from-emerald-500 hover:via-green-500 hover:to-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1"
+                      >
+                        <Download className="w-4 h-4" />
+                        {exporting ? 'Exporting...' : 'Export'}
+                      </button>
+                      {showExportMenu && (
+                        <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                          <button
+                            onClick={handleExportDocx}
+                            disabled={exporting}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 rounded-t-lg disabled:opacity-60"
+                          >
+                            <FileText className="w-4 h-4" />
+                            Export DOCX
+                          </button>
+                          <button
+                            onClick={handleExportPdf}
+                            disabled={exporting}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 rounded-b-lg disabled:opacity-60"
+                          >
+                            <FileDown className="w-4 h-4" />
+                            Export PDF
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <button
                       onClick={() => router.push('/dashboard/proposals')}
                       className="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-800 bg-gradient-to-r from-gray-100 via-gray-50 to-white border border-gray-200 shadow-md shadow-gray-100 hover:from-gray-50 hover:via-white hover:to-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 transition-all"
@@ -441,6 +563,69 @@ export default function ProposalDetailPage() {
               onDuplicate={handleDuplicate}
               duplicating={duplicating}
             />
+          )}
+
+          {/* Save as Template Modal */}
+          {showSaveAsTemplateModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div className="p-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">Save as Template</h2>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Save this proposal as a reusable template. The template will include all sections and formatting, but client-specific data will be cleared.
+                  </p>
+                  <form onSubmit={handleSaveAsTemplate} className="space-y-4">
+                    <div>
+                      <label htmlFor="templateName" className="block text-sm font-medium text-gray-700">
+                        Template Name *
+                      </label>
+                      <input
+                        type="text"
+                        id="templateName"
+                        required
+                        value={templateName}
+                        onChange={(e) => setTemplateName(e.target.value)}
+                        placeholder="Enter template name"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="templateCategory" className="block text-sm font-medium text-gray-700">
+                        Category (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        id="templateCategory"
+                        value={templateCategory}
+                        onChange={(e) => setTemplateCategory(e.target.value)}
+                        placeholder="e.g., Sales, Consulting"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSaveAsTemplateModal(false)
+                          setTemplateName('')
+                          setTemplateCategory('')
+                        }}
+                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={savingAsTemplate}
+                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {savingAsTemplate ? 'Saving...' : 'Save Template'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
