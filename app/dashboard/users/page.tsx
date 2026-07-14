@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import toast from 'react-hot-toast'
 import { Edit2, Power, PowerOff, Trash2 } from 'lucide-react'
+import PasswordInput from '@/components/PasswordInput'
 
 interface Permission {
   id: string
@@ -77,8 +79,9 @@ export default function UsersPage() {
       }
       setUsers(users.filter(u => u.id !== userId))
       setDeleteConfirm(null)
+      toast.success('User deleted successfully')
     } catch (err: any) {
-      alert(err.message)
+      toast.error(err.message)
     }
   }
 
@@ -101,8 +104,9 @@ export default function UsersPage() {
       }
       setUsers(users.map(u => u.id === statusConfirm.id ? { ...u, isActive: statusConfirm.activate } : u))
       setStatusConfirm(null)
+      toast.success(statusConfirm.activate ? 'User activated' : 'User deactivated')
     } catch (err: any) {
-      alert(err.message)
+      toast.error(err.message)
     }
   }
 
@@ -441,6 +445,7 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
       }
 
       onSuccess()
+      toast.success('User created successfully')
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -501,18 +506,14 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password *
-            </label>
-            <input
-              type="password"
-              required
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <PasswordInput
+            id="create-password"
+            label="Password *"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required
+            className="rounded-lg"
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -675,6 +676,7 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
       }
 
       onSuccess()
+      toast.success('User updated successfully')
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -735,17 +737,13 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              New Password (leave blank to keep current)
-            </label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <PasswordInput
+            id="edit-password"
+            label="New Password (leave blank to keep current)"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            className="rounded-lg"
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

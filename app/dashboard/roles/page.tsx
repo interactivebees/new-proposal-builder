@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import toast from 'react-hot-toast'
 
 interface Permission {
   id: string
@@ -71,8 +72,9 @@ export default function RolesPage() {
       }
       setRoles(roles.filter(r => r.id !== roleId))
       setDeleteConfirm(null)
+      toast.success('Role deleted successfully')
     } catch (err: any) {
-      alert(err.message)
+      toast.error(err.message)
     }
   }
 

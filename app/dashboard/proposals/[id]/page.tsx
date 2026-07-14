@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { formatDate } from '@/lib/formatDate'
+import toast from 'react-hot-toast'
 import { Download, FileText, FileDown, Save } from 'lucide-react'
 
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
@@ -234,14 +235,14 @@ export default function ProposalDetailPage() {
         setShowSaveAsTemplateModal(false)
         setTemplateName('')
         setTemplateCategory('')
-        alert(`Template "${template.name}" created successfully!`)
+        toast.success(`Template "${template.name}" created successfully`)
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to save as template')
+        toast.error(data.error || 'Failed to save as template')
       }
     } catch (error) {
       console.error('Error saving as template:', error)
-      alert('An error occurred')
+      toast.error('An error occurred')
     } finally {
       setSavingAsTemplate(false)
     }

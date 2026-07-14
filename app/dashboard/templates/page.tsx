@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 interface Template {
   id: string
@@ -49,11 +50,11 @@ export default function TemplatesPage() {
       if (res.ok) {
         setTemplates(templates.filter(t => t.id !== id))
       } else {
-        alert('Failed to delete template')
+        toast.error('Failed to delete template')
       }
     } catch (error) {
       console.error('Error deleting template:', error)
-      alert('An error occurred')
+      toast.error('An error occurred')
     }
   }
 

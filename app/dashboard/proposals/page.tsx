@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatDate } from '@/lib/formatDate'
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 
 interface Proposal {
   id: string
@@ -54,11 +55,11 @@ export default function ProposalsPage() {
       if (res.ok) {
         setProposals(proposals.filter(p => p.id !== id))
       } else {
-        alert('Failed to delete proposal')
+        toast.error('Failed to delete proposal')
       }
     } catch (error) {
       console.error('Error deleting proposal:', error)
-      alert('Failed to delete proposal')
+      toast.error('Failed to delete proposal')
     } finally {
       setDeleting(null)
     }
@@ -79,11 +80,11 @@ export default function ProposalsPage() {
         ))
       } else {
         const error = await res.json()
-        alert(error.error || 'Failed to update status')
+        toast.error(error.error || 'Failed to update status')
       }
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Failed to update status')
+      toast.error('Failed to update status')
     }
   }
 

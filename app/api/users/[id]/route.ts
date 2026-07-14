@@ -92,7 +92,10 @@ export async function PUT(
     if (roleId) updateData.role = { connect: { id: roleId } }
     if (companyName !== undefined) updateData.companyName = companyName
     if (phone !== undefined) updateData.phone = phone
-    if (password) updateData.password = await hash(password, 10)
+    if (password) {
+      updateData.password = await hash(password, 10)
+      updateData.tokenVersion = { increment: 1 }
+    }
     if (customPermissionIds) {
       updateData.customPermissions = {
         set: customPermissionIds.map((pid: string) => ({ id: pid })),
@@ -186,7 +189,7 @@ export async function PATCH(
       const newStatus = isActive !== undefined ? isActive : !user.isActive
       await prisma.user.update({
         where: { id },
-        data: { isActive: newStatus },
+        data: { isActive: newStatus, tokenVersion: { increment: 1 } },
       })
 
       return NextResponse.json({ 
@@ -227,10 +230,11 @@ export async function PATCH(
       
       await prisma.user.update({
         where: { id },
-        data: { 
+        data: {
           password: hashedPassword,
           resetToken: null,
           resetTokenExpiry: null,
+          tokenVersion: { increment: 1 },
         },
       })
 
