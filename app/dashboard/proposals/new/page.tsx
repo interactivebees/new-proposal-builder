@@ -214,10 +214,10 @@ function NewProposalForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Create New Proposal</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-heading)] mb-6">Create New Proposal</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
@@ -228,14 +228,14 @@ function NewProposalForm() {
 
             {/* Template Selector */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <label htmlFor="template" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="template" className="block text-sm font-medium text-[var(--text-body)] mb-2">
                 Start with a Template (Optional)
               </label>
               <select
                 id="template"
                 value={selectedTemplateId}
                 onChange={(e) => setSelectedTemplateId(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">-- Start from scratch --</option>
                 {templates.map((template) => (
@@ -251,9 +251,9 @@ function NewProposalForm() {
               )}
             </div>
 
-            <div className="bg-white shadow rounded-lg p-6 space-y-4">
+            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 space-y-4">
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="title" className="block text-sm font-medium text-[var(--text-body)]">
                   Proposal Title *
                 </label>
                 <input
@@ -262,13 +262,13 @@ function NewProposalForm() {
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="clientName" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="clientName" className="block text-sm font-medium text-[var(--text-body)]">
                     Client Name
                   </label>
                   <input
@@ -276,12 +276,12 @@ function NewProposalForm() {
                     id="clientName"
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="clientCompany" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="clientCompany" className="block text-sm font-medium text-[var(--text-body)]">
                     Client Company
                   </label>
                   <input
@@ -289,13 +289,13 @@ function NewProposalForm() {
                     id="clientCompany"
                     value={clientCompany}
                     onChange={(e) => setClientCompany(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="clientEmail" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="clientEmail" className="block text-sm font-medium text-[var(--text-body)]">
                   Client Email
                 </label>
                 <input
@@ -303,12 +303,12 @@ function NewProposalForm() {
                   id="clientEmail"
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label htmlFor="clientAddress" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="clientAddress" className="block text-sm font-medium text-[var(--text-body)]">
                   Client Address
                 </label>
                 <textarea
@@ -316,12 +316,12 @@ function NewProposalForm() {
                   value={clientAddress}
                   onChange={(e) => setClientAddress(e.target.value)}
                   rows={2}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label htmlFor="clientLogo" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="clientLogo" className="block text-sm font-medium text-[var(--text-body)]">
                   Client Logo
                 </label>
                 <div className="mt-1 flex items-center space-x-4">
@@ -331,9 +331,9 @@ function NewProposalForm() {
                     accept="image/*"
                     onChange={handleLogoUpload}
                     disabled={uploading}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="block w-full text-sm text-[var(--text-muted)] file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
-                  {uploading && <span className="text-sm text-gray-500">Uploading...</span>}
+                  {uploading && <span className="text-sm text-[var(--text-muted)]">Uploading...</span>}
                 </div>
                 {clientLogoUrl && (
                   <div className="mt-2">
@@ -343,9 +343,9 @@ function NewProposalForm() {
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Proposal Sections</h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Proposal Sections</h2>
+            <p className="text-sm text-[var(--text-muted)] mb-4">
               Organize your proposal into multiple sections. You can add, reorder, and customize each section.
             </p>
             <SectionEditor sections={sections} onChange={setSections} />
@@ -355,7 +355,7 @@ function NewProposalForm() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="px-4 py-2 border border-[var(--border-default)] rounded-md shadow-sm text-sm font-medium text-[var(--text-body)] bg-[var(--bg-card)] hover:bg-[var(--bg-page)]"
             >
               Cancel
             </button>
@@ -385,7 +385,7 @@ function NewProposalForm() {
 
 export default function NewProposalPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">Loading...</div>}>
       <NewProposalForm />
     </Suspense>
   )

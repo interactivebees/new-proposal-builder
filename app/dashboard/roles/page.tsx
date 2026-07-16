@@ -87,7 +87,7 @@ export default function RolesPage() {
       case 'BUSINESS_EXPERT':
         return 'bg-green-100 text-green-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-[var(--badge-bg)] text-gray-800'
     }
   }
 
@@ -97,14 +97,14 @@ export default function RolesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
+        <div className="text-[var(--text-muted)]">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {error && (
@@ -115,8 +115,8 @@ export default function RolesPage() {
 
           <div className="mb-6 flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900">Roles ({roles.length})</h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <h2 className="text-2xl font-semibold text-[var(--text-heading)]">Roles ({roles.length})</h2>
+              <p className="text-sm text-[var(--text-muted)] mt-1">
                 Manage roles and their default permissions
               </p>
             </div>
@@ -130,14 +130,14 @@ export default function RolesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {roles.map((role) => (
-              <div key={role.id} className="bg-white shadow rounded-lg p-4 hover:shadow-md transition">
+              <div key={role.id} className="bg-[var(--bg-card)] shadow rounded-lg p-4 hover:shadow-md transition">
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(role.name)}`}>
                       {formatRole(role.name)}
                     </span>
                     {role.isDefault && (
-                      <span className="ml-2 px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                      <span className="ml-2 px-2 py-0.5 text-xs bg-[var(--badge-bg)] text-[var(--text-muted)] rounded">
                         Default
                       </span>
                     )}
@@ -163,11 +163,11 @@ export default function RolesPage() {
                 </div>
                 
                 {role.description && (
-                  <p className="text-sm text-gray-600 mb-3">{role.description}</p>
+                  <p className="text-sm text-[var(--text-muted)] mb-3">{role.description}</p>
                 )}
                 
                 <div className="border-t pt-3">
-                  <div className="text-xs font-medium text-gray-500 uppercase mb-2">
+                  <div className="text-xs font-medium text-[var(--text-muted)] uppercase mb-2">
                     Default Permissions ({role.permissions.length})
                   </div>
                   <div className="flex flex-wrap gap-1">
@@ -186,7 +186,7 @@ export default function RolesPage() {
                   </div>
                 </div>
                 
-                <div className="border-t mt-3 pt-3 text-xs text-gray-500">
+                <div className="border-t mt-3 pt-3 text-xs text-[var(--text-muted)]">
                   {role._count?.users || 0} user(s) with this role
                 </div>
               </div>
@@ -226,15 +226,15 @@ export default function RolesPage() {
 
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-[var(--bg-card)] rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Confirm Delete</h3>
+            <p className="text-[var(--text-muted)] mb-6">
               Are you sure you want to delete this role? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
               >
                 Cancel
               </button>
@@ -319,8 +319,8 @@ function RoleModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-[var(--bg-card)] rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold text-[var(--text-heading)] mb-4">
           {mode === 'create' ? 'Create New Role' : 'Edit Role'}
         </h3>
         
@@ -332,7 +332,7 @@ function RoleModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Role Name *
             </label>
             <input
@@ -341,12 +341,12 @@ function RoleModal({
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value.toUpperCase().replace(/\s/g, '_') })}
               placeholder="e.g., MANAGER"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Description
             </label>
             <input
@@ -354,7 +354,7 @@ function RoleModal({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Brief description of this role"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -364,23 +364,23 @@ function RoleModal({
                 type="checkbox"
                 checked={formData.isDefault}
                 onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                className="rounded border-gray-300"
+                className="rounded border-[var(--border-default)]"
               />
-              <span className="font-medium text-gray-700">Set as default role</span>
+              <span className="font-medium text-[var(--text-body)]">Set as default role</span>
             </label>
-            <p className="text-xs text-gray-500 ml-6 mt-1">
+            <p className="text-xs text-[var(--text-muted)] ml-6 mt-1">
               New users will be assigned this role by default
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Default Permissions
             </label>
-            <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-2 space-y-2">
+            <div className="max-h-48 overflow-y-auto border border-[var(--border-default)] rounded-lg p-2 space-y-2">
               {Object.entries(groupedPermissions).map(([category, perms]) => (
                 <div key={category}>
-                  <div className="text-xs font-medium text-gray-500 uppercase mb-1">{category}</div>
+                  <div className="text-xs font-medium text-[var(--text-muted)] uppercase mb-1">{category}</div>
                   <div className="flex flex-wrap gap-2">
                     {perms.map(perm => (
                       <label key={perm.id} className="flex items-center space-x-1 text-sm">
@@ -388,7 +388,7 @@ function RoleModal({
                           type="checkbox"
                           checked={formData.permissionIds.includes(perm.id)}
                           onChange={() => togglePermission(perm.id)}
-                          className="rounded border-gray-300"
+                          className="rounded border-[var(--border-default)]"
                         />
                         <span>{perm.name}</span>
                       </label>
@@ -403,7 +403,7 @@ function RoleModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
             >
               Cancel
             </button>

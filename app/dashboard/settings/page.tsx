@@ -168,20 +168,20 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
+        <div className="text-[var(--text-muted)]">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Change Password Section */}
-          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <div className="bg-[var(--bg-card)] shadow-md rounded-lg p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-[var(--text-heading)] flex items-center gap-2">
                 <span>🔒</span> Change Password
               </h2>
               {!showPasswordForm && (
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                       setNewPassword('')
                       setConfirmPassword('')
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
                   >
                     Cancel
                   </button>
@@ -252,19 +252,19 @@ export default function SettingsPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-white shadow-md rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-[var(--bg-card)] shadow-md rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4 flex items-center gap-2">
                 <span>🏢</span> Company Logo &amp; Branding
               </h2>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-body)] mb-2">
                     Company Logo
                   </label>
                   <div className="flex items-center gap-4">
                     {logoPreview && (
-                      <div className="w-32 h-32 border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                      <div className="w-32 h-32 border-2 border-[var(--border-light)] rounded-lg overflow-hidden bg-[var(--bg-page)] flex items-center justify-center">
                         <img src={logoPreview} alt="Company Logo" className="max-w-full max-h-full object-contain" />
                       </div>
                     )}
@@ -273,122 +273,122 @@ export default function SettingsPage() {
                         type="file"
                         accept="image/*"
                         onChange={handleLogoUpload}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                        className="block w-full text-sm text-[var(--text-muted)] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                       />
-                      <p className="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
+                      <p className="mt-1 text-xs text-[var(--text-muted)]">PNG, JPG, GIF up to 2MB</p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
                     Company Name
                   </label>
                   <input
                     type="text"
                     value={settings.companyName}
                     onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Your Company Name"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow-md rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-[var(--bg-card)] shadow-md rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4 flex items-center gap-2">
                 <span>📞</span> Contact Information
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
                     Email
                   </label>
                   <input
                     type="email"
                     value={settings.email}
                     onChange={(e) => setSettings({ ...settings, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="company@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
                     Phone
                   </label>
                   <input
                     type="tel"
                     value={settings.phone}
                     onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
                     Address
                   </label>
                   <textarea
                     value={settings.address}
                     onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="123 Business St, City, State, ZIP"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
                     Website
                   </label>
                   <input
                     type="url"
                     value={settings.website}
                     onChange={(e) => setSettings({ ...settings, website: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="https://www.example.com"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow-md rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-[var(--bg-card)] shadow-md rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4 flex items-center gap-2">
                 <span>⚙️</span> Default Proposal Settings
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
                     Payment Terms
                   </label>
                   <input
                     type="text"
                     value={settings.defaultPaymentTerms}
                     onChange={(e) => setSettings({ ...settings, defaultPaymentTerms: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Net 30"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
                     Validity Days
                   </label>
                   <input
                     type="number"
                     value={settings.defaultValidityDays}
                     onChange={(e) => setSettings({ ...settings, defaultValidityDays: parseInt(e.target.value) || 30 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="1"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
                     Tax Rate (%)
                   </label>
                   <input
@@ -396,7 +396,7 @@ export default function SettingsPage() {
                     step="0.01"
                     value={settings.taxRate}
                     onChange={(e) => setSettings({ ...settings, taxRate: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
                     max="100"
                   />
@@ -407,7 +407,7 @@ export default function SettingsPage() {
             <div className="flex justify-end gap-3">
               <Link
                 href="/dashboard"
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                className="px-6 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)] transition"
               >
                 Cancel
               </Link>

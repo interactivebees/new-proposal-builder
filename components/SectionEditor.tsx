@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 
 const Word365Editor = dynamic(() => import('@/components/Word365Editor'), {
   ssr: false,
-  loading: () => <div className="flex items-center justify-center p-8"><div className="text-gray-600">Loading editor...</div></div>
+  loading: () => <div className="flex items-center justify-center p-8"><div className="text-[var(--text-muted)]">Loading editor...</div></div>
 })
 
 interface Section {
@@ -88,14 +88,14 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
         const isExpanded = expandedSections.includes(section.id)
 
         return (
-          <div key={section.id} className="border border-gray-300 rounded-lg overflow-hidden">
+          <div key={section.id} className="border border-[var(--border-default)] rounded-lg overflow-hidden">
             {/* Section Header */}
-            <div className="bg-gray-50 px-4 py-3 flex items-center justify-between">
+            <div className="bg-[var(--bg-page)] px-4 py-3 flex items-center justify-between">
               <div className="flex items-center space-x-3 flex-1">
                 <button
                   type="button"
                   onClick={() => toggleSection(section.id)}
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-[var(--text-muted)] hover:text-[var(--text-heading)]"
                 >
                   {isExpanded ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,14 +113,14 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
                     type="text"
                     value={section.title}
                     onChange={(e) => updateSection(section.id, { title: e.target.value })}
-                    className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm font-medium"
+                    className="flex-1 px-2 py-1 border border-[var(--border-default)] rounded text-sm font-medium"
                     placeholder="Section Title"
                   />
                 ) : (
-                  <h3 className="text-sm font-medium text-gray-900">{section.title}</h3>
+                  <h3 className="text-sm font-medium text-[var(--text-heading)]">{section.title}</h3>
                 )}
 
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-[var(--text-muted)]">
                   {section.type === 'text' ? '📝 Text' : 
                    section.type === 'pricing' ? '💰 Pricing' :
                    section.type === 'timeline' ? '📅 Timeline' : '📄 Custom'}
@@ -133,7 +133,7 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
                     type="button"
                     onClick={() => moveSection(section.id, 'up')}
                     disabled={index === 0}
-                    className="p-1 text-gray-600 hover:text-gray-900 disabled:opacity-30"
+                    className="p-1 text-[var(--text-muted)] hover:text-[var(--text-heading)] disabled:opacity-30"
                     title="Move Up"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
                     type="button"
                     onClick={() => moveSection(section.id, 'down')}
                     disabled={index === sections.length - 1}
-                    className="p-1 text-gray-600 hover:text-gray-900 disabled:opacity-30"
+                    className="p-1 text-[var(--text-muted)] hover:text-[var(--text-heading)] disabled:opacity-30"
                     title="Move Down"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,14 +167,14 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
 
             {/* Section Content */}
             {isExpanded && (
-              <div className="p-4 bg-white">
+              <div className="p-4 bg-[var(--bg-card)]">
                 {!readOnly && (
                   <div className="mb-3">
-                    <label className="block text-xs text-gray-600 mb-1">Section Type</label>
+                    <label className="block text-xs text-[var(--text-muted)] mb-1">Section Type</label>
                     <select
                       value={section.type}
                       onChange={(e) => updateSection(section.id, { type: e.target.value as any })}
-                      className="text-sm border border-gray-300 rounded px-2 py-1"
+                      className="text-sm border border-[var(--border-default)] rounded px-2 py-1"
                     >
                       <option value="text">Text Content</option>
                       <option value="pricing">Pricing Table</option>
@@ -199,7 +199,7 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
         <button
           type="button"
           onClick={addSection}
-          className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition"
+          className="w-full py-3 border-2 border-dashed border-[var(--border-default)] rounded-lg text-[var(--text-muted)] hover:border-blue-500 hover:text-blue-600 transition"
         >
           + Add New Section
         </button>

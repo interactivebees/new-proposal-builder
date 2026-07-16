@@ -119,7 +119,7 @@ export default function UsersPage() {
       case 'BUSINESS_EXPERT':
         return 'bg-green-100 text-green-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-[var(--badge-bg)] text-gray-800'
     }
   }
 
@@ -137,14 +137,14 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
+        <div className="text-[var(--text-muted)]">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {error && (
@@ -154,7 +154,7 @@ export default function UsersPage() {
           )}
 
           <div className="mb-6 flex justify-between items-center">
-            <h2 className="text-2xl font-semibold text-gray-900">Users ({users.length})</h2>
+            <h2 className="text-2xl font-semibold text-[var(--text-heading)]">Users ({users.length})</h2>
             <button
               onClick={() => setShowCreateModal(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
@@ -163,43 +163,43 @@ export default function UsersPage() {
             </button>
           </div>
 
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-[var(--bg-card)] shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-[var(--border-light)]">
+              <thead className="bg-[var(--bg-page)]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                     Permissions
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                     Company
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                     Phone
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[var(--bg-card)] divide-y divide-[var(--border-light)]">
                 {users.map((user) => {
                   const effectivePerms = getEffectivePermissions(user)
                   return (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                    <tr key={user.id} className="hover:bg-[var(--bg-page)]">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm font-medium text-[var(--text-heading)]">{user.name}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-600">{user.email}</div>
+                        <div className="text-sm text-[var(--text-muted)]">{user.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(user.role?.name || '')}`}>
@@ -211,23 +211,23 @@ export default function UsersPage() {
                           {effectivePerms.slice(0, 4).map((perm) => (
                             <span
                               key={perm.id}
-                              className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded"
+                              className="px-2 py-0.5 text-xs bg-[var(--badge-bg)] text-[var(--text-body)] rounded"
                               title={perm.description}
                             >
                               {perm.name}
                             </span>
                           ))}
                           {effectivePerms.length > 4 && (
-                            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-500 rounded">
+                            <span className="px-2 py-0.5 text-xs bg-[var(--badge-bg)] text-[var(--text-muted)] rounded">
                               +{effectivePerms.length - 4}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-muted)]">
                         {user.companyName || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-muted)]">
                         {user.phone || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -308,15 +308,15 @@ export default function UsersPage() {
 
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-[var(--bg-card)] rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Confirm Delete</h3>
+            <p className="text-[var(--text-muted)] mb-6">
               Are you sure you want to delete this user? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
               >
                 Cancel
               </button>
@@ -334,7 +334,7 @@ export default function UsersPage() {
       {/* Status Change Confirmation Modal */}
       {statusConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-[var(--bg-card)] rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
               {statusConfirm.activate ? (
                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -349,11 +349,11 @@ export default function UsersPage() {
                   </svg>
                 </div>
               )}
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-[var(--text-heading)]">
                 {statusConfirm.activate ? 'Activate User' : 'Deactivate User'}
               </h3>
             </div>
-            <p className="text-gray-600 mb-6">
+            <p className="text-[var(--text-muted)] mb-6">
               {statusConfirm.activate 
                 ? 'Are you sure you want to activate this user? They will be able to sign in again.'
                 : 'Are you sure you want to deactivate this user? They will not be able to sign in until activated again.'
@@ -362,7 +362,7 @@ export default function UsersPage() {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setStatusConfirm(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
               >
                 Cancel
               </button>
@@ -470,8 +470,8 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New User</h3>
+      <div className="bg-[var(--bg-card)] rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Create New User</h3>
         
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
@@ -481,7 +481,7 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Name *
             </label>
             <input
@@ -489,12 +489,12 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Email *
             </label>
             <input
@@ -502,7 +502,7 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -516,14 +516,14 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Role *
             </label>
             <select
               required
               value={formData.roleId}
               onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {roles.map(role => (
                 <option key={role.id} value={role.id}>
@@ -534,13 +534,13 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Additional Permissions
             </label>
-            <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-2 space-y-2">
+            <div className="max-h-40 overflow-y-auto border border-[var(--border-default)] rounded-lg p-2 space-y-2">
               {Object.entries(groupedPermissions).map(([category, perms]) => (
                 <div key={category}>
-                  <div className="text-xs font-medium text-gray-500 uppercase mb-1">{category}</div>
+                  <div className="text-xs font-medium text-[var(--text-muted)] uppercase mb-1">{category}</div>
                   <div className="flex flex-wrap gap-2">
                     {perms.map(perm => (
                       <label key={perm.id} className="flex items-center space-x-1 text-sm">
@@ -548,7 +548,7 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
                           type="checkbox"
                           checked={formData.customPermissionIds.includes(perm.id)}
                           onChange={() => toggleCustomPermission(perm.id)}
-                          className="rounded border-gray-300"
+                          className="rounded border-[var(--border-default)]"
                         />
                         <span>{perm.name}</span>
                       </label>
@@ -560,26 +560,26 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Company Name
             </label>
             <input
               type="text"
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Phone
             </label>
             <input
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -587,7 +587,7 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
             >
               Cancel
             </button>
@@ -701,8 +701,8 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit User</h3>
+      <div className="bg-[var(--bg-card)] rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Edit User</h3>
         
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
@@ -712,7 +712,7 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Name *
             </label>
             <input
@@ -720,12 +720,12 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Email *
             </label>
             <input
@@ -733,7 +733,7 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -746,14 +746,14 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Role *
             </label>
             <select
               required
               value={formData.roleId}
               onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {roles.map(role => (
                 <option key={role.id} value={role.id}>
@@ -764,13 +764,13 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Additional Permissions
             </label>
-            <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-2 space-y-2">
+            <div className="max-h-40 overflow-y-auto border border-[var(--border-default)] rounded-lg p-2 space-y-2">
               {Object.entries(groupedPermissions).map(([category, perms]) => (
                 <div key={category}>
-                  <div className="text-xs font-medium text-gray-500 uppercase mb-1">{category}</div>
+                  <div className="text-xs font-medium text-[var(--text-muted)] uppercase mb-1">{category}</div>
                   <div className="flex flex-wrap gap-2">
                     {perms.map(perm => (
                       <label key={perm.id} className="flex items-center space-x-1 text-sm">
@@ -778,7 +778,7 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
                           type="checkbox"
                           checked={formData.customPermissionIds.includes(perm.id)}
                           onChange={() => toggleCustomPermission(perm.id)}
-                          className="rounded border-gray-300"
+                          className="rounded border-[var(--border-default)]"
                         />
                         <span>{perm.name}</span>
                       </label>
@@ -790,26 +790,26 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Company Name
             </label>
             <input
               type="text"
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
               Phone
             </label>
             <input
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -817,7 +817,7 @@ function EditUserModal({ user, onClose, onSuccess }: { user: User; onClose: () =
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
             >
               Cancel
             </button>

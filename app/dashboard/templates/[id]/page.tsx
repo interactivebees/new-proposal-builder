@@ -54,17 +54,17 @@ export default function TemplateDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading template...</div>
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
+        <div className="text-[var(--text-muted)]">Loading template...</div>
       </div>
     )
   }
 
   if (!template) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Template not found</p>
+          <p className="text-[var(--text-muted)] mb-4">Template not found</p>
           <Link href="/dashboard/templates" className="text-blue-600 hover:text-blue-800">
             Back to Templates
           </Link>
@@ -74,18 +74,18 @@ export default function TemplateDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 mb-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{template.name}</h1>
+                <h1 className="text-2xl font-bold text-[var(--text-heading)]">{template.name}</h1>
               </div>
               <div className="flex space-x-3">
                 <Link
                   href="/dashboard/templates"
-                  className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                  className="px-4 py-2 border border-[var(--border-default)] rounded hover:bg-[var(--bg-page)]"
                 >
                   Back
                 </Link>
@@ -107,12 +107,12 @@ export default function TemplateDetailPage() {
             <div className="mt-4 pt-4 border-t">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Created By</p>
-                  <p className="text-sm font-medium text-gray-900">{template.creator.name}</p>
+                  <p className="text-sm text-[var(--text-muted)]">Created By</p>
+                  <p className="text-sm font-medium text-[var(--text-heading)]">{template.creator.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Created</p>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm text-[var(--text-muted)]">Created</p>
+                  <p className="text-sm font-medium text-[var(--text-heading)]">
                     {new Date(template.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -120,8 +120,8 @@ export default function TemplateDetailPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Template Preview</h2>
+          <div className="bg-[var(--bg-card)] shadow rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Template Preview</h2>
             <SectionEditor
               sections={template.sections?.sections || []}
               onChange={() => {}}

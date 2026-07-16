@@ -63,10 +63,10 @@ export default function NewTemplatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Create New Template</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-heading)] mb-6">Create New Template</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
@@ -75,9 +75,9 @@ export default function NewTemplatePage() {
               </div>
             )}
 
-            <div className="bg-white shadow rounded-lg p-6 space-y-4">
+            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="name" className="block text-sm font-medium text-[var(--text-body)]">
                   Template Name *
                 </label>
                 <input
@@ -86,13 +86,13 @@ export default function NewTemplatePage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., Standard Proposal Template"
                 />
               </div>
 
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="category" className="block text-sm font-medium text-[var(--text-body)]">
                   Category
                 </label>
                 <input
@@ -100,15 +100,15 @@ export default function NewTemplatePage() {
                   id="category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., Sales, Marketing, Consulting"
                 />
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Template Sections</h2>
-              <p className="text-sm text-gray-600 mb-4">
+            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Template Sections</h2>
+              <p className="text-sm text-[var(--text-muted)] mb-4">
                 Define the structure and default content for proposals using this template.
               </p>
               <SectionEditor sections={sections} onChange={setSections} />
@@ -118,7 +118,7 @@ export default function NewTemplatePage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                className="px-4 py-2 border border-[var(--border-default)] rounded-md shadow-sm text-sm font-medium text-[var(--text-body)] bg-[var(--bg-card)] hover:bg-[var(--bg-page)]"
               >
                 Cancel
               </button>

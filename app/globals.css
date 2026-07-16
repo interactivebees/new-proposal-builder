@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --bg-page: #f9fafb;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --border-default: #d1d5db;
+  --border-light: #e5e7eb;
+  --text-heading: #111827;
+  --text-body: #374151;
+  --text-muted: #6b7280;
+  --hover-bg: #f9fafb;
+  --badge-bg: #f3f4f6;
 }
 
 @theme inline {
@@ -16,6 +28,26 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --bg-page: #030712;
+    --bg-card: #111827;
+    --bg-input: #1f2937;
+    --border-default: #4b5563;
+    --border-light: #374151;
+    --text-heading: #f9fafb;
+    --text-body: #d1d5db;
+    --text-muted: #9ca3af;
+    --hover-bg: #1f2937;
+    --badge-bg: #374151;
+  }
+
+  input, textarea, select {
+    background-color: var(--bg-input);
+    color: var(--text-body);
+    border-color: var(--border-default);
+  }
+
+  label {
+    color: var(--text-body);
   }
 }
 

@@ -273,29 +273,29 @@ export default function ProposalDetailPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      DRAFT: 'bg-gray-100 text-gray-800',
+      DRAFT: 'bg-[var(--badge-bg)] text-gray-800',
       IN_REVIEW: 'bg-yellow-100 text-yellow-800',
       PENDING_APPROVAL: 'bg-blue-100 text-blue-800',
       APPROVED: 'bg-green-100 text-green-800',
       REJECTED: 'bg-red-100 text-red-800',
       SENT: 'bg-purple-100 text-purple-800'
     }
-    return colors[status] || 'bg-gray-100 text-gray-800'
+    return colors[status] || 'bg-[var(--badge-bg)] text-gray-800'
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading proposal...</div>
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
+        <div className="text-[var(--text-muted)]">Loading proposal...</div>
       </div>
     )
   }
 
   if (!proposal) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Proposal not found</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-heading)] mb-4">Proposal not found</h2>
           <button
             onClick={() => router.push('/dashboard/proposals')}
             className="text-blue-600 hover:text-blue-800"
@@ -308,11 +308,11 @@ export default function ProposalDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Header */}
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 mb-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 {editing ? (
@@ -320,16 +320,16 @@ export default function ProposalDetailPage() {
                     type="text"
                     value={editedTitle}
                     onChange={(e) => setEditedTitle(e.target.value)}
-                    className="text-2xl font-bold text-gray-900 border-b-2 border-blue-500 focus:outline-none w-full"
+                    className="text-2xl font-bold text-[var(--text-heading)] border-b-2 border-blue-500 focus:outline-none w-full"
                   />
                 ) : (
-                  <h1 className="text-2xl font-bold text-gray-900">{proposal.title}</h1>
+                  <h1 className="text-2xl font-bold text-[var(--text-heading)]">{proposal.title}</h1>
                 )}
                 <div className="mt-2 flex items-center space-x-4">
                   <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(proposal.status)}`}>
                     {proposal.status}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-[var(--text-muted)]">
                     Created by {proposal.creator.name}
                   </span>
                 </div>
@@ -352,7 +352,7 @@ export default function ProposalDetailPage() {
                         setEditedClientLogoUrl(proposal.clientLogoUrl || '')
                       }}
                       disabled={saving}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-gray-300 text-[var(--text-body)] rounded hover:bg-gray-400 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       Cancel
                     </button>
@@ -394,11 +394,11 @@ export default function ProposalDetailPage() {
                         {exporting ? 'Exporting...' : 'Export'}
                       </button>
                       {showExportMenu && (
-                        <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                        <div className="absolute right-0 mt-1 w-40 bg-[var(--bg-card)] rounded-lg shadow-lg border border-[var(--border-light)] z-50">
                           <button
                             onClick={handleExportDocx}
                             disabled={exporting}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 rounded-t-lg disabled:opacity-60"
+                            className="w-full px-4 py-2 text-left text-sm text-[var(--text-body)] hover:bg-[var(--badge-bg)] flex items-center gap-2 rounded-t-lg disabled:opacity-60"
                           >
                             <FileText className="w-4 h-4" />
                             Export DOCX
@@ -406,7 +406,7 @@ export default function ProposalDetailPage() {
                           <button
                             onClick={handleExportPdf}
                             disabled={exporting}
-                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2 rounded-b-lg disabled:opacity-60"
+                            className="w-full px-4 py-2 text-left text-sm text-[var(--text-body)] hover:bg-[var(--badge-bg)] flex items-center gap-2 rounded-b-lg disabled:opacity-60"
                           >
                             <FileDown className="w-4 h-4" />
                             Export PDF
@@ -416,7 +416,7 @@ export default function ProposalDetailPage() {
                     </div>
                     <button
                       onClick={() => router.push('/dashboard/proposals')}
-                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-800 bg-gradient-to-r from-gray-100 via-gray-50 to-white border border-gray-200 shadow-md shadow-gray-100 hover:from-gray-50 hover:via-white hover:to-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 transition-all"
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-800 bg-gradient-to-r from-gray-100 via-gray-50 to-white border border-[var(--border-light)] shadow-md shadow-gray-100 hover:from-gray-50 hover:via-white hover:to-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-300 transition-all"
                     >
                       Back
                     </button>
@@ -429,7 +429,7 @@ export default function ProposalDetailPage() {
             <div className="mt-4 pt-4 border-t">
               {/* Client Logo */}
               <div className="mb-4">
-                <p className="text-sm text-gray-500 mb-2">Client Logo</p>
+                <p className="text-sm text-[var(--text-muted)] mb-2">Client Logo</p>
                 {editing ? (
                   <div className="space-y-2">
                     {editedClientLogoUrl && (
@@ -445,9 +445,9 @@ export default function ProposalDetailPage() {
                         accept="image/*"
                         onChange={handleLogoUpload}
                         disabled={uploading}
-                        className="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        className="block text-sm text-[var(--text-muted)] file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                       />
-                      {uploading && <span className="text-sm text-gray-500">Uploading...</span>}
+                      {uploading && <span className="text-sm text-[var(--text-muted)]">Uploading...</span>}
                     </div>
                     {editedClientLogoUrl && (
                       <button
@@ -473,32 +473,32 @@ export default function ProposalDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Client Name</p>
-                  <p className="text-sm font-medium text-gray-900">{proposal.clientName || 'N/A'}</p>
+                  <p className="text-sm text-[var(--text-muted)]">Client Name</p>
+                  <p className="text-sm font-medium text-[var(--text-heading)]">{proposal.clientName || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Company</p>
-                  <p className="text-sm font-medium text-gray-900">{proposal.clientCompany || 'N/A'}</p>
+                  <p className="text-sm text-[var(--text-muted)]">Company</p>
+                  <p className="text-sm font-medium text-[var(--text-heading)]">{proposal.clientCompany || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="text-sm font-medium text-gray-900">{proposal.clientEmail || 'N/A'}</p>
+                  <p className="text-sm text-[var(--text-muted)]">Email</p>
+                  <p className="text-sm font-medium text-[var(--text-heading)]">{proposal.clientEmail || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Address</p>
-                  <p className="text-sm font-medium text-gray-900">{proposal.clientAddress || 'N/A'}</p>
+                  <p className="text-sm text-[var(--text-muted)]">Address</p>
+                  <p className="text-sm font-medium text-[var(--text-heading)]">{proposal.clientAddress || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Created</p>
-                  <p className="text-sm font-medium text-gray-900">{formatDate(proposal.createdAt)}</p>
+                  <p className="text-sm text-[var(--text-muted)]">Created</p>
+                  <p className="text-sm font-medium text-[var(--text-heading)]">{formatDate(proposal.createdAt)}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Proposal Sections</h2>
+          <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 mb-6">
+            <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Proposal Sections</h2>
             <SectionEditor
               sections={editing ? editedContent?.sections || [] : proposal.content?.sections || []}
               onChange={(sections) => setEditedContent({ ...editedContent, sections })}
@@ -508,27 +508,27 @@ export default function ProposalDetailPage() {
 
           {/* Pricing Items */}
           {proposal.pricingItems && proposal.pricingItems.length > 0 && (
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Pricing</h2>
-              <table className="min-w-full divide-y divide-gray-200">
+            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 mb-6">
+              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Pricing</h2>
+              <table className="min-w-full divide-y divide-[var(--border-light)]">
                 <thead>
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cost</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Frequency</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-muted)] uppercase">Service</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-muted)] uppercase">Cost</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-[var(--text-muted)] uppercase">Frequency</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-[var(--border-light)]">
                   {proposal.pricingItems.map((item) => (
                     <tr key={item.id}>
-                      <td className="px-4 py-2 text-sm text-gray-900">{item.serviceDescription}</td>
-                      <td className="px-4 py-2 text-sm text-gray-900">${item.cost.toLocaleString()}</td>
-                      <td className="px-4 py-2 text-sm text-gray-500">{item.frequency || 'one-time'}</td>
+                      <td className="px-4 py-2 text-sm text-[var(--text-heading)]">{item.serviceDescription}</td>
+                      <td className="px-4 py-2 text-sm text-[var(--text-heading)]">${item.cost.toLocaleString()}</td>
+                      <td className="px-4 py-2 text-sm text-[var(--text-muted)]">{item.frequency || 'one-time'}</td>
                     </tr>
                   ))}
-                  <tr className="bg-gray-50">
-                    <td className="px-4 py-2 text-sm font-semibold text-gray-900">Total</td>
-                    <td className="px-4 py-2 text-sm font-semibold text-gray-900">
+                  <tr className="bg-[var(--bg-page)]">
+                    <td className="px-4 py-2 text-sm font-semibold text-[var(--text-heading)]">Total</td>
+                    <td className="px-4 py-2 text-sm font-semibold text-[var(--text-heading)]">
                       ${proposal.pricingItems.reduce((sum, item) => sum + item.cost, 0).toLocaleString()}
                     </td>
                     <td></td>
@@ -540,16 +540,16 @@ export default function ProposalDetailPage() {
 
           {/* Comments */}
           {proposal.comments && proposal.comments.length > 0 && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Comments</h2>
+            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Comments</h2>
               <div className="space-y-4">
                 {proposal.comments.map((comment) => (
                   <div key={comment.id} className="border-l-4 border-blue-500 pl-4">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-sm font-medium text-gray-900">{comment.user.name}</span>
-                      <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
+                      <span className="text-sm font-medium text-[var(--text-heading)]">{comment.user.name}</span>
+                      <span className="text-xs text-[var(--text-muted)]">{formatDate(comment.createdAt)}</span>
                     </div>
-                    <p className="text-sm text-gray-700">{comment.content}</p>
+                    <p className="text-sm text-[var(--text-body)]">{comment.content}</p>
                   </div>
                 ))}
               </div>
@@ -568,15 +568,15 @@ export default function ProposalDetailPage() {
           {/* Save as Template Modal */}
           {showSaveAsTemplateModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="bg-[var(--bg-card)] rounded-lg shadow-xl max-w-md w-full mx-4">
                 <div className="p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">Save as Template</h2>
-                  <p className="text-sm text-gray-600 mb-6">
+                  <h2 className="text-xl font-bold text-[var(--text-heading)] mb-2">Save as Template</h2>
+                  <p className="text-sm text-[var(--text-muted)] mb-6">
                     Save this proposal as a reusable template. The template will include all sections and formatting, but client-specific data will be cleared.
                   </p>
                   <form onSubmit={handleSaveAsTemplate} className="space-y-4">
                     <div>
-                      <label htmlFor="templateName" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="templateName" className="block text-sm font-medium text-[var(--text-body)]">
                         Template Name *
                       </label>
                       <input
@@ -586,11 +586,11 @@ export default function ProposalDetailPage() {
                         value={templateName}
                         onChange={(e) => setTemplateName(e.target.value)}
                         placeholder="Enter template name"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
                     <div>
-                      <label htmlFor="templateCategory" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="templateCategory" className="block text-sm font-medium text-[var(--text-body)]">
                         Category (Optional)
                       </label>
                       <input
@@ -599,7 +599,7 @@ export default function ProposalDetailPage() {
                         value={templateCategory}
                         onChange={(e) => setTemplateCategory(e.target.value)}
                         placeholder="e.g., Sales, Consulting"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
                     <div className="flex justify-end space-x-3 pt-4">
@@ -610,7 +610,7 @@ export default function ProposalDetailPage() {
                           setTemplateName('')
                           setTemplateCategory('')
                         }}
-                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        className="px-4 py-2 border border-[var(--border-default)] rounded-md shadow-sm text-sm font-medium text-[var(--text-body)] bg-[var(--bg-card)] hover:bg-[var(--bg-page)]"
                       >
                         Cancel
                       </button>
@@ -648,53 +648,53 @@ function DuplicateModal({ onClose, onDuplicate, duplicating }: any) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Duplicate Proposal for New Client</h2>
+      <div className="bg-[var(--bg-card)] rounded-lg p-6 max-w-md w-full mx-4">
+        <h2 className="text-xl font-bold text-[var(--text-heading)] mb-4">Duplicate Proposal for New Client</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">New Proposal Title (optional)</label>
+            <label className="block text-sm font-medium text-[var(--text-body)]">New Proposal Title (optional)</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Leave blank to auto-generate"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Client Name</label>
+            <label className="block text-sm font-medium text-[var(--text-body)]">Client Name</label>
             <input
               type="text"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Client Company</label>
+            <label className="block text-sm font-medium text-[var(--text-body)]">Client Company</label>
             <input
               type="text"
               value={clientCompany}
               onChange={(e) => setClientCompany(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Client Email</label>
+            <label className="block text-sm font-medium text-[var(--text-body)]">Client Email</label>
             <input
               type="email"
               value={clientEmail}
               onChange={(e) => setClientEmail(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Client Address</label>
+            <label className="block text-sm font-medium text-[var(--text-body)]">Client Address</label>
             <textarea
               value={clientAddress}
               onChange={(e) => setClientAddress(e.target.value)}
               rows={2}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md"
             />
           </div>
           <div className="flex justify-end space-x-2 mt-6">
@@ -702,7 +702,7 @@ function DuplicateModal({ onClose, onDuplicate, duplicating }: any) {
               type="button"
               onClick={onClose}
               disabled={duplicating}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              className="px-4 py-2 bg-gray-300 text-[var(--text-body)] rounded hover:bg-gray-400"
             >
               Cancel
             </button>

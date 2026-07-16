@@ -100,7 +100,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
       Table.configure({
         resizable: true,
         HTMLAttributes: {
-          class: 'border-collapse border border-gray-300'
+          class: 'border-collapse border border-[var(--border-default)]'
         }
       }),
       TableRow,
@@ -189,17 +189,17 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
   }
 
   return (
-    <div className="border border-gray-300 rounded-lg shadow-sm bg-white">
+    <div className="border border-[var(--border-default)] rounded-lg shadow-sm bg-[var(--bg-card)]">
       {!readOnly && (
-        <div className="border-b border-gray-300 bg-gradient-to-b from-blue-50 to-white">
+        <div className="border-b border-[var(--border-default)] bg-gradient-to-b from-blue-50 to-white">
           {/* Font and Style Bar - Word 365 Style */}
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border-light)]">
             {/* Font Family Dropdown */}
             <div className="relative">
               <select
                 value={selectedFont}
                 onChange={(e) => applyFont(e.target.value)}
-                className="px-3 py-1.5 pr-8 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="px-3 py-1.5 pr-8 border border-[var(--border-default)] rounded text-sm bg-[var(--bg-card)] hover:bg-[var(--bg-page)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 style={{ minWidth: '150px' }}
               >
                 {fonts.map(font => (
@@ -215,7 +215,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
               <select
                 value={selectedFontSize}
                 onChange={(e) => applyFontSize(e.target.value)}
-                className="px-3 py-1.5 pr-8 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="px-3 py-1.5 pr-8 border border-[var(--border-default)] rounded text-sm bg-[var(--bg-card)] hover:bg-[var(--bg-page)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="default">Font Size</option>
                 {fontSizes.map(size => (
@@ -234,7 +234,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-2.5 py-1.5 rounded text-sm font-bold transition ${
                   editor.isActive('bold') 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-transparent'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-transparent'
                 }`}
                 title="Bold (Ctrl+B)"
               >
@@ -246,7 +246,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-2.5 py-1.5 rounded text-sm italic transition ${
                   editor.isActive('italic') 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-transparent'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-transparent'
                 }`}
                 title="Italic (Ctrl+I)"
               >
@@ -258,7 +258,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-2.5 py-1.5 rounded text-sm underline transition ${
                   editor.isActive('underline') 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-transparent'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-transparent'
                 }`}
                 title="Underline (Ctrl+U)"
               >
@@ -270,7 +270,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-2.5 py-1.5 rounded text-sm line-through transition ${
                   editor.isActive('strike') 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-transparent'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-transparent'
                 }`}
                 title="Strikethrough"
               >
@@ -288,14 +288,14 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                   setShowColorPicker(!showColorPicker)
                   setShowHighlightPicker(false)
                 }}
-                className="px-2.5 py-1.5 rounded text-sm bg-white text-gray-700 hover:bg-gray-100 border border-transparent transition flex items-center gap-1"
+                className="px-2.5 py-1.5 rounded text-sm bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-transparent transition flex items-center gap-1"
                 title="Text Color"
               >
                 <span>A</span>
                 <div className="w-4 h-1 bg-red-500 rounded"></div>
               </button>
               {showColorPicker && (
-                <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-gray-300 rounded shadow-lg z-10">
+                <div className="absolute top-full left-0 mt-1 p-2 bg-[var(--bg-card)] border border-[var(--border-default)] rounded shadow-lg z-10">
                   <div className="grid grid-cols-7 gap-1">
                     {colors.map(color => (
                       <button
@@ -305,7 +305,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                           editor.chain().focus().setColor(color).run()
                           setShowColorPicker(false)
                         }}
-                        className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition"
+                        className="w-6 h-6 rounded border border-[var(--border-default)] hover:scale-110 transition"
                         style={{ backgroundColor: color }}
                         title={color}
                       />
@@ -325,15 +325,15 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 }}
                 className={`px-2.5 py-1.5 rounded text-sm transition flex items-center gap-1 ${
                   editor.isActive('highlight') 
-                    ? 'bg-yellow-100 text-gray-900 border border-yellow-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-transparent'
+                    ? 'bg-yellow-100 text-[var(--text-heading)] border border-yellow-300' 
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-transparent'
                 }`}
                 title="Highlight"
               >
                 <span className="bg-yellow-300 px-1">ab</span>
               </button>
               {showHighlightPicker && (
-                <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-gray-300 rounded shadow-lg z-10">
+                <div className="absolute top-full left-0 mt-1 p-2 bg-[var(--bg-card)] border border-[var(--border-default)] rounded shadow-lg z-10">
                   <div className="grid grid-cols-6 gap-1">
                     {highlightColors.map(color => (
                       <button
@@ -343,7 +343,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                           editor.chain().focus().toggleHighlight({ color }).run()
                           setShowHighlightPicker(false)
                         }}
-                        className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition"
+                        className="w-6 h-6 rounded border border-[var(--border-default)] hover:scale-110 transition"
                         style={{ backgroundColor: color }}
                         title={color}
                       />
@@ -355,7 +355,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                       editor.chain().focus().unsetHighlight().run()
                       setShowHighlightPicker(false)
                     }}
-                    className="mt-2 w-full px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                    className="mt-2 w-full px-2 py-1 text-xs bg-[var(--badge-bg)] hover:bg-gray-200 rounded"
                   >
                     Remove Highlight
                   </button>
@@ -365,7 +365,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
           </div>
 
           {/* Paragraph Styles - Word 365 Style */}
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border-light)]">
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -373,7 +373,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-3 py-1.5 rounded text-sm font-semibold transition ${
                   editor.isActive('heading', { level: 1 }) 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
                 style={{ fontSize: '16px' }}
               >
@@ -385,7 +385,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-3 py-1.5 rounded text-sm font-semibold transition ${
                   editor.isActive('heading', { level: 2 }) 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
                 style={{ fontSize: '14px' }}
               >
@@ -397,7 +397,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-3 py-1.5 rounded text-sm transition ${
                   editor.isActive('heading', { level: 3 }) 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
               >
                 Heading 3
@@ -408,7 +408,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-3 py-1.5 rounded text-sm transition ${
                   editor.isActive('paragraph') 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
               >
                 Normal
@@ -425,7 +425,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-3 py-1.5 rounded text-sm transition flex items-center gap-1 ${
                   editor.isActive('bulletList') 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
                 title="Bullet List"
               >
@@ -444,7 +444,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-3 py-1.5 rounded text-sm transition flex items-center gap-1 ${
                   editor.isActive('orderedList') 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
                 title="Numbered List"
               >
@@ -469,7 +469,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-2.5 py-1.5 rounded text-sm transition ${
                   editor.isActive({ textAlign: 'left' }) 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
                 title="Align Left"
               >
@@ -486,7 +486,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-2.5 py-1.5 rounded text-sm transition ${
                   editor.isActive({ textAlign: 'center' }) 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
                 title="Align Center"
               >
@@ -503,7 +503,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-2.5 py-1.5 rounded text-sm transition ${
                   editor.isActive({ textAlign: 'right' }) 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
                 title="Align Right"
               >
@@ -520,7 +520,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 className={`px-2.5 py-1.5 rounded text-sm transition ${
                   editor.isActive({ textAlign: 'justify' }) 
                     ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-[var(--border-light)]'
                 }`}
                 title="Justify"
               >
@@ -540,7 +540,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
               <button
                 type="button"
                 onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-                className="px-2.5 py-1.5 rounded text-sm bg-white text-gray-700 hover:bg-gray-100 border border-transparent transition"
+                className="px-2.5 py-1.5 rounded text-sm bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] border border-transparent transition"
                 title="Insert Table"
               >
                 ⊞ Table
@@ -550,7 +550,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                   <button
                     type="button"
                     onClick={() => editor.chain().focus().addColumnAfter().run()}
-                    className="px-2 py-1.5 rounded text-xs bg-white text-gray-700 hover:bg-gray-100"
+                    className="px-2 py-1.5 rounded text-xs bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)]"
                     title="Add Column"
                   >
                     +Col
@@ -558,7 +558,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                   <button
                     type="button"
                     onClick={() => editor.chain().focus().addRowAfter().run()}
-                    className="px-2 py-1.5 rounded text-xs bg-white text-gray-700 hover:bg-gray-100"
+                    className="px-2 py-1.5 rounded text-xs bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)]"
                     title="Add Row"
                   >
                     +Row
@@ -566,7 +566,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                   <button
                     type="button"
                     onClick={() => editor.chain().focus().mergeCells().run()}
-                    className="px-2 py-1.5 rounded text-xs bg-white text-gray-700 hover:bg-gray-100"
+                    className="px-2 py-1.5 rounded text-xs bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)]"
                     title="Merge Selected Cells"
                   >
                     Merge
@@ -574,7 +574,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                   <button
                     type="button"
                     onClick={() => editor.chain().focus().splitCell().run()}
-                    className="px-2 py-1.5 rounded text-xs bg-white text-gray-700 hover:bg-gray-100"
+                    className="px-2 py-1.5 rounded text-xs bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)]"
                     title="Split Cell"
                   >
                     Split
@@ -599,7 +599,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 type="button"
                 onClick={() => editor.chain().focus().undo().run()}
                 disabled={!editor.can().undo()}
-                className="px-2.5 py-1.5 rounded text-sm bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                className="px-2.5 py-1.5 rounded text-sm bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] disabled:opacity-30 disabled:cursor-not-allowed transition"
                 title="Undo (Ctrl+Z)"
               >
                 ↶
@@ -608,7 +608,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
                 type="button"
                 onClick={() => editor.chain().focus().redo().run()}
                 disabled={!editor.can().redo()}
-                className="px-2.5 py-1.5 rounded text-sm bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                className="px-2.5 py-1.5 rounded text-sm bg-[var(--bg-card)] text-[var(--text-body)] hover:bg-[var(--badge-bg)] disabled:opacity-30 disabled:cursor-not-allowed transition"
                 title="Redo (Ctrl+Y)"
               >
                 ↷
@@ -619,7 +619,7 @@ export default function Word365Editor({ content, onChange, readOnly = false }: W
       )}
       <EditorContent 
         editor={editor} 
-        className="max-w-none p-6 min-h-[400px] focus:outline-none bg-white word365-editor-content"
+        className="max-w-none p-6 min-h-[400px] focus:outline-none bg-[var(--bg-card)] word365-editor-content"
         style={{
           fontFamily: selectedFont
         }}
