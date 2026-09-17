@@ -11,6 +11,11 @@ export default function Header() {
   const { data: session, status } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  // Do not render global header on authentication pages
+  if (pathname?.startsWith('/auth')) {
+    return null
+  }
+
   const user = session?.user
   const loading = status === 'loading'
 
