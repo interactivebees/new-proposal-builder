@@ -6,6 +6,7 @@ import { z } from 'zod'
 const proposalSchema = z.object({
   title: z.string().min(1),
   templateId: z.string().optional(),
+  clientId: z.string().optional(),
   content: z.any(),
   clientName: z.string().optional(),
   clientCompany: z.string().optional(),

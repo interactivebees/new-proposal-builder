@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { proposalId, stepName, comments } = body
+    const { proposalId, stepName, comments, assignedTo } = body
 
     if (!proposalId) {
       return NextResponse.json({ error: 'Proposal ID is required' }, { status: 400 })
@@ -44,6 +44,7 @@ export async function POST(req: Request) {
       data: {
         proposalId,
         requestedBy: session.user.id,
+        assignedTo: assignedTo || undefined,
         stepName: stepName || 'Technical Review',
         comments: comments || 'Submitted for approval',
         status: 'PENDING'

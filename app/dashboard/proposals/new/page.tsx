@@ -31,6 +31,13 @@ function NewProposalForm() {
   const [clientEmail, setClientEmail] = useState('')
   const [clientAddress, setClientAddress] = useState('')
   const [clientLogoUrl, setClientLogoUrl] = useState('')
+  const [clientId, setClientId] = useState('')
+  const [submittedByName, setSubmittedByName] = useState('Alok Ranjan')
+  const [submittedByEmail, setSubmittedByEmail] = useState('admin@interactivebees.com')
+  const [submittedByDesignation, setSubmittedByDesignation] = useState('Enterprise Sales Director')
+
+  const [clientsList, setClientsList] = useState<any[]>([])
+  const [selectedClientKey, setSelectedClientKey] = useState('')
   const [sections, setSections] = useState<Array<{
     id: string
     title: string
@@ -57,10 +64,23 @@ function NewProposalForm() {
   const [variableContent, setVariableContent] = useState('')
   const [pendingTemplateSections, setPendingTemplateSections] = useState<any[] | null>(null)
 
-  // Fetch available templates
+  // Fetch available templates & clients
   useEffect(() => {
     fetchTemplates()
+    fetchClients()
   }, [])
+
+  const fetchClients = async () => {
+    try {
+      const res = await fetch('/api/clients')
+      if (res.ok) {
+        const data = await res.json()
+        setClientsList(data)
+      }
+    } catch (err) {
+      console.error('Error fetching clients:', err)
+    }
+  }
 
   // Load template if selectedTemplateId changes
   useEffect(() => {
@@ -78,6 +98,51 @@ function NewProposalForm() {
       }
     } catch (err) {
       console.error('Error fetching templates:', err)
+    }
+  }
+
+  // Build selectable contact options from fetched clients list
+  const clientOptions = clientsList.flatMap((client) => {
+    if (client.contacts && client.contacts.length > 0) {
+      return client.contacts.map((contact: any) => ({
+        key: `${client.id}:::${contact.id}`,
+        clientId: client.id,
+        contactName: contact.name,
+        designation: contact.designation,
+        companyName: client.companyName,
+        email: contact.email || client.email || '',
+        address: client.address || client.city || '',
+        logoUrl: client.logoUrl || '',
+        displayText: `${contact.name}${contact.designation ? ` (${contact.designation})` : ''} — ${client.companyName}`
+      }))
+    }
+    return [{
+      key: `${client.id}:::main`,
+      clientId: client.id,
+      contactName: client.name,
+      designation: '',
+      companyName: client.companyName,
+      email: client.email || '',
+      address: client.address || client.city || '',
+      logoUrl: client.logoUrl || '',
+      displayText: `${client.name} — ${client.companyName}`
+    }]
+  })
+
+  const handleClientSelectChange = (key: string) => {
+    setSelectedClientKey(key)
+    if (!key) {
+      setClientId('')
+      return
+    }
+    const selectedOpt = clientOptions.find((opt) => opt.key === key)
+    if (selectedOpt) {
+      setClientId(selectedOpt.clientId)
+      setClientName(selectedOpt.contactName)
+      setClientCompany(selectedOpt.companyName)
+      setClientEmail(selectedOpt.email)
+      setClientAddress(selectedOpt.address)
+      setClientLogoUrl(selectedOpt.logoUrl)
     }
   }
 
@@ -165,6 +230,7 @@ function NewProposalForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
+          clientId: clientId || undefined,
           clientName,
           clientCompany,
           clientEmail,
@@ -351,13 +417,51 @@ function NewProposalForm() {
               </div>
             </div>
 
+            {/* Select Client Contact Person from CRM (Dropdown) */}
+            <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="clientSelect" className="block text-xs font-black text-slate-800 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Select Client Contact Person from CRM (Dropdown)</span>
+                </label>
+                {selectedClientKey && (
+                  <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                    <Check className="w-3 h-3 stroke-[3]" /> Auto-Filled from CRM
+                  </span>
+                )}
+              </div>
+
+              <div className="relative">
+                <select
+                  id="clientSelect"
+                  value={selectedClientKey}
+                  onChange={(e) => handleClientSelectChange(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white text-xs font-bold text-slate-800 border border-slate-300 rounded-xl shadow-2xs focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 cursor-pointer appearance-none"
+                >
+                  <option value="">-- Choose Contact Person from Client CRM Database --</option>
+                  {clientOptions.map((opt) => (
+                    <option key={opt.key} value={opt.key}>
+                      {opt.displayText}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                  <ChevronLeft className="w-4 h-4 -rotate-90" />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium">
+                Selecting a client contact automatically fills the Contact Person, Company Name, Email, and Logo details below.
+              </p>
+            </div>
+
             {/* 2-Column Row: Contact Person & Company */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               
-              {/* Client Contact Person */}
+              {/* Client Contact Person (Editable) */}
               <div>
                 <label htmlFor="clientName" className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Client Contact Person
+                  Client Contact Person *
                 </label>
                 <div className="relative">
                   <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -369,15 +473,15 @@ function NewProposalForm() {
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
                     placeholder="e.g. Rajesh Sharma"
-                    className="w-full pl-10 pr-3.5 py-2.5 text-xs font-medium border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition-all"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs font-semibold border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition-all"
                   />
                 </div>
               </div>
 
-              {/* Client Organization / Company */}
+              {/* Client Organization / Company (Editable) */}
               <div>
                 <label htmlFor="clientCompany" className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Client Organization / Company
+                  Client Organization / Company *
                 </label>
                 <div className="relative">
                   <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -389,11 +493,73 @@ function NewProposalForm() {
                     value={clientCompany}
                     onChange={(e) => setClientCompany(e.target.value)}
                     placeholder="e.g. Maruti Suzuki India Ltd."
-                    className="w-full pl-10 pr-3.5 py-2.5 text-xs font-medium border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition-all"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs font-semibold border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition-all"
                   />
                 </div>
               </div>
 
+            </div>
+
+            {/* Submitted By / Author Details Box */}
+            <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-amber-200/60 pb-2">
+                <label className="block text-xs font-black text-amber-950 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Submitted By / Proposal Author Details</span>
+                </label>
+                <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                  Interactive Bees Author
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                
+                {/* Author Name */}
+                <div>
+                  <label htmlFor="submittedByName" className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Author Name
+                  </label>
+                  <input
+                    type="text"
+                    id="submittedByName"
+                    value={submittedByName}
+                    onChange={(e) => setSubmittedByName(e.target.value)}
+                    placeholder="Author Full Name"
+                    className="w-full px-3 py-2 text-xs font-semibold bg-white border border-amber-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none"
+                  />
+                </div>
+
+                {/* Author Email */}
+                <div>
+                  <label htmlFor="submittedByEmail" className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Author Official Email
+                  </label>
+                  <input
+                    type="email"
+                    id="submittedByEmail"
+                    value={submittedByEmail}
+                    onChange={(e) => setSubmittedByEmail(e.target.value)}
+                    placeholder="Author Email Address"
+                    className="w-full px-3 py-2 text-xs font-semibold bg-white border border-amber-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none"
+                  />
+                </div>
+
+                {/* Author Designation */}
+                <div>
+                  <label htmlFor="submittedByDesignation" className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Author Designation
+                  </label>
+                  <input
+                    type="text"
+                    id="submittedByDesignation"
+                    value={submittedByDesignation}
+                    onChange={(e) => setSubmittedByDesignation(e.target.value)}
+                    placeholder="e.g. Enterprise Sales Director"
+                    className="w-full px-3 py-2 text-xs font-semibold bg-white border border-amber-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none"
+                  />
+                </div>
+
+              </div>
             </div>
 
           </div>

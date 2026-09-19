@@ -45,6 +45,73 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [companySettings, setCompanySettings] = useState<{ logoUrl?: string; companyName?: string } | null>(null)
+
+  // Fetch company settings for dynamic logo, favicon, and title
+  useEffect(() => {
+    fetchCompanySettings()
+  }, [])
+
+  const fetchCompanySettings = async () => {
+    try {
+      const res = await fetch('/api/settings')
+      if (res.ok) {
+        const data = await res.json()
+        if (data) {
+          setCompanySettings(data)
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching company settings:', err)
+    }
+  }
+
+  // Dynamic document title per route
+  useEffect(() => {
+    const routeTitles: Record<string, string> = {
+      '/dashboard': 'Dashboard Overview',
+      '/dashboard/proposals': 'Proposals Manager',
+      '/dashboard/proposals/new': 'Create New Proposal',
+      '/dashboard/templates': 'Templates Library',
+      '/dashboard/clients': 'Client CRM Directory',
+      '/dashboard/content-library': 'Content Snippets Library',
+      '/dashboard/asset-library': 'Asset Media Library',
+      '/dashboard/pricing': 'Pricing & Rate Cards',
+      '/dashboard/approvals': 'Approvals Engine',
+      '/dashboard/reports': 'Reports & Analytics',
+      '/dashboard/ai-assistant': 'AI Proposal Assistant',
+      '/dashboard/users': 'User Management',
+      '/dashboard/roles': 'Roles & Permissions',
+      '/dashboard/audit-logs': 'Audit & Security Logs Console',
+      '/dashboard/settings': 'System & Company Settings',
+    }
+
+    let activeTitle = 'Proposal Builder'
+    if (pathname && routeTitles[pathname]) {
+      activeTitle = routeTitles[pathname]
+    } else if (pathname?.startsWith('/dashboard/proposals/')) {
+      activeTitle = 'Proposal Workspace'
+    } else if (pathname?.startsWith('/dashboard/templates/')) {
+      activeTitle = 'Edit Template'
+    }
+
+    const orgName = companySettings?.companyName || 'Interactive Bees'
+    document.title = `${activeTitle} | ${orgName}`
+  }, [pathname, companySettings])
+
+  // Dynamic favicon update
+  useEffect(() => {
+    if (companySettings?.logoUrl) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']")
+      if (!link) {
+        link = document.createElement('link')
+        link.type = 'image/x-icon'
+        link.rel = 'shortcut icon'
+        document.getElementsByTagName('head')[0].appendChild(link)
+      }
+      link.href = companySettings.logoUrl
+    }
+  }, [companySettings])
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -115,8 +182,8 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Logo on Left */}
-          <IbeesLogo />
+          {/* Logo on Left with Dynamic Logo Support */}
+          <IbeesLogo customLogoUrl={companySettings?.logoUrl} />
         </div>
 
         {/* Center/Right Section: Search Bar & User Profile */}
@@ -321,8 +388,8 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6 min-w-0 bg-[#F8FAFC]">
-          <div className="w-full">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-5 min-w-0 bg-[#F8FAFC]">
+          <div className="w-full space-y-5">
             {children}
           </div>
         </div>
