@@ -4,6 +4,7 @@ A professional proposal management web application that enables sales teams to c
 
 ---
 
+
 ## Table of Contents
 
 - [Overview](#overview)
