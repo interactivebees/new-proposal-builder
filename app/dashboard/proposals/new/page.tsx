@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { FileText } from 'lucide-react'
 import { extractVariables, replaceVariablesInSections } from '@/lib/template-variables'
 
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
@@ -214,162 +215,114 @@ function NewProposalForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)]">
-      <div className="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-2xl font-bold text-[var(--text-heading)] mb-6">Create New Proposal</h1>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
-
-            {/* Template Selector */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <label htmlFor="template" className="block text-sm font-medium text-[var(--text-body)] mb-2">
-                Start with a Template (Optional)
-              </label>
-              <select
-                id="template"
-                value={selectedTemplateId}
-                onChange={(e) => setSelectedTemplateId(e.target.value)}
-                className="block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">-- Start from scratch --</option>
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name} {template.category ? `(${template.category})` : ''}
-                  </option>
-                ))}
-              </select>
-              {selectedTemplateId && (
-                <p className="mt-2 text-sm text-blue-600">
-                  ✓ Template loaded. You can still customize all sections below.
-                </p>
-              )}
-            </div>
-
-            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 space-y-4">
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-[var(--text-body)]">
-                  Proposal Title *
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="clientName" className="block text-sm font-medium text-[var(--text-body)]">
-                    Client Name
-                  </label>
-                  <input
-                    type="text"
-                    id="clientName"
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="clientCompany" className="block text-sm font-medium text-[var(--text-body)]">
-                    Client Company
-                  </label>
-                  <input
-                    type="text"
-                    id="clientCompany"
-                    value={clientCompany}
-                    onChange={(e) => setClientCompany(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="clientEmail" className="block text-sm font-medium text-[var(--text-body)]">
-                  Client Email
-                </label>
-                <input
-                  type="email"
-                  id="clientEmail"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="clientAddress" className="block text-sm font-medium text-[var(--text-body)]">
-                  Client Address
-                </label>
-                <textarea
-                  id="clientAddress"
-                  value={clientAddress}
-                  onChange={(e) => setClientAddress(e.target.value)}
-                  rows={2}
-                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="clientLogo" className="block text-sm font-medium text-[var(--text-body)]">
-                  Client Logo
-                </label>
-                <div className="mt-1 flex items-center space-x-4">
-                  <input
-                    type="file"
-                    id="clientLogo"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                    disabled={uploading}
-                    className="block w-full text-sm text-[var(--text-muted)] file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {uploading && <span className="text-sm text-[var(--text-muted)]">Uploading...</span>}
-                </div>
-                {clientLogoUrl && (
-                  <div className="mt-2">
-                    <img src={clientLogoUrl} alt="Client logo" className="h-16 w-auto border rounded" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Proposal Sections</h2>
-            <p className="text-sm text-[var(--text-muted)] mb-4">
-              Organize your proposal into multiple sections. You can add, reorder, and customize each section.
-            </p>
-            <SectionEditor sections={sections} onChange={setSections} />
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="px-4 py-2 border border-[var(--border-default)] rounded-md shadow-sm text-sm font-medium text-[var(--text-body)] bg-[var(--bg-card)] hover:bg-[var(--bg-page)]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : 'Create Proposal'}
-            </button>
-          </div>
-          </form>
-        </div>
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+          <FileText className="w-7 h-7 text-amber-600" />
+          Create New Proposal
+        </h1>
+        <p className="text-xs font-medium text-slate-500 mt-1">
+          Draft a new business proposal, select pre-built templates, and define client deliverables.
+        </p>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-bold">
+            {error}
+          </div>
+        )}
+
+        {/* Template Selector */}
+        <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-5 shadow-2xs">
+          <label htmlFor="template" className="block text-xs font-extrabold text-amber-950 mb-2">
+            Start with a Pre-Built Template (Optional)
+          </label>
+          <select
+            id="template"
+            value={selectedTemplateId}
+            onChange={(e) => setSelectedTemplateId(e.target.value)}
+            className="block w-full px-3.5 py-2.5 bg-white text-xs font-semibold border border-amber-200 rounded-xl shadow-2xs focus:outline-none focus:ring-2 focus:ring-amber-400"
+          >
+            <option value="">-- Start from scratch --</option>
+            {templates.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name} {template.category ? `(${template.category})` : ''}
+              </option>
+            ))}
+          </select>
+          {selectedTemplateId && (
+            <p className="mt-2 text-xs text-amber-800 font-bold flex items-center gap-1.5">
+              ✓ Template loaded. You can still customize all sections below.
+            </p>
+          )}
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 space-y-4">
+          <div>
+            <label htmlFor="title" className="block text-xs font-extrabold text-slate-800 mb-1">
+              Proposal Title *
+            </label>
+            <input
+              type="text"
+              id="title"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Enterprise Cloud Migration Proposal"
+              className="w-full px-3.5 py-2.5 text-xs font-medium border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-300"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="clientName" className="block text-xs font-extrabold text-slate-800 mb-1">
+                Client Contact Person
+              </label>
+              <input
+                type="text"
+                id="clientName"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="e.g. Rajesh Sharma"
+                className="w-full px-3.5 py-2.5 text-xs font-medium border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-300"
+              />
+            </div>
+            <div>
+              <label htmlFor="clientCompany" className="block text-xs font-extrabold text-slate-800 mb-1">
+                Client Organization / Company
+              </label>
+              <input
+                type="text"
+                id="clientCompany"
+                value={clientCompany}
+                onChange={(e) => setClientCompany(e.target.value)}
+                placeholder="e.g. Maruti Suzuki India Ltd."
+                className="w-full px-3.5 py-2.5 text-xs font-medium border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-300"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-5 py-2 bg-[#FEF08A] hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow-2xs transition-all border border-amber-300/80 disabled:opacity-50"
+          >
+            {loading ? 'Creating...' : 'Create Proposal'}
+          </button>
+        </div>
+      </form>
 
       {/* Variable Input Form Modal */}
       {showVariableForm && (

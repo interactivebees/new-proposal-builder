@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Proposal Builder",
+  title: "Ibees Proposal Builder",
   description: "Create and manage professional business proposals",
 };
 

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import DashboardNavigation from "@/components/DashboardNavigation";
 
 export default async function DashboardLayout({
   children,
@@ -8,13 +9,13 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
 
-  if (!session) {
+  if (!session || !session.user) {
     redirect("/auth/signin");
   }
 
   return (
-    <main className="min-h-screen bg-[var(--bg-page)]">
+    <DashboardNavigation user={session.user}>
       {children}
-    </main>
+    </DashboardNavigation>
   );
-}
+}

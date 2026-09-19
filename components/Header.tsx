@@ -5,14 +5,15 @@ import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { LogOut, Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import IbeesLogo from '@/components/IbeesLogo'
 
 export default function Header() {
   const pathname = usePathname()
   const { data: session, status } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Do not render global header on authentication pages
-  if (pathname?.startsWith('/auth')) {
+  // Do not render default header on authentication or dashboard layout pages
+  if (pathname?.startsWith('/auth') || pathname?.startsWith('/dashboard')) {
     return null
   }
 
@@ -41,14 +42,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand - Always visible */}
           <div className="flex items-center space-x-8">
-            <Link href={session ? "/dashboard" : "/auth/signin"} className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">P</span>
-              </div>
-              <span className="text-xl font-bold text-[var(--text-heading)] hidden sm:block">
-                Proposal Builder
-              </span>
-            </Link>
+            <IbeesLogo />
 
             {/* Navigation Links - Only when logged in */}
             {user && !loading && (

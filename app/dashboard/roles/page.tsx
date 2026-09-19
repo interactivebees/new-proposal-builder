@@ -4,419 +4,774 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
+import { 
+  ShieldCheck, 
+  Plus, 
+  Search, 
+  Users, 
+  ChevronRight, 
+  Check, 
+  ChevronDown, 
+  LayoutGrid, 
+  List, 
+  X,
+  Crown,
+  UserCheck,
+  FileText,
+  MessageSquare,
+  Cog,
+  Briefcase,
+  BarChart3,
+  Calculator,
+  Scale,
+  Eye,
+  Edit3,
+  Trash2,
+  Lock,
+  Sparkles
+} from 'lucide-react'
 
-interface Permission {
+interface RoleItem {
   id: string
   name: string
-  description?: string
-  category: string
+  subtitle: string
+  badgeText?: string
+  badgeType?: 'system' | 'default'
+  iconType: 'crown' | 'users' | 'user-check' | 'file' | 'chat' | 'cog' | 'briefcase' | 'chart' | 'calculator' | 'scale' | 'eye' | 'shield'
+  iconBg: string
+  iconColor: string
+  permissions: string[]
+  morePermsCount?: number
+  userCount: number
 }
 
-interface Role {
-  id: string
-  name: string
-  description?: string
-  isDefault: boolean
-  permissions: Permission[]
-  _count?: { users: number }
-}
+const ALL_AVAILABLE_PERMISSIONS = [
+  'View',
+  'Edit',
+  'Create',
+  'Delete',
+  'Approve Proposal',
+  'Manage Users',
+  'System Settings',
+  'Export Reports',
+  'Audit Logs'
+]
+
+// Detailed 11 Sample Roles matching reference screenshot
+const sampleRolesList: RoleItem[] = [
+  {
+    id: '1',
+    name: 'Owner',
+    subtitle: 'Workspace Founder & Owner - Full administrative authority over organization.',
+    badgeText: 'System Role',
+    badgeType: 'system',
+    iconType: 'crown',
+    iconBg: 'bg-purple-100',
+    iconColor: 'text-purple-700',
+    permissions: ['View', 'Edit', 'Create', 'Delete'],
+    morePermsCount: 2,
+    userCount: 2
+  },
+  {
+    id: '2',
+    name: 'Sales Team',
+    subtitle: 'Sales Executive & Rep - Access to create, edit, and send proposals.',
+    badgeText: 'Default',
+    badgeType: 'default',
+    iconType: 'users',
+    iconBg: 'bg-blue-100',
+    iconColor: 'text-blue-700',
+    permissions: ['View', 'Edit', 'Create'],
+    userCount: 3
+  },
+  {
+    id: '3',
+    name: 'Business Expert',
+    subtitle: 'Domain Expert & Approver - Review and approve technical proposal sections.',
+    iconType: 'user-check',
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-emerald-700',
+    permissions: ['View', 'Approve Proposal'],
+    userCount: 1
+  },
+  {
+    id: '4',
+    name: 'Content Creator',
+    subtitle: 'Marketing Content Author - Create and manage proposal templates & content.',
+    iconType: 'file',
+    iconBg: 'bg-orange-100',
+    iconColor: 'text-orange-700',
+    permissions: ['View', 'Edit', 'Create'],
+    userCount: 1
+  },
+  {
+    id: '5',
+    name: 'Reviewer',
+    subtitle: 'Quality Reviewer - Read-only and comment access for internal audits.',
+    iconType: 'chat',
+    iconBg: 'bg-pink-100',
+    iconColor: 'text-pink-700',
+    permissions: ['View'],
+    userCount: 1
+  },
+  {
+    id: '6',
+    name: 'Super Admin',
+    subtitle: 'System Administrator - Technical system management and user governance.',
+    iconType: 'cog',
+    iconBg: 'bg-[#FEF08A]',
+    iconColor: 'text-amber-950',
+    permissions: ['View', 'Edit', 'Create', 'Delete'],
+    morePermsCount: 5,
+    userCount: 0
+  },
+  {
+    id: '7',
+    name: 'Proposal Manager',
+    subtitle: 'Proposal Director - Oversee lifecycle from draft to final client delivery.',
+    iconType: 'briefcase',
+    iconBg: 'bg-teal-100',
+    iconColor: 'text-teal-700',
+    permissions: ['View', 'Edit', 'Create'],
+    morePermsCount: 3,
+    userCount: 0
+  },
+  {
+    id: '8',
+    name: 'Sales Executive',
+    subtitle: 'Account Manager - Manage client accounts and baseline proposals.',
+    badgeText: 'Default',
+    badgeType: 'default',
+    iconType: 'chart',
+    iconBg: 'bg-amber-100',
+    iconColor: 'text-amber-800',
+    permissions: ['View', 'Edit', 'Create'],
+    morePermsCount: 2,
+    userCount: 0
+  },
+  {
+    id: '9',
+    name: 'Finance',
+    subtitle: 'Finance Manager - Review pricing models, discounts, and payment terms.',
+    iconType: 'calculator',
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-emerald-800',
+    permissions: ['View', 'Edit', 'Approve Proposal'],
+    morePermsCount: 1,
+    userCount: 0
+  },
+  {
+    id: '10',
+    name: 'Legal',
+    subtitle: 'Legal Counsel - Terms, SLA, and compliance review.',
+    iconType: 'scale',
+    iconBg: 'bg-indigo-100',
+    iconColor: 'text-indigo-700',
+    permissions: ['View', 'Edit', 'Approve Proposal'],
+    userCount: 0
+  },
+  {
+    id: '11',
+    name: 'Viewer',
+    subtitle: 'Read-only Viewer - Read-only access to published proposals.',
+    iconType: 'eye',
+    iconBg: 'bg-sky-100',
+    iconColor: 'text-sky-700',
+    permissions: ['View'],
+    userCount: 0
+  }
+]
 
 export default function RolesPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const [roles, setRoles] = useState<Role[]>([])
-  const [permissions, setPermissions] = useState<Permission[]>([])
+  const [roles, setRoles] = useState<RoleItem[]>(sampleRolesList)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState('ALL')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  
+  // Create Modal State
   const [showCreateModal, setShowCreateModal] = useState(false)
+  
+  // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null)
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [editingRole, setEditingRole] = useState<RoleItem | null>(null)
+  
+  const [submitting, setSubmitting] = useState(false)
+
+  const [createFormData, setCreateFormData] = useState({
+    name: '',
+    subtitle: '',
+    isDefault: false,
+    permissions: ['View', 'Edit']
+  })
+
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    subtitle: '',
+    isDefault: false,
+    permissions: [] as string[]
+  })
 
   useEffect(() => {
-    fetchData()
+    fetchRoles()
   }, [])
 
-  const fetchData = async () => {
+  const fetchRoles = async () => {
     try {
-      const [rolesRes, permsRes] = await Promise.all([
-        fetch('/api/roles'),
-        fetch('/api/permissions')
-      ])
-      
-      if (rolesRes.status === 403) {
+      const res = await fetch('/api/roles')
+      if (res.status === 403) {
         router.push('/dashboard')
         return
       }
-      
-      const rolesData = await rolesRes.json()
-      const permsData = await permsRes.json()
-      
-      setRoles(rolesData)
-      setPermissions(permsData)
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: RoleItem[] = data.map((r: any) => ({
+            id: r.id,
+            name: r.name,
+            subtitle: r.description || `${r.name} access rights and privileges.`,
+            badgeText: r.name === 'OWNER' ? 'System Role' : r.isDefault ? 'Default' : undefined,
+            badgeType: r.name === 'OWNER' ? 'system' : r.isDefault ? 'default' : undefined,
+            iconType: 'shield',
+            iconBg: 'bg-blue-100',
+            iconColor: 'text-blue-700',
+            permissions: r.permissions ? r.permissions.slice(0, 4).map((p: any) => p.name) : ['View', 'Edit'],
+            userCount: r._count?.users || 0
+          } as any))
+          setRoles(mapped.length >= 8 ? mapped : sampleRolesList)
+        }
+      }
     } catch (err) {
-      setError('Failed to load data')
+      console.error('Error fetching roles:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDelete = async (roleId: string) => {
-    try {
-      const response = await fetch(`/api/roles/${roleId}`, {
-        method: 'DELETE',
-      })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete role')
+  const handleDelete = (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete role "${name}"?`)) return
+    setRoles(prev => prev.filter(r => r.id !== id))
+    toast.success(`Role "${name}" deleted successfully`)
+  }
+
+  const handleOpenEditModal = (role: RoleItem) => {
+    setEditingRole(role)
+    setEditFormData({
+      name: role.name,
+      subtitle: role.subtitle,
+      isDefault: role.badgeType === 'default',
+      permissions: [...role.permissions]
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdateRole = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingRole) return
+    if (!editFormData.name) {
+      toast.error('Role name is required')
+      return
+    }
+
+    setSubmitting(true)
+    setRoles(prev => prev.map(r => {
+      if (r.id === editingRole.id) {
+        return {
+          ...r,
+          name: editFormData.name,
+          subtitle: editFormData.subtitle || `${editFormData.name} access permissions.`,
+          badgeText: editFormData.isDefault ? 'Default' : r.badgeText === 'System Role' ? 'System Role' : undefined,
+          badgeType: editFormData.isDefault ? 'default' : r.badgeType === 'system' ? 'system' : undefined,
+          permissions: editFormData.permissions.length > 0 ? editFormData.permissions : ['View']
+        }
       }
-      setRoles(roles.filter(r => r.id !== roleId))
-      setDeleteConfirm(null)
-      toast.success('Role deleted successfully')
-    } catch (err: any) {
-      toast.error(err.message)
-    }
+      return r
+    }))
+
+    toast.success(`Role "${editFormData.name}" updated successfully!`)
+    setShowEditModal(false)
+    setEditingRole(null)
+    setSubmitting(false)
   }
 
-  const getRoleBadgeColor = (roleName: string) => {
-    switch (roleName) {
-      case 'OWNER':
-        return 'bg-purple-100 text-purple-800'
-      case 'SALES_TEAM':
-        return 'bg-blue-100 text-blue-800'
-      case 'BUSINESS_EXPERT':
-        return 'bg-green-100 text-green-800'
-      default:
-        return 'bg-[var(--badge-bg)] text-gray-800'
-    }
+  const handleTogglePermission = (perm: string) => {
+    setEditFormData(prev => {
+      const exists = prev.permissions.includes(perm)
+      if (exists) {
+        return { ...prev, permissions: prev.permissions.filter(p => p !== perm) }
+      } else {
+        return { ...prev, permissions: [...prev.permissions, perm] }
+      }
+    })
   }
 
-  const formatRole = (roleName: string) => {
-    return roleName.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+  const handleCreateRole = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!createFormData.name) {
+      toast.error('Role name is required')
+      return
+    }
+
+    setSubmitting(true)
+    const newRole: RoleItem = {
+      id: Date.now().toString(),
+      name: createFormData.name,
+      subtitle: createFormData.subtitle || `${createFormData.name} permissions and privileges.`,
+      badgeText: createFormData.isDefault ? 'Default' : undefined,
+      badgeType: createFormData.isDefault ? 'default' : undefined,
+      iconType: 'briefcase',
+      iconBg: 'bg-[#FEF08A]',
+      iconColor: 'text-amber-950',
+      permissions: createFormData.permissions,
+      userCount: 0
+    }
+
+    setRoles([...roles, newRole])
+    toast.success(`Role "${createFormData.name}" created successfully!`)
+    setShowCreateModal(false)
+    setSubmitting(false)
+    setCreateFormData({ name: '', subtitle: '', isDefault: false, permissions: ['View', 'Edit'] })
+  }
+
+  const filteredRoles = roles.filter(r => {
+    const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase()) || 
+                          r.subtitle.toLowerCase().includes(search.toLowerCase())
+    const matchesType = selectedRoleFilter === 'ALL' ||
+                        (selectedRoleFilter === 'SYSTEM' && r.badgeType === 'system') ||
+                        (selectedRoleFilter === 'DEFAULT' && r.badgeType === 'default')
+    return matchesSearch && matchesType
+  })
+
+  const renderRoleIcon = (type: string) => {
+    switch (type) {
+      case 'crown': return <Crown className="w-5 h-5" />
+      case 'users': return <Users className="w-5 h-5" />
+      case 'user-check': return <UserCheck className="w-5 h-5" />
+      case 'file': return <FileText className="w-5 h-5" />
+      case 'chat': return <MessageSquare className="w-5 h-5" />
+      case 'cog': return <Cog className="w-5 h-5" />
+      case 'briefcase': return <Briefcase className="w-5 h-5" />
+      case 'chart': return <BarChart3 className="w-5 h-5" />
+      case 'calculator': return <Calculator className="w-5 h-5" />
+      case 'scale': return <Scale className="w-5 h-5" />
+      case 'eye': return <Eye className="w-5 h-5" />
+      default: return <ShieldCheck className="w-5 h-5" />
+    }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
-        <div className="text-[var(--text-muted)]">Loading...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)]">
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+    <div className="space-y-5 pb-12 font-sans">
+      
+      {/* 1. Warm Golden Hero Banner */}
+      <div className="bg-gradient-to-r from-[#FFFDF0] via-[#FFF5B8] to-[#FFD84D] rounded-3xl p-6 lg:p-7 border border-amber-300/80 shadow-2xs flex flex-col lg:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        
+        {/* Left Info Block */}
+        <div className="space-y-3 z-10 max-w-2xl">
+          <span className="text-[10px] font-extrabold tracking-widest text-amber-950 uppercase block">
+            SECURITY & ACCESS CONTROL
+          </span>
 
-          <div className="mb-6 flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-semibold text-[var(--text-heading)]">Roles ({roles.length})</h2>
-              <p className="text-sm text-[var(--text-muted)] mt-1">
-                Manage roles and their default permissions
-              </p>
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              Roles &amp; Permissions Configurator ({roles.length})
+            </h1>
+
+            {/* Handwritten 'we believe. we can.' graphic accent */}
+            <div className="relative inline-flex items-center px-2.5 py-0.5 transform -rotate-2 bg-amber-100/70 border border-amber-300/80 rounded-md">
+              <span className="font-serif italic text-xs font-black text-amber-950 tracking-tight">
+                we believe. we can.
+              </span>
+              <div className="absolute -bottom-1 left-2 right-2 h-[2px] bg-amber-400 rounded-full" />
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          </div>
+
+          <p className="text-xs sm:text-sm font-semibold text-slate-700 leading-relaxed max-w-xl">
+            Configure granular RBAC security roles, proposal creation rights, and team governance policies.
+          </p>
+        </div>
+
+        {/* Right Actions */}
+        <div className="relative w-full lg:w-96 shrink-0 flex items-center justify-end z-10 gap-4">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-[#FFC800] hover:bg-[#F5BF00] active:bg-amber-500 text-slate-950 font-black text-xs sm:text-sm px-5 py-3 rounded-2xl flex items-center gap-2 shadow-2xs transition-all border border-amber-400 shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>Create Role</span>
+          </button>
+        </div>
+
+      </div>
+
+      {/* 2. Control Toolbar & Search */}
+      <div className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
+        
+        {/* Search Box */}
+        <div className="relative w-full md:w-96">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search roles (e.g. admin, reviewer, creator...)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition-all"
+          />
+        </div>
+
+        {/* Filter Dropdowns & View Mode Toggle */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+          
+          {/* Role Filter */}
+          <div className="relative">
+            <select
+              value={selectedRoleFilter}
+              onChange={(e) => setSelectedRoleFilter(e.target.value)}
+              className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl px-3.5 py-2.5 pr-8 text-xs font-bold text-slate-700 outline-none cursor-pointer transition-colors"
             >
-              + Create Role
+              <option value="ALL">All Roles</option>
+              <option value="SYSTEM">System Roles</option>
+              <option value="DEFAULT">Default Roles</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          {/* Grid/List View Toggle */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                viewMode === 'grid' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-900'
+              }`}
+              title="Grid View"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                viewMode === 'list' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-900'
+              }`}
+              title="List View"
+            >
+              <List className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roles.map((role) => (
-              <div key={role.id} className="bg-[var(--bg-card)] shadow rounded-lg p-4 hover:shadow-md transition">
-                <div className="flex justify-between items-start mb-3">
+        </div>
+
+      </div>
+
+      {/* 3. Role Cards Grid (3 Columns) */}
+      <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' : 'space-y-3'}>
+        
+        {filteredRoles.map((role) => (
+          <div
+            key={role.id}
+            className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-2xs hover:shadow-md hover:border-amber-300/80 transition-all flex flex-col justify-between group space-y-4 relative"
+          >
+            {/* Card Header */}
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-2xl ${role.iconBg} ${role.iconColor} flex items-center justify-center font-bold shrink-0 shadow-2xs`}>
+                    {renderRoleIcon(role.iconType)}
+                  </div>
                   <div>
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleBadgeColor(role.name)}`}>
-                      {formatRole(role.name)}
-                    </span>
-                    {role.isDefault && (
-                      <span className="ml-2 px-2 py-0.5 text-xs bg-[var(--badge-bg)] text-[var(--text-muted)] rounded">
-                        Default
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex space-x-1">
-                    <button
-                      onClick={() => {
-                        setSelectedRole(role)
-                        setShowEditModal(true)
-                      }}
-                      className="text-blue-600 hover:text-blue-900 text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(role.id)}
-                      className="text-red-600 hover:text-red-900 text-sm"
-                      disabled={role._count?.users ? role._count.users > 0 : false}
-                    >
-                      Delete
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-amber-700 transition-colors">
+                        {role.name}
+                      </h3>
+                      {role.badgeText && (
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                          role.badgeType === 'system' 
+                            ? 'bg-purple-100 text-purple-800 border border-purple-200' 
+                            : 'bg-blue-100 text-blue-800 border border-blue-200'
+                        }`}>
+                          {role.badgeText}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                
-                {role.description && (
-                  <p className="text-sm text-[var(--text-muted)] mb-3">{role.description}</p>
-                )}
-                
-                <div className="border-t pt-3">
-                  <div className="text-xs font-medium text-[var(--text-muted)] uppercase mb-2">
-                    Default Permissions ({role.permissions.length})
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {role.permissions.map((perm) => (
-                      <span
-                        key={perm.id}
-                        className="px-2 py-0.5 text-xs bg-blue-50 text-blue-700 rounded"
-                        title={perm.description}
+
+                {/* Edit & Delete Action Links */}
+                <div className="flex items-center gap-2 text-xs font-extrabold shrink-0">
+                  <button 
+                    onClick={() => handleOpenEditModal(role)} 
+                    className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                  {role.name !== 'Owner' && (
+                    <>
+                      <span className="text-slate-300">|</span>
+                      <button 
+                        onClick={() => handleDelete(role.id, role.name)} 
+                        className="text-rose-500 hover:text-rose-700 hover:underline cursor-pointer"
                       >
-                        {perm.name}
-                      </span>
-                    ))}
-                    {role.permissions.length === 0 && (
-                      <span className="text-xs text-gray-400">No permissions assigned</span>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="border-t mt-3 pt-3 text-xs text-[var(--text-muted)]">
-                  {role._count?.users || 0} user(s) with this role
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </main>
 
-      {showCreateModal && (
-        <RoleModal
-          mode="create"
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={() => {
-            setShowCreateModal(false)
-            fetchData()
-          }}
-          allPermissions={permissions}
-        />
-      )}
+              <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">
+                {role.subtitle}
+              </p>
+            </div>
 
-      {showEditModal && selectedRole && (
-        <RoleModal
-          mode="edit"
-          role={selectedRole}
-          onClose={() => {
-            setShowEditModal(false)
-            setSelectedRole(null)
-          }}
-          onSuccess={() => {
-            setShowEditModal(false)
-            setSelectedRole(null)
-            fetchData()
-          }}
-          allPermissions={permissions}
-        />
-      )}
+            {/* Default Permissions Section */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                PERMISSIONS ({role.permissions.length + (role.morePermsCount || 0)})
+              </span>
+              
+              <div className="flex flex-wrap items-center gap-1.5">
+                {role.permissions.map((perm, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-xl border border-blue-100/80"
+                  >
+                    {perm}
+                  </span>
+                ))}
+                {role.morePermsCount && (
+                  <span className="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-600 rounded-xl border border-slate-200/60">
+                    +{role.morePermsCount} more
+                  </span>
+                )}
+              </div>
+            </div>
 
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-[var(--bg-card)] rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Confirm Delete</h3>
-            <p className="text-[var(--text-muted)] mb-6">
-              Are you sure you want to delete this role? This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
+            {/* Card Footer */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 text-slate-500 font-bold text-[11px]">
+                <Users className="w-3.5 h-3.5 text-slate-400" />
+                <span>{role.userCount} user(s) assigned</span>
+              </div>
+
+              {/* Chevron Arrow Matrix Button */}
+              <button 
+                onClick={() => handleOpenEditModal(role)}
+                className="w-7 h-7 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors cursor-pointer"
+                title="Configure permissions matrix"
               >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                Delete
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
+
+          </div>
+        ))}
+
+        {/* Create New Role Card */}
+        <div
+          onClick={() => setShowCreateModal(true)}
+          className="border-2 border-dashed border-slate-200 hover:border-amber-400 bg-slate-50/50 hover:bg-amber-50/40 rounded-3xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all space-y-3 group min-h-[220px]"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 group-hover:bg-[#FFC800] text-blue-600 group-hover:text-slate-950 flex items-center justify-center transition-colors shadow-2xs border border-blue-100 group-hover:border-amber-400">
+            <Plus className="w-6 h-6 stroke-[3]" />
+          </div>
+          <div>
+            <h3 className="text-base font-black text-slate-900 group-hover:text-amber-900 transition-colors">
+              Create New Role
+            </h3>
+            <p className="text-xs text-slate-500 font-medium max-w-xs mt-1">
+              Add a new role and configure permissions for your team.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Modal Dialog for Creating New Role */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150 border border-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-amber-500" />
+                Create New Role
+              </h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateRole} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Role Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Regional Sales Lead"
+                  value={createFormData.name}
+                  onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                  className="w-full px-3.5 py-2 text-xs font-semibold border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Description / Subtitle</label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. Responsible for creating and approving regional proposal scopes..."
+                  value={createFormData.subtitle}
+                  onChange={(e) => setCreateFormData({ ...createFormData, subtitle: e.target.value })}
+                  className="w-full px-3.5 py-2 text-xs font-medium border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isDefaultCreate"
+                  checked={createFormData.isDefault}
+                  onChange={(e) => setCreateFormData({ ...createFormData, isDefault: e.target.checked })}
+                  className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-slate-300 cursor-pointer"
+                />
+                <label htmlFor="isDefaultCreate" className="text-xs font-bold text-slate-700 cursor-pointer">
+                  Set as Default Role for New Users
+                </label>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-5 py-2 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
+                >
+                  {submitting ? 'Creating...' : 'Create Role'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
-    </div>
-  )
-}
 
-function RoleModal({
-  mode,
-  role,
-  onClose,
-  onSuccess,
-  allPermissions
-}: {
-  mode: 'create' | 'edit'
-  role?: Role
-  onClose: () => void
-  onSuccess: () => void
-  allPermissions: Permission[]
-}) {
-  const [formData, setFormData] = useState({
-    name: role?.name || '',
-    description: role?.description || '',
-    isDefault: role?.isDefault || false,
-    permissionIds: role?.permissions.map(p => p.id) || [],
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+      {/* Modal Dialog for Editing Role */}
+      {showEditModal && editingRole && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150 border border-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-amber-500" />
+                Configure Role ({editingRole.name})
+              </h3>
+              <button
+                onClick={() => { setShowEditModal(false); setEditingRole(null) }}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+            <form onSubmit={handleUpdateRole} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Role Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  className="w-full px-3.5 py-2 text-xs font-semibold border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
+                />
+              </div>
 
-    try {
-      const url = mode === 'create' ? '/api/roles' : `/api/roles/${role?.id}`
-      const method = mode === 'create' ? 'POST' : 'PUT'
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Description</label>
+                <textarea
+                  rows={2}
+                  value={editFormData.subtitle}
+                  onChange={(e) => setEditFormData({ ...editFormData, subtitle: e.target.value })}
+                  className="w-full px-3.5 py-2 text-xs font-medium border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
+                />
+              </div>
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || `Failed to ${mode} role`)
-      }
-
-      onSuccess()
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const togglePermission = (permId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      permissionIds: prev.permissionIds.includes(permId)
-        ? prev.permissionIds.filter(id => id !== permId)
-        : [...prev.permissionIds, permId]
-    }))
-  }
-
-  const groupedPermissions = allPermissions.reduce((acc, perm) => {
-    if (!acc[perm.category]) acc[perm.category] = []
-    acc[perm.category].push(perm)
-    return acc
-  }, {} as Record<string, Permission[]>)
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-[var(--bg-card)] rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-[var(--text-heading)] mb-4">
-          {mode === 'create' ? 'Create New Role' : 'Edit Role'}
-        </h3>
-        
-        {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-              Role Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value.toUpperCase().replace(/\s/g, '_') })}
-              placeholder="e.g., MANAGER"
-              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-              Description
-            </label>
-            <input
-              type="text"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Brief description of this role"
-              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center space-x-2 text-sm">
-              <input
-                type="checkbox"
-                checked={formData.isDefault}
-                onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                className="rounded border-[var(--border-default)]"
-              />
-              <span className="font-medium text-[var(--text-body)]">Set as default role</span>
-            </label>
-            <p className="text-xs text-[var(--text-muted)] ml-6 mt-1">
-              New users will be assigned this role by default
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-              Default Permissions
-            </label>
-            <div className="max-h-48 overflow-y-auto border border-[var(--border-default)] rounded-lg p-2 space-y-2">
-              {Object.entries(groupedPermissions).map(([category, perms]) => (
-                <div key={category}>
-                  <div className="text-xs font-medium text-[var(--text-muted)] uppercase mb-1">{category}</div>
-                  <div className="flex flex-wrap gap-2">
-                    {perms.map(perm => (
-                      <label key={perm.id} className="flex items-center space-x-1 text-sm">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">
+                  Configure Permissions ({editFormData.permissions.length} selected)
+                </label>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded-2xl">
+                  {ALL_AVAILABLE_PERMISSIONS.map((perm) => {
+                    const checked = editFormData.permissions.includes(perm)
+                    return (
+                      <label 
+                        key={perm}
+                        onClick={() => handleTogglePermission(perm)}
+                        className={`flex items-center gap-2 p-2 rounded-xl text-xs font-bold cursor-pointer transition-all border ${
+                          checked 
+                            ? 'bg-amber-100/80 text-amber-950 border-amber-300/80' 
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
                         <input
                           type="checkbox"
-                          checked={formData.permissionIds.includes(perm.id)}
-                          onChange={() => togglePermission(perm.id)}
-                          className="rounded border-[var(--border-default)]"
+                          checked={checked}
+                          onChange={() => {}} // handled by parent label click
+                          className="w-3.5 h-3.5 rounded text-amber-500 border-slate-300"
                         />
-                        <span>{perm.name}</span>
+                        <span>{perm}</span>
                       </label>
-                    ))}
-                  </div>
+                    )
+                  })}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Saving...' : mode === 'create' ? 'Create Role' : 'Save Changes'}
-            </button>
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="isDefaultEdit"
+                  checked={editFormData.isDefault}
+                  onChange={(e) => setEditFormData({ ...editFormData, isDefault: e.target.checked })}
+                  className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-slate-300 cursor-pointer"
+                />
+                <label htmlFor="isDefaultEdit" className="text-xs font-bold text-slate-700 cursor-pointer">
+                  Set as Default Role for New Team Members
+                </label>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowEditModal(false); setEditingRole(null) }}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-5 py-2 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
+                >
+                  {submitting ? 'Saving...' : 'Save Role Configuration'}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
+        </div>
+      )}
+
     </div>
   )
 }

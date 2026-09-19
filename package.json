@@ -7,12 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "tsx prisma/seed-dummy-data.ts",
     "db:seed-docx": "tsx prisma/seed-from-docx.ts",
-    "db:seed-century": "tsx prisma/seed-century-ply.ts"
+    "db:seed-century": "tsx prisma/seed-century-ply.ts",
+    "db:seed-dummy": "tsx prisma/seed-dummy-data.ts"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed-dummy-data.ts"
   },
   "keywords": [],
   "author": "",

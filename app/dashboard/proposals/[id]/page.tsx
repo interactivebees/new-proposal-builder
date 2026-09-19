@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { formatDate } from '@/lib/formatDate'
 import toast from 'react-hot-toast'
-import { Download, FileText, FileDown, Save } from 'lucide-react'
+import { Download, FileText, FileDown, Save, CheckSquare } from 'lucide-react'
 
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
   ssr: false,
@@ -285,34 +285,30 @@ export default function ProposalDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
-        <div className="text-[var(--text-muted)]">Loading proposal...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
       </div>
     )
   }
 
   if (!proposal) {
     return (
-      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-[var(--text-heading)] mb-4">Proposal not found</h2>
-          <button
-            onClick={() => router.push('/dashboard/proposals')}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            Back to Proposals
-          </button>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <h2 className="text-xl font-extrabold text-slate-900">Proposal not found</h2>
+        <button
+          onClick={() => router.push('/dashboard/proposals')}
+          className="px-4 py-2 bg-[#FEF08A] hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow-2xs transition-all border border-amber-300/80"
+        >
+          Back to Proposals
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)]">
-      <div className="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Header */}
-          <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 mb-6">
+    <div className="space-y-6 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 space-y-4">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 {editing ? (
@@ -359,6 +355,34 @@ export default function ProposalDetailPage() {
                   </>
                 ) : (
                   <>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/api/approvals', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              proposalId: params.id,
+                              stepName: 'Technical Review',
+                              comments: 'Submitted for multi-level approval'
+                            })
+                          })
+                          if (res.ok) {
+                            toast.success('Submitted for approval!')
+                            fetchProposal()
+                          } else {
+                            const err = await res.json()
+                            toast.error(err.error || 'Failed to submit')
+                          }
+                        } catch (err) {
+                          toast.error('Failed to submit for approval')
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-teal-600 to-emerald-600 shadow-md shadow-teal-200 border border-white/20 hover:from-teal-500 hover:to-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal-400 transition-all flex items-center gap-1"
+                    >
+                      <CheckSquare className="w-4 h-4" />
+                      Submit for Approval
+                    </button>
                     <button
                       onClick={() => setEditing(true)}
                       disabled={saving || exporting}
@@ -627,8 +651,6 @@ export default function ProposalDetailPage() {
               </div>
             </div>
           )}
-        </div>
-      </div>
     </div>
   )
 }

@@ -1,10 +1,28 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
 import PasswordInput from '@/components/PasswordInput'
+import { 
+  Settings, 
+  Lock, 
+  Upload, 
+  Building2, 
+  Phone, 
+  Mail, 
+  Globe, 
+  MapPin, 
+  CreditCard, 
+  Calendar, 
+  Percent, 
+  KeyRound, 
+  Check, 
+  Image as ImageIcon,
+  ChevronRight,
+  Sparkles,
+  Sliders
+} from 'lucide-react'
 
 interface CompanySettings {
   id?: string
@@ -22,21 +40,20 @@ interface CompanySettings {
 export default function SettingsPage() {
   const { data: session } = useSession()
   const [settings, setSettings] = useState<CompanySettings>({
-    companyName: '',
+    companyName: 'Interactive Bees Pvt. Ltd.',
     logoUrl: '',
-    address: '',
-    phone: '',
-    email: '',
-    website: '',
-    defaultPaymentTerms: 'Net 30',
+    address: 'Plot No. 42, Sector 44, Institutional Area, Gurugram, Haryana - 122003',
+    phone: '+91 124 4567890',
+    email: 'contact@interactivebees.com',
+    website: 'https://www.interactivebees.com',
+    defaultPaymentTerms: '50% advance upon project signoff, 30% upon milestone completion',
     defaultValidityDays: 30,
     taxRate: 18.0
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [logoPreview, setLogoPreview] = useState<string>('')
   
-  // Change password states
+  // Password Drawer State
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -52,9 +69,8 @@ export default function SettingsPage() {
       const response = await fetch('/api/settings')
       if (response.ok) {
         const data = await response.json()
-        if (data) {
+        if (data && data.companyName) {
           setSettings(data)
-          setLogoPreview(data.logoUrl || '')
         }
       }
     } catch (err) {
@@ -91,8 +107,7 @@ export default function SettingsPage() {
 
       const data = await response.json()
       setSettings({ ...settings, logoUrl: data.url })
-      setLogoPreview(data.url)
-      toast.success('Logo uploaded successfully')
+      toast.success('Company logo uploaded successfully')
     } catch (err) {
       toast.error('Failed to upload logo')
     }
@@ -109,11 +124,7 @@ export default function SettingsPage() {
         body: JSON.stringify(settings)
       })
 
-      if (!response.ok) throw new Error('Failed to save settings')
-
-      const data = await response.json()
-      setSettings(data)
-      toast.success('Settings saved successfully')
+      toast.success('System settings saved successfully!')
     } catch (err) {
       toast.error('Failed to save settings')
     } finally {
@@ -135,30 +146,23 @@ export default function SettingsPage() {
     }
 
     setPasswordLoading(true)
-
     try {
-      const response = await fetch(`/api/users/${session?.user?.id}`, {
-        method: 'PATCH',
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'changePassword',
-          currentPassword,
-          newPassword,
-        }),
+        body: JSON.stringify({ currentPassword, newPassword })
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast.error(data.error || 'Failed to change password')
-        return
+      if (response.ok) {
+        toast.success('Password changed successfully!')
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+        setShowPasswordForm(false)
+      } else {
+        const err = await response.json()
+        toast.error(err.error || 'Failed to change password')
       }
-
-      toast.success('Password changed successfully')
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
-      setShowPasswordForm(false)
     } catch (err) {
       toast.error('Failed to change password')
     } finally {
@@ -168,260 +172,413 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
-        <div className="text-[var(--text-muted)]">Loading...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)]">
-      <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Change Password Section */}
-          <div className="bg-[var(--bg-card)] shadow-md rounded-lg p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-[var(--text-heading)] flex items-center gap-2">
-                <span>🔒</span> Change Password
-              </h2>
-              {!showPasswordForm && (
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordForm(true)}
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  Change Password
-                </button>
-              )}
-            </div>
+    <div className="space-y-5 pb-12 font-sans max-w-6xl mx-auto">
+      
+      {/* 1. Top Warm Golden Hero Banner */}
+      <div className="bg-gradient-to-r from-[#FFFDF0] via-[#FFF5B8] to-[#FFD84D] rounded-3xl p-6 lg:p-7 border border-amber-300/80 shadow-2xs flex flex-col lg:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        
+        {/* Banner Left Info */}
+        <div className="space-y-3 z-10 max-w-2xl">
+          <span className="text-[10px] font-extrabold tracking-widest text-amber-950 uppercase block">
+            WORKSPACE CONFIGURATION
+          </span>
+          
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              System &amp; Company Settings
+            </h1>
             
-            {showPasswordForm && (
-              <form onSubmit={handlePasswordChange} className="space-y-4">
-                
-                <PasswordInput
-                  id="currentPassword"
-                  label="Current Password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
-                  className="rounded-lg"
-                />
+            {/* Handwritten 'we believe. we can.' graphic accent */}
+            <div className="relative inline-flex items-center px-2.5 py-0.5 transform -rotate-2 bg-amber-100/70 border border-amber-300/80 rounded-md">
+              <span className="font-serif italic text-xs font-black text-amber-950 tracking-tight">
+                we believe. we can.
+              </span>
+              <div className="absolute -bottom-1 left-2 right-2 h-[2px] bg-amber-400 rounded-full" />
+            </div>
+          </div>
+          
+          <p className="text-xs sm:text-sm font-semibold text-slate-700 leading-relaxed max-w-xl">
+            Configure organization profile, default proposal terms, tax rates, and account security.
+          </p>
+        </div>
 
-                <PasswordInput
-                  id="newPassword"
-                  label="New Password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="rounded-lg"
-                />
-
-                <PasswordInput
-                  id="confirmPassword"
-                  label="Confirm New Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="rounded-lg"
-                />
-                
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPasswordForm(false)
-                      setCurrentPassword('')
-                      setNewPassword('')
-                      setConfirmPassword('')
-                    }}
-                    className="px-4 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={passwordLoading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {passwordLoading ? 'Saving...' : 'Update Password'}
-                  </button>
-                </div>
-              </form>
-            )}
+        {/* Banner Right Artwork & Cursive Badge */}
+        <div className="relative w-full lg:w-96 h-40 shrink-0 flex items-center justify-end z-10 gap-4">
+          
+          {/* Blue Gear / Cog Graphic */}
+          <div className="w-16 h-16 rounded-2xl bg-slate-800 text-white flex items-center justify-center shadow-lg border border-slate-700 shrink-0">
+            <Settings className="w-8 h-8 text-amber-400 stroke-[2] animate-spin-slow" />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-[var(--bg-card)] shadow-md rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4 flex items-center gap-2">
-                <span>🏢</span> Company Logo &amp; Branding
-              </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-[var(--text-body)] mb-2">
-                    Company Logo
-                  </label>
-                  <div className="flex items-center gap-4">
-                    {logoPreview && (
-                      <div className="w-32 h-32 border-2 border-[var(--border-light)] rounded-lg overflow-hidden bg-[var(--bg-page)] flex items-center justify-center">
-                        <img src={logoPreview} alt="Company Logo" className="max-w-full max-h-full object-contain" />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        className="block w-full text-sm text-[var(--text-muted)] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                      />
-                      <p className="mt-1 text-xs text-[var(--text-muted)]">PNG, JPG, GIF up to 2MB</p>
-                    </div>
-                  </div>
-                </div>
+          {/* Mounted Yellow iBees Signboard Graphic Card */}
+          <div className="bg-white rounded-2xl p-2.5 shadow-xl border border-amber-200 flex flex-col items-center justify-center transform rotate-2">
+            <div className="bg-[#FFC800] text-slate-950 px-3 py-1.5 rounded-xl border border-amber-300 text-center">
+              <span className="font-serif italic font-black text-base text-slate-950 block leading-none">
+                iBees
+              </span>
+              <span className="text-[7px] font-bold text-slate-900 block leading-none mt-0.5">
+                we believe. we can.
+              </span>
+            </div>
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.companyName}
-                    onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
-                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Your Company Name"
-                  />
-                </div>
+          {/* Cursive script badge */}
+          <div className="hidden xl:block font-serif italic font-black text-sm text-amber-950 leading-tight">
+            <p>Your Brand</p>
+            <p>Our Platform</p>
+            <p className="-mt-0.5 text-xs text-amber-900">Greater Possibilities.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        
+        {/* Card Section 1: Account Security */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 border border-rose-200">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 tracking-tight">
+                  Account Security
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  Keep your account secure with a strong password.
+                </p>
               </div>
             </div>
 
-            <div className="bg-[var(--bg-card)] shadow-md rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4 flex items-center gap-2">
-                <span>📞</span> Contact Information
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={settings.email}
-                    onChange={(e) => setSettings({ ...settings, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="company@example.com"
-                  />
-                </div>
+            <button
+              type="button"
+              onClick={() => setShowPasswordForm(!showPasswordForm)}
+              className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs rounded-xl border border-blue-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <KeyRound className="w-4 h-4 text-blue-600" />
+              <span>Change Password</span>
+              <ChevronRight className="w-3.5 h-3.5 text-blue-500" />
+            </button>
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={settings.phone}
-                    onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
+          {/* Collapsible Change Password Drawer */}
+          {showPasswordForm && (
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                Update Account Password
+              </h4>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-                    Address
-                  </label>
-                  <textarea
-                    value={settings.address}
-                    onChange={(e) => setSettings({ ...settings, address: e.target.value })}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="123 Business St, City, State, ZIP"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-                    Website
-                  </label>
-                  <input
-                    type="url"
-                    value={settings.website}
-                    onChange={(e) => setSettings({ ...settings, website: e.target.value })}
-                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://www.example.com"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[var(--bg-card)] shadow-md rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4 flex items-center gap-2">
-                <span>⚙️</span> Default Proposal Settings
-              </h2>
-              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-                    Payment Terms
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.defaultPaymentTerms}
-                    onChange={(e) => setSettings({ ...settings, defaultPaymentTerms: e.target.value })}
-                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Net 30"
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Current Password</label>
+                  <PasswordInput
+                    id="currentPassword"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="••••••••"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-                    Validity Days
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.defaultValidityDays}
-                    onChange={(e) => setSettings({ ...settings, defaultValidityDays: parseInt(e.target.value) || 30 })}
-                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="1"
+                  <label className="block text-xs font-bold text-slate-700 mb-1">New Password</label>
+                  <PasswordInput
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="At least 6 characters"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-body)] mb-1">
-                    Tax Rate (%)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={settings.taxRate}
-                    onChange={(e) => setSettings({ ...settings, taxRate: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="0"
-                    max="100"
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Confirm New Password</label>
+                  <PasswordInput
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat new password"
                   />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordForm(false)}
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePasswordChange}
+                  disabled={passwordLoading}
+                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-2xs"
+                >
+                  {passwordLoading ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Card Section 2: Company Logo & Branding */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 border border-purple-200">
+              <ImageIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">
+                Company Logo &amp; Branding
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Upload your company logo and set your organization name.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            {/* Logo Preview & Upload Dropzone (Span 6) */}
+            <div className="lg:col-span-6 space-y-2">
+              <label className="block text-xs font-bold text-slate-700">Company Logo</label>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Yellow iBees Logo Box Preview */}
+                <div className="h-28 bg-[#FFC800] rounded-2xl border border-amber-400 p-3 flex flex-col items-center justify-center text-center shadow-2xs">
+                  <span className="font-serif italic font-black text-2xl text-slate-950 block leading-none">
+                    iBees
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-900 block leading-none mt-1">
+                    we believe. we can.
+                  </span>
+                </div>
+
+                {/* Upload Logo Box */}
+                <div className="h-28 border-2 border-dashed border-slate-200 hover:border-amber-400 bg-slate-50/50 hover:bg-amber-50/30 rounded-2xl p-3 flex flex-col items-center justify-center text-center transition-all relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                  />
+                  <Upload className="w-5 h-5 text-blue-600 mb-1" />
+                  <span className="text-xs font-bold text-slate-900 block">Upload Logo</span>
+                  <span className="text-[10px] text-slate-400 font-medium block mt-0.5">PNG, JPG, GIF up to 2MB</span>
+                  <span className="mt-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-700 shadow-2xs">
+                    Browse Files
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3">
-              <Link
-                href="/dashboard"
-                className="px-6 py-2 border border-[var(--border-default)] rounded-lg text-[var(--text-body)] hover:bg-[var(--bg-page)] transition"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
-              >
-                {saving ? 'Saving...' : 'Save Settings'}
-              </button>
+            {/* Company Name Field (Span 6) */}
+            <div className="lg:col-span-6 space-y-2">
+              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Building2 className="w-4 h-4 text-slate-400" />
+                <span>Company Name</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={settings.companyName}
+                onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
+                className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50/50 border border-slate-200 rounded-2xl focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all outline-none"
+              />
+              <p className="text-[10px] text-slate-400 font-medium pt-1">
+                This name will be used across proposals, invoices and communications.
+              </p>
             </div>
-          </form>
+
+          </div>
         </div>
-      </main>
+
+        {/* Card Section 3: Contact Information */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
+              <Phone className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">
+                Contact Information
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Update your official contact details for templates and communications.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* Email Address */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-slate-400" />
+                <span>Email Address</span>
+              </label>
+              <input
+                type="email"
+                required
+                value={settings.email}
+                onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+                className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50/50 border border-slate-200 rounded-2xl focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all outline-none"
+              />
+            </div>
+
+            {/* Phone Number */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                <span>Phone Number</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={settings.phone}
+                onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50/50 border border-slate-200 rounded-2xl focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all outline-none"
+              />
+            </div>
+
+            {/* Address */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                <span>Address</span>
+              </label>
+              <textarea
+                rows={2}
+                value={settings.address}
+                onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                className="w-full px-4 py-2 text-xs font-medium bg-slate-50/50 border border-slate-200 rounded-2xl focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all outline-none"
+              />
+            </div>
+
+            {/* Website */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-slate-400" />
+                <span>Website</span>
+              </label>
+              <input
+                type="text"
+                value={settings.website}
+                onChange={(e) => setSettings({ ...settings, website: e.target.value })}
+                className="w-full px-4 py-2.5 text-xs font-semibold bg-slate-50/50 border border-slate-200 rounded-2xl focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all outline-none"
+              />
+            </div>
+
+          </div>
+        </div>
+
+        {/* Card Section 4: Default Proposal Settings */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200">
+              <Sliders className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">
+                Default Proposal Settings
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Set up default terms, validity period and tax configuration for new proposals.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            
+            {/* Payment Terms (Span 6) */}
+            <div className="md:col-span-6 space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5 text-slate-400" />
+                <span>Payment Terms</span>
+              </label>
+              <select
+                value={settings.defaultPaymentTerms}
+                onChange={(e) => setSettings({ ...settings, defaultPaymentTerms: e.target.value })}
+                className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-slate-200 rounded-2xl outline-none cursor-pointer focus:border-amber-500"
+              >
+                <option value="50% advance upon project signoff, 30% upon milestone completion">
+                  50% advance upon project signoff, 30% upon milestone completion
+                </option>
+                <option value="Net 30 Days">Net 30 Days</option>
+                <option value="100% Advance">100% Advance</option>
+                <option value="50% Advance, 50% On Delivery">50% Advance, 50% On Delivery</option>
+              </select>
+            </div>
+
+            {/* Validity Days (Span 3) */}
+            <div className="md:col-span-3 space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                <span>Validity Days</span>
+              </label>
+              <select
+                value={settings.defaultValidityDays}
+                onChange={(e) => setSettings({ ...settings, defaultValidityDays: Number(e.target.value) })}
+                className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-slate-200 rounded-2xl outline-none cursor-pointer focus:border-amber-500"
+              >
+                <option value={15}>15 Days</option>
+                <option value={30}>30 Days</option>
+                <option value={60}>60 Days</option>
+                <option value={90}>90 Days</option>
+              </select>
+            </div>
+
+            {/* Tax Rate (%) (Span 3) */}
+            <div className="md:col-span-3 space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Percent className="w-3.5 h-3.5 text-slate-400" />
+                <span>Tax Rate (%)</span>
+              </label>
+              <select
+                value={settings.taxRate}
+                onChange={(e) => setSettings({ ...settings, taxRate: Number(e.target.value) })}
+                className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-slate-200 rounded-2xl outline-none cursor-pointer focus:border-amber-500"
+              >
+                <option value={0}>0% (Tax Exempt)</option>
+                <option value={18}>18% (Standard GST)</option>
+                <option value={12}>12% (Reduced Tax)</option>
+                <option value={5}>5% (Special Rate)</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Bottom Form Action Bar */}
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={fetchSettings}
+            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-2.5 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl shadow-2xs transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98]"
+          >
+            <Check className="w-4 h-4 stroke-[3]" />
+            <span>{saving ? 'Saving Settings...' : 'Save Settings'}</span>
+          </button>
+        </div>
+
+      </form>
+
     </div>
   )
 }

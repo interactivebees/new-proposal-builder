@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { Layers, Plus } from 'lucide-react'
 
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
   ssr: false,
@@ -63,76 +64,81 @@ export default function NewTemplatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)]">
-      <div className="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-2xl font-bold text-[var(--text-heading)] mb-6">Create New Template</h1>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
-
-            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-[var(--text-body)]">
-                  Template Name *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., Standard Proposal Template"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-[var(--text-body)]">
-                  Category
-                </label>
-                <input
-                  type="text"
-                  id="category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-[var(--border-default)] rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., Sales, Marketing, Consulting"
-                />
-              </div>
-            </div>
-
-            <div className="bg-[var(--bg-card)] shadow rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Template Sections</h2>
-              <p className="text-sm text-[var(--text-muted)] mb-4">
-                Define the structure and default content for proposals using this template.
-              </p>
-              <SectionEditor sections={sections} onChange={setSections} />
-            </div>
-
-            <div className="flex justify-end space-x-4">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-4 py-2 border border-[var(--border-default)] rounded-md shadow-sm text-sm font-medium text-[var(--text-body)] bg-[var(--bg-card)] hover:bg-[var(--bg-page)]"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? 'Creating...' : 'Create Template'}
-              </button>
-            </div>
-          </form>
-        </div>
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+          <Layers className="w-7 h-7 text-amber-600" />
+          Create Proposal Template
+        </h1>
+        <p className="text-xs font-medium text-slate-500 mt-1">
+          Build a reusable proposal structure with standard sections, pricing layouts, and content blocks.
+        </p>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-bold">
+            {error}
+          </div>
+        )}
+
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6 space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-xs font-extrabold text-slate-800 mb-1">
+              Template Name *
+            </label>
+            <input
+              type="text"
+              id="name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3.5 py-2.5 text-xs font-medium border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-300"
+              placeholder="e.g., Enterprise Web Application Proposal Template"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="category" className="block text-xs font-extrabold text-slate-800 mb-1">
+              Category
+            </label>
+            <input
+              type="text"
+              id="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full px-3.5 py-2.5 text-xs font-medium border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-300"
+              placeholder="e.g., IT Services, Cloud Architecture, Mobile App"
+            />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-6">
+          <h2 className="text-sm font-extrabold text-slate-900 mb-1">Template Sections</h2>
+          <p className="text-xs text-slate-500 font-medium mb-4">
+            Define the default sections and content structure for proposals created with this template.
+          </p>
+          <SectionEditor sections={sections} onChange={setSections} />
+        </div>
+
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-5 py-2 bg-[#FEF08A] hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow-2xs transition-all border border-amber-300/80 disabled:opacity-50"
+          >
+            {loading ? 'Creating...' : 'Create Template'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
