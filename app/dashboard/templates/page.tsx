@@ -10,8 +10,6 @@ import {
   Search, 
   ChevronDown, 
   MoreVertical, 
-  Download, 
-  Star, 
   LayoutGrid, 
   List, 
   Cloud, 
@@ -22,7 +20,6 @@ import {
   Code, 
   Server, 
   GraduationCap,
-  ExternalLink,
   Trash2,
   Copy,
   Edit3,
@@ -43,7 +40,7 @@ interface TemplateItem {
   bannerType: 'cloud' | 'cyber' | 'mobile' | 'marketing' | 'erp' | 'web' | 'it' | 'training'
 }
 
-// Sample 8 Templates matching reference screenshot exactly
+// Sample 8 Templates
 const sampleTemplatesList: TemplateItem[] = [
   {
     id: '1',
@@ -141,14 +138,11 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
-  const [selectedCreator, setSelectedCreator] = useState('ALL')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
   
-  // Create / Edit Modal State
+  // Create Modal State
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [editingTemplate, setEditingTemplate] = useState<TemplateItem | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -177,7 +171,7 @@ export default function TemplatesPage() {
             creatorInitials: item.creator?.name
               ? item.creator.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
               : 'AD',
-            usedTimes: item.usedCount || Math.floor(Math.random() * 20) + 5,
+            usedTimes: item.usedCount || Math.floor(Math.random() * 25) + 6,
             createdAt: new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
             bannerType: (['cloud', 'cyber', 'mobile', 'marketing', 'erp', 'web', 'it', 'training'][index % 8]) as any
           }))
@@ -211,44 +205,9 @@ export default function TemplatesPage() {
     setActionMenuOpen(null)
   }
 
-  const handleOpenEditModal = (template: TemplateItem) => {
-    setEditingTemplate(template)
-    setFormData({
-      title: template.title,
-      category: template.category,
-      description: template.description,
-      bannerType: template.bannerType
-    })
-    setShowEditModal(true)
+  const handleEditTemplatePage = (id: string) => {
     setActionMenuOpen(null)
-  }
-
-  const handleUpdateTemplate = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingTemplate) return
-    if (!formData.title) {
-      toast.error('Template title is required')
-      return
-    }
-
-    setSubmitting(true)
-    setTemplates(prev => prev.map(t => {
-      if (t.id === editingTemplate.id) {
-        return {
-          ...t,
-          title: formData.title,
-          category: formData.category,
-          description: formData.description,
-          bannerType: formData.bannerType
-        }
-      }
-      return t
-    }))
-
-    toast.success(`Template "${formData.title}" updated successfully!`)
-    setShowEditModal(false)
-    setEditingTemplate(null)
-    setSubmitting(false)
+    router.push(`/dashboard/templates/${id}/edit`)
   }
 
   const handleCreateTemplate = (e: React.FormEvent) => {
@@ -259,8 +218,9 @@ export default function TemplatesPage() {
     }
 
     setSubmitting(true)
+    const newId = Date.now().toString()
     const newTemplate: TemplateItem = {
-      id: Date.now().toString(),
+      id: newId,
       title: formData.title,
       category: formData.category,
       description: formData.description || 'Custom corporate proposal template structure.',
@@ -272,10 +232,10 @@ export default function TemplatesPage() {
     }
 
     setTemplates([newTemplate, ...templates])
-    toast.success(`New template "${formData.title}" created successfully!`)
+    toast.success(`New template "${formData.title}" created! Redirecting to section editor...`)
     setShowCreateModal(false)
     setSubmitting(false)
-    setFormData({ title: '', category: 'Cloud & DevOps', description: '', bannerType: 'cloud' })
+    router.push(`/dashboard/templates/${newId}/edit`)
   }
 
   const handleUseTemplate = (id: string, title: string) => {
@@ -290,12 +250,11 @@ export default function TemplatesPage() {
                           t.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           t.creatorName.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === 'ALL' || t.category === selectedCategory
-    const matchesCreator = selectedCreator === 'ALL' || t.creatorName === selectedCreator
-    return matchesSearch && matchesCategory && matchesCreator
+    return matchesSearch && matchesCategory
   })
 
   const uniqueCategories = Array.from(new Set(templates.map(t => t.category)))
-  const uniqueCreators = Array.from(new Set(templates.map(t => t.creatorName)))
+  const totalUsages = templates.reduce((acc, t) => acc + (t.usedTimes || 0), 0)
 
   const renderBannerGraphic = (type: string) => {
     switch (type) {
@@ -368,7 +327,7 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="space-y-5 pb-6 font-sans">
+    <div className="space-y-5 pb-8 font-sans">
       
       {/* 1. Top Warm Golden Hero Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
@@ -408,7 +367,62 @@ export default function TemplatesPage() {
         </button>
       </div>
 
-      {/* 2. Control Toolbar */}
+      {/* 2. Dashboard KPI Metric Stat Cards Row (4 Columns) */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        {/* Card 1: Total Templates */}
+        <div className="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-slate-500 block">Total Templates</span>
+            <div className="text-2xl font-black text-slate-900 tracking-tight">{templates.length}</div>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center border border-blue-200 shadow-2xs">
+            <Layers className="w-5 h-5 stroke-[2.2]" />
+          </div>
+        </div>
+
+        {/* Card 2: Total Template Usages */}
+        <div className="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-slate-500 block">Total Template Usages</span>
+            <div className="text-2xl font-black text-slate-900 tracking-tight">
+              {totalUsages}
+            </div>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-[#FEF08A] text-amber-950 flex items-center justify-center border border-amber-200 shadow-2xs">
+            <Sparkles className="w-5 h-5 stroke-[2.2]" />
+          </div>
+        </div>
+
+        {/* Card 3: Solution Categories */}
+        <div className="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-slate-500 block">Solution Categories</span>
+            <div className="text-2xl font-black text-slate-900 tracking-tight">
+              {uniqueCategories.length}
+            </div>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-2xs">
+            <TrendingUp className="w-5 h-5 stroke-[2.2]" />
+          </div>
+        </div>
+
+        {/* Card 4: Top Category */}
+        <div className="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-slate-500 block">Top Framework</span>
+            <div className="text-base font-black text-slate-900 tracking-tight truncate max-w-[130px]">
+              {uniqueCategories[0] || 'Cloud & DevOps'}
+            </div>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center border border-purple-200 shadow-2xs">
+            <FileText className="w-5 h-5 stroke-[2.2]" />
+          </div>
+        </div>
+
+      </div>
+
+      {/* 3. Control Toolbar */}
       <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-2xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3.5">
         
         {/* Search Input */}
@@ -466,7 +480,7 @@ export default function TemplatesPage() {
 
       </div>
 
-      {/* 3. Templates Grid / Table */}
+      {/* 4. Templates Grid / Table */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {filteredTemplates.map((template) => (
@@ -493,27 +507,27 @@ export default function TemplatesPage() {
                     </button>
 
                     {actionMenuOpen === template.id && (
-                      <div className="absolute right-0 top-8 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 text-left animate-in fade-in slide-in-from-top-1">
+                      <div className="absolute right-0 top-8 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 text-left animate-in fade-in slide-in-from-top-1">
                         <button
-                          onClick={() => handleOpenEditModal(template)}
+                          onClick={() => handleEditTemplatePage(template.id)}
                           className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors text-left cursor-pointer"
                         >
-                          <Edit3 className="w-3.5 h-3.5 text-blue-500" />
-                          Edit Details
+                          <Edit3 className="w-3.5 h-3.5 text-amber-600" />
+                          Edit Template &amp; Sections
                         </button>
                         <button
                           onClick={() => handleDuplicate(template)}
                           className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors text-left cursor-pointer"
                         >
                           <Copy className="w-3.5 h-3.5 text-slate-400" />
-                          Duplicate
+                          Duplicate Template
                         </button>
                         <button
                           onClick={() => handleDelete(template.id, template.title)}
                           className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors text-left border-t border-slate-100 mt-1 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                          Delete
+                          Delete Template
                         </button>
                       </div>
                     )}
@@ -525,7 +539,9 @@ export default function TemplatesPage() {
               <div className="p-4.5 space-y-3 flex-1 flex flex-col justify-between">
                 <div className="space-y-1.5">
                   <h3 className="text-xs sm:text-sm font-black text-slate-900 group-hover:text-amber-800 transition-colors leading-snug line-clamp-2">
-                    {template.title}
+                    <Link href={`/dashboard/templates/${template.id}/edit`} className="hover:underline">
+                      {template.title}
+                    </Link>
                   </h3>
                   <p className="text-[11px] font-semibold text-slate-500 line-clamp-2 leading-relaxed">
                     {template.description}
@@ -554,12 +570,13 @@ export default function TemplatesPage() {
 
                 {/* Bottom Action Buttons */}
                 <div className="grid grid-cols-2 gap-2 pt-1">
-                  <button
-                    onClick={() => handleOpenEditModal(template)}
-                    className="py-2 px-3 text-center bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-[11px] transition-colors border border-slate-200/80 shadow-2xs cursor-pointer"
+                  <Link
+                    href={`/dashboard/templates/${template.id}/edit`}
+                    className="py-2 px-3 text-center bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-[11px] transition-colors border border-slate-200/80 shadow-2xs flex items-center justify-center gap-1"
                   >
-                    Edit Details
-                  </button>
+                    <Edit3 className="w-3 h-3 text-slate-600" />
+                    <span>Edit Sections</span>
+                  </Link>
                   <button
                     onClick={() => handleUseTemplate(template.id, template.title)}
                     className="py-2 px-3 text-center bg-[#FFC800] hover:bg-[#F5BF00] active:bg-amber-500 text-slate-950 font-extrabold rounded-xl text-[11px] transition-colors shadow-2xs border border-amber-400 cursor-pointer"
@@ -590,7 +607,9 @@ export default function TemplatesPage() {
               {filteredTemplates.map((template) => (
                 <tr key={template.id} className="hover:bg-amber-50/20 transition-colors group">
                   <td className="py-4 px-5 font-extrabold text-slate-900 group-hover:text-amber-800 transition-colors">
-                    {template.title}
+                    <Link href={`/dashboard/templates/${template.id}/edit`} className="hover:underline">
+                      {template.title}
+                    </Link>
                   </td>
                   <td className="py-4 px-5">
                     <span className="px-2.5 py-1 text-[10px] font-extrabold bg-slate-100 text-slate-800 rounded-full border border-slate-200">
@@ -613,12 +632,13 @@ export default function TemplatesPage() {
                   </td>
                   <td className="py-4 px-5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleOpenEditModal(template)}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-lg text-[11px] transition-colors cursor-pointer"
+                      <Link
+                        href={`/dashboard/templates/${template.id}/edit`}
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-lg text-[11px] transition-colors flex items-center gap-1"
                       >
-                        Edit
-                      </button>
+                        <Edit3 className="w-3 h-3 text-slate-600" />
+                        <span>Edit Sections</span>
+                      </Link>
                       <button
                         onClick={() => handleUseTemplate(template.id, template.title)}
                         className="px-3 py-1.5 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black rounded-lg text-[11px] transition-colors shadow-2xs cursor-pointer"
@@ -704,83 +724,7 @@ export default function TemplatesPage() {
                   disabled={submitting}
                   className="px-5 py-2 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
                 >
-                  {submitting ? 'Creating...' : 'Create Template'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal for Editing Template */}
-      {showEditModal && editingTemplate && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150 border border-slate-100">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <Edit3 className="w-5 h-5 text-amber-500" />
-                Edit Template ({editingTemplate.title})
-              </h3>
-              <button
-                onClick={() => { setShowEditModal(false); setEditingTemplate(null) }}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateTemplate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Template Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3.5 py-2 text-xs font-semibold border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3.5 py-2 text-xs font-semibold border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none bg-white"
-                >
-                  <option value="Cloud & DevOps">Cloud &amp; DevOps</option>
-                  <option value="Cybersecurity">Cybersecurity</option>
-                  <option value="Mobile Apps">Mobile Apps</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Enterprise Solutions">Enterprise Solutions</option>
-                  <option value="Web Development">Web Development</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Description</label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3.5 py-2 text-xs font-medium border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => { setShowEditModal(false); setEditingTemplate(null) }}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
-                >
-                  {submitting ? 'Saving...' : 'Save Template Changes'}
+                  {submitting ? 'Creating...' : 'Create & Edit Sections'}
                 </button>
               </div>
             </form>

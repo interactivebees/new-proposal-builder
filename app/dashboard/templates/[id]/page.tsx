@@ -2,20 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
-
-const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
-  ssr: false,
-  loading: () => <div>Loading editor...</div>
-})
+import toast from 'react-hot-toast'
+import { ArrowLeft, Edit3, Plus, Layers, Sparkles, Save, FileText } from 'lucide-react'
 
 interface Template {
   id: string
   name: string
+  category?: string
+  description?: string
   sections: any
   createdAt: string
-  creator: {
+  creator?: {
     name: string
     email: string
   }
@@ -24,111 +22,18 @@ interface Template {
 export default function TemplateDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const [template, setTemplate] = useState<Template | null>(null)
-  const [loading, setLoading] = useState(true)
+  const templateId = params.id as string
 
   useEffect(() => {
-    fetchTemplate()
-  }, [params.id])
-
-  const fetchTemplate = async () => {
-    try {
-      const res = await fetch(`/api/templates/${params.id}`)
-      if (res.ok) {
-        const data = await res.json()
-        setTemplate(data)
-      } else {
-        console.error('Failed to fetch template')
-      }
-    } catch (error) {
-      console.error('Error fetching template:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleUseTemplate = () => {
-    // Navigate to new proposal page with template ID
-    router.push(`/dashboard/proposals/new?templateId=${params.id}`)
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
-        <div className="text-[var(--text-muted)]">Loading template...</div>
-      </div>
-    )
-  }
-
-  if (!template) {
-    return (
-      <div className="min-h-screen bg-[var(--bg-page)] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-[var(--text-muted)] mb-4">Template not found</p>
-          <Link href="/dashboard/templates" className="text-blue-600 hover:text-blue-800">
-            Back to Templates
-          </Link>
-        </div>
-      </div>
-    )
-  }
+    // Automatically redirect to the template section editor page for seamless section management
+    router.replace(`/dashboard/templates/${templateId}/edit`)
+  }, [templateId, router])
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)]">
-      <div className="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="bg-[var(--bg-card)] shadow rounded-lg p-6 mb-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-[var(--text-heading)]">{template.name}</h1>
-              </div>
-              <div className="flex space-x-3">
-                <Link
-                  href="/dashboard/templates"
-                  className="px-4 py-2 border border-[var(--border-default)] rounded hover:bg-[var(--bg-page)]"
-                >
-                  Back
-                </Link>
-                <Link
-                  href={`/dashboard/templates/${params.id}/edit`}
-                  className="px-4 py-2 border border-blue-600 text-blue-600 rounded hover:bg-blue-50"
-                >
-                  Edit Template
-                </Link>
-                <button
-                  onClick={handleUseTemplate}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Use This Template
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-[var(--text-muted)]">Created By</p>
-                  <p className="text-sm font-medium text-[var(--text-heading)]">{template.creator.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[var(--text-muted)]">Created</p>
-                  <p className="text-sm font-medium text-[var(--text-heading)]">
-                    {new Date(template.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[var(--bg-card)] shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-[var(--text-heading)] mb-4">Template Preview</h2>
-            <SectionEditor
-              sections={template.sections?.sections || []}
-              onChange={() => {}}
-              readOnly={true}
-            />
-          </div>
-        </div>
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        <p className="text-xs font-bold text-slate-500">Opening Template Section Editor...</p>
       </div>
     </div>
   )
