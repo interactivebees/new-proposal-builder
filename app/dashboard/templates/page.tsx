@@ -187,22 +187,44 @@ export default function TemplatesPage() {
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return
-    setTemplates(prev => prev.filter(t => t.id !== id))
-    toast.success(`Template "${title}" deleted`)
-    setActionMenuOpen(null)
+    try {
+      const res = await fetch(`/api/templates/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success(`Template "${title}" deleted`)
+        setActionMenuOpen(null)
+        fetchTemplates()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to delete template')
+      }
+    } catch (error) {
+      toast.error('Failed to delete template')
+    }
   }
 
-  const handleDuplicate = (template: TemplateItem) => {
-    const duplicated: TemplateItem = {
-      ...template,
-      id: Date.now().toString(),
-      title: `${template.title} (Copy)`,
-      usedTimes: 0,
-      createdAt: 'Just now'
+  const handleDuplicate = async (template: TemplateItem) => {
+    try {
+      const res = await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${template.title} (Copy)`,
+          content: { description: template.description },
+          category: template.category
+        })
+      })
+
+      if (res.ok) {
+        toast.success(`Template "${template.title}" duplicated!`)
+        setActionMenuOpen(null)
+        fetchTemplates()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to duplicate template')
+      }
+    } catch (error) {
+      toast.error('Failed to duplicate template')
     }
-    setTemplates([duplicated, ...templates])
-    toast.success(`Template "${template.title}" duplicated!`)
-    setActionMenuOpen(null)
   }
 
   const handleEditTemplatePage = (id: string) => {
@@ -210,7 +232,7 @@ export default function TemplatesPage() {
     router.push(`/dashboard/templates/${id}/edit`)
   }
 
-  const handleCreateTemplate = (e: React.FormEvent) => {
+  const handleCreateTemplate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title) {
       toast.error('Template title is required')
@@ -218,24 +240,32 @@ export default function TemplatesPage() {
     }
 
     setSubmitting(true)
-    const newId = Date.now().toString()
-    const newTemplate: TemplateItem = {
-      id: newId,
-      title: formData.title,
-      category: formData.category,
-      description: formData.description || 'Custom corporate proposal template structure.',
-      creatorName: 'Admin',
-      creatorInitials: 'AD',
-      usedTimes: 0,
-      createdAt: 'Just now',
-      bannerType: formData.bannerType
-    }
+    try {
+      const res = await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.title,
+          content: { description: formData.description || 'Custom corporate proposal template structure.' },
+          category: formData.category
+        })
+      })
 
-    setTemplates([newTemplate, ...templates])
-    toast.success(`New template "${formData.title}" created! Redirecting to section editor...`)
-    setShowCreateModal(false)
-    setSubmitting(false)
-    router.push(`/dashboard/templates/${newId}/edit`)
+      if (res.ok) {
+        const created = await res.json()
+        toast.success(`New template "${formData.title}" created! Redirecting to section editor...`)
+        setShowCreateModal(false)
+        setFormData({ title: '', category: 'Cloud & DevOps', description: '', bannerType: 'cloud' })
+        router.push(`/dashboard/templates/${created.id}/edit`)
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to create template')
+      }
+    } catch (error) {
+      toast.error('Failed to create template')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleUseTemplate = (id: string, title: string) => {

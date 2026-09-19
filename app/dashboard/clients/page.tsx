@@ -292,7 +292,7 @@ export default function ClientsPage() {
     }
   }
 
-  const handleCreateClient = (e: React.FormEvent) => {
+  const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.companyName) {
       toast.error('Company Name is required')
@@ -300,42 +300,49 @@ export default function ClientsPage() {
     }
 
     setSubmitting(true)
-    const newClient: ClientItem = {
-      id: Date.now().toString(),
-      num: clients.length + 1,
-      companyName: formData.companyName,
-      slogan: formData.slogan || 'Enterprise Client Account',
-      status: formData.status,
-      industry: formData.industry,
-      location: formData.location,
-      email: formData.email || `contact@${formData.companyName.toLowerCase().replace(/\s+/g, '')}.com`,
-      phone: formData.phone || '+91 11 4100 2000',
-      contactPerson: formData.contactPerson || 'Rajesh Sharma',
-      contactDesignation: formData.contactDesignation || 'VP Digital Operations',
-      logoUrl: formData.logoUrl || undefined,
-      proposalsCount: 1,
-      pipelineValue: formData.pipelineValue,
-      avatarLetter: formData.companyName[0].toUpperCase(),
-      avatarBg: 'bg-blue-600'
-    }
+    try {
+      const [city, country] = formData.location.split(', ')
+      const res = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.contactPerson || formData.companyName,
+          companyName: formData.companyName,
+          industry: formData.industry,
+          email: formData.email,
+          phone: formData.phone,
+          city: city || 'New Delhi',
+          country: country || 'India',
+          status: formData.status
+        })
+      })
 
-    setClients([newClient, ...clients])
-    toast.success(`Client account "${formData.companyName}" added successfully!`)
-    setShowModal(false)
-    setSubmitting(false)
-    setFormData({
-      companyName: '',
-      slogan: '',
-      industry: 'Technology',
-      location: 'New Delhi, India',
-      email: '',
-      phone: '',
-      contactPerson: '',
-      contactDesignation: '',
-      logoUrl: '',
-      pipelineValue: '₹ 50 L',
-      status: 'LEAD'
-    })
+      if (res.ok) {
+        toast.success(`Client account "${formData.companyName}" added successfully!`)
+        setShowModal(false)
+        setFormData({
+          companyName: '',
+          slogan: '',
+          industry: 'Technology',
+          location: 'New Delhi, India',
+          email: '',
+          phone: '',
+          contactPerson: '',
+          contactDesignation: '',
+          logoUrl: '',
+          pipelineValue: '₹ 50 L',
+          status: 'LEAD'
+        })
+        fetchClients()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to create client')
+      }
+    } catch (error) {
+      toast.error('Failed to create client')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleOpenEditModal = (client: ClientItem) => {
@@ -357,7 +364,7 @@ export default function ClientsPage() {
     setActionMenuOpen(null)
   }
 
-  const handleUpdateClient = (e: React.FormEvent) => {
+  const handleUpdateClient = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingClient) return
     if (!editFormData.companyName) {
@@ -366,38 +373,54 @@ export default function ClientsPage() {
     }
 
     setSubmitting(true)
-    setClients(prev => prev.map(c => {
-      if (c.id === editingClient.id) {
-        return {
-          ...c,
+    try {
+      const [city, country] = editFormData.location.split(', ')
+      const res = await fetch(`/api/clients/${editingClient.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editFormData.contactPerson || editFormData.companyName,
           companyName: editFormData.companyName,
-          slogan: editFormData.slogan,
           industry: editFormData.industry,
-          location: editFormData.location,
           email: editFormData.email,
           phone: editFormData.phone,
-          contactPerson: editFormData.contactPerson,
-          contactDesignation: editFormData.contactDesignation,
-          logoUrl: editFormData.logoUrl || undefined,
-          pipelineValue: editFormData.pipelineValue,
-          status: editFormData.status,
-          avatarLetter: editFormData.companyName[0].toUpperCase()
-        }
-      }
-      return c
-    }))
+          city: city || 'New Delhi',
+          country: country || 'India',
+          status: editFormData.status
+        })
+      })
 
-    toast.success(`Client account "${editFormData.companyName}" updated successfully!`)
-    setShowEditModal(false)
-    setEditingClient(null)
-    setSubmitting(false)
+      if (res.ok) {
+        toast.success(`Client account "${editFormData.companyName}" updated successfully!`)
+        setShowEditModal(false)
+        setEditingClient(null)
+        fetchClients()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to update client')
+      }
+    } catch (error) {
+      toast.error('Failed to update client')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return
-    setClients(prev => prev.filter(c => c.id !== id))
-    toast.success(`Client account "${name}" deleted`)
-    setActionMenuOpen(null)
+    try {
+      const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success(`Client account "${name}" deleted`)
+        setActionMenuOpen(null)
+        fetchClients()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to delete client')
+      }
+    } catch (error) {
+      toast.error('Failed to delete client')
+    }
   }
 
   const filteredClients = clients.filter(c => {

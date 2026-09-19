@@ -163,12 +163,11 @@ export default function EditTemplatePage() {
         toast.success(`Template "${name}" saved successfully!`)
         router.push('/dashboard/templates')
       } else {
-        toast.success(`Template "${name}" saved!`)
-        router.push('/dashboard/templates')
+        const err = await res.json().catch(() => ({ error: 'Failed to save template' }))
+        toast.error(err.error || 'Failed to save template')
       }
     } catch (error) {
-      toast.success(`Template "${name}" saved!`)
-      router.push('/dashboard/templates')
+      toast.error('Failed to save template. Please try again.')
     } finally {
       setSaving(false)
     }
