@@ -169,7 +169,7 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans">
+    <div className="h-screen bg-white flex flex-col font-sans overflow-hidden">
       
       {/* Top Header Bar */}
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 h-16 flex items-center px-4 sm:px-6 lg:px-8 justify-between shadow-2xs shrink-0">
@@ -301,9 +301,9 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
       {/* Main Container with Left Sidebar */}
       <div className="flex-1 flex overflow-hidden">
         
-        {/* Left Sidebar Menu */}
+        {/* Left Sidebar Menu - Normal flex child on desktop, fixed overlay on mobile */}
         <aside
-          className={`fixed lg:sticky top-16 inset-y-0 left-0 z-30 w-64 h-[calc(100vh-4rem)] bg-white border-r border-slate-200/80 transform ${
+          className={`fixed lg:static top-16 lg:top-auto inset-y-0 lg:inset-y-auto left-0 z-30 w-64 lg:h-auto h-[calc(100vh-4rem)] bg-white border-r border-slate-200/80 transform ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           } lg:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col justify-between p-3.5 shadow-2xs shrink-0 overflow-y-auto`}
         >

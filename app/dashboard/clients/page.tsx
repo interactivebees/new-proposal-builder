@@ -54,7 +54,7 @@ const sampleClientsList: ClientItem[] = [
     num: 1,
     companyName: 'Maruti Suzuki India Limited',
     slogan: 'Mobility for a Better Tomorrow',
-    status: 'LEAD',
+    status: 'ACTIVE',
     industry: 'Automotive',
     location: 'New Delhi, India',
     email: 'contact@maruti.co.in',
@@ -161,8 +161,8 @@ const sampleClientsList: ClientItem[] = [
 
 function getStatusBadge(status: string) {
   switch (status) {
-    case 'LEAD':
-      return { text: 'LEAD', class: 'bg-[#FEF08A] text-amber-950 border border-amber-300/80 shadow-2xs' }
+    // case 'LEAD':
+    //   return { text: 'LEAD', class: 'bg-[#FEF08A] text-amber-950 border border-amber-300/80 shadow-2xs' }
     case 'ACTIVE':
       return { text: 'ACTIVE', class: 'bg-[#DCFCE7] text-emerald-900 border border-emerald-200/80 shadow-2xs' }
     case 'INACTIVE':
@@ -172,7 +172,7 @@ function getStatusBadge(status: string) {
 }
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<ClientItem[]>(sampleClientsList)
+  const [clients, setClients] = useState<ClientItem[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedIndustry, setSelectedIndustry] = useState('ALL')
@@ -182,10 +182,12 @@ export default function ClientsPage() {
   
   // Create Modal State
   const [showModal, setShowModal] = useState(false)
+  const [addLogoError, setAddLogoError] = useState(false)
 
   // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingClient, setEditingClient] = useState<ClientItem | null>(null)
+  const [editLogoError, setEditLogoError] = useState(false)
 
   const [submitting, setSubmitting] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -200,8 +202,8 @@ export default function ClientsPage() {
     contactPerson: '',
     contactDesignation: '',
     logoUrl: '',
-    pipelineValue: '₹ 50 L',
-    status: 'LEAD' as 'LEAD' | 'ACTIVE' | 'INACTIVE'
+    pipelineValue: '₹ 0',
+    status: 'ACTIVE' as 'LEAD' | 'ACTIVE' | 'INACTIVE'
   })
 
   const [editFormData, setEditFormData] = useState({
@@ -214,8 +216,8 @@ export default function ClientsPage() {
     contactPerson: '',
     contactDesignation: '',
     logoUrl: '',
-    pipelineValue: '₹ 50 L',
-    status: 'LEAD' as 'LEAD' | 'ACTIVE' | 'INACTIVE'
+    pipelineValue: '₹ 0',
+    status: 'ACTIVE' as 'LEAD' | 'ACTIVE' | 'INACTIVE'
   })
 
   useEffect(() => {
@@ -227,9 +229,22 @@ export default function ClientsPage() {
       const res = await fetch('/api/clients')
       if (res.ok) {
         const data = await res.json()
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const mapped: ClientItem[] = data.map((item: any, index: number) => {
             const firstContact = item.contacts && item.contacts.length > 0 ? item.contacts[0] : null
+            const proposals = item.proposals || []
+            const proposalsCount = proposals.length
+            const totalVal = proposals.reduce((acc: number, p: any) => acc + (Number(p.opportunityValue) || 0), 0)
+
+            let pipelineValue = '₹ 0'
+            if (totalVal >= 10000000) {
+              pipelineValue = `₹ ${(totalVal / 10000000).toFixed(1)} Cr`
+            } else if (totalVal >= 100000) {
+              pipelineValue = `₹ ${(totalVal / 100000).toFixed(0)} L`
+            } else if (totalVal > 0) {
+              pipelineValue = `₹ ${totalVal.toLocaleString('en-IN')}`
+            }
+
             return {
               id: item.id,
               num: index + 1,
@@ -237,15 +252,15 @@ export default function ClientsPage() {
               slogan: item.slogan || 'Transforming Enterprise Growth',
               status: (item.status || 'ACTIVE') as any,
               industry: item.industry || 'Technology',
-              location: (item.city ? `${item.city}, India` : 'New Delhi, India'),
-              email: item.email || `contact@${(item.companyName || 'client').toLowerCase().replace(/\s+/g, '')}.com`,
-              phone: item.phone || '+91 11 4100 2000',
-              contactPerson: firstContact?.name || item.name || 'Key Contact Person',
+              location: item.city ? (item.country ? `${item.city}, ${item.country}` : `${item.city}, India`) : (item.country || 'New Delhi, India'),
+              email: item.email || '',
+              phone: item.phone || '',
+              contactPerson: firstContact?.name || item.name || '',
               contactDesignation: firstContact?.designation || 'Lead Procurement Manager',
-              logoUrl: item.logoUrl || sampleClientsList[index % sampleClientsList.length]?.logoUrl,
-              proposalsCount: item.proposals?.length || Math.floor(Math.random() * 8) + 3,
-              pipelineValue: item.pipelineValue || `₹ ${(Math.floor(Math.random() * 80) + 20)} L`,
-              avatarLetter: (item.companyName || 'C')[0].toUpperCase(),
+              logoUrl: item.logoUrl || '',
+              proposalsCount,
+              pipelineValue,
+              avatarLetter: (item.companyName || item.name || 'C')[0].toUpperCase(),
               avatarBg: ['bg-rose-600', 'bg-blue-600', 'bg-indigo-600', 'bg-red-600', 'bg-slate-800', 'bg-purple-600'][index % 6]
             }
           })
@@ -277,8 +292,10 @@ export default function ClientsPage() {
         const data = await res.json()
         if (mode === 'create') {
           setFormData(prev => ({ ...prev, logoUrl: data.url }))
+          setAddLogoError(false)
         } else {
           setEditFormData(prev => ({ ...prev, logoUrl: data.url }))
+          setEditLogoError(false)
         }
         toast.success('Company logo uploaded successfully!')
       } else {
@@ -301,18 +318,23 @@ export default function ClientsPage() {
 
     setSubmitting(true)
     try {
-      const [city, country] = formData.location.split(', ')
+      const parts = formData.location ? formData.location.split(',').map(s => s.trim()) : ['New Delhi', 'India']
+      const city = parts[0] || 'New Delhi'
+      const country = parts[1] || 'India'
       const res = await fetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.contactPerson || formData.companyName,
+          contactDesignation: formData.contactDesignation,
           companyName: formData.companyName,
+          slogan: formData.slogan || '',
+          logoUrl: formData.logoUrl || '',
           industry: formData.industry,
           email: formData.email,
           phone: formData.phone,
-          city: city || 'New Delhi',
-          country: country || 'India',
+          city,
+          country,
           status: formData.status
         })
       })
@@ -320,6 +342,7 @@ export default function ClientsPage() {
       if (res.ok) {
         toast.success(`Client account "${formData.companyName}" added successfully!`)
         setShowModal(false)
+        setAddLogoError(false)
         setFormData({
           companyName: '',
           slogan: '',
@@ -330,16 +353,16 @@ export default function ClientsPage() {
           contactPerson: '',
           contactDesignation: '',
           logoUrl: '',
-          pipelineValue: '₹ 50 L',
-          status: 'LEAD'
+          pipelineValue: '₹ 0',
+          status: 'ACTIVE'
         })
         fetchClients()
       } else {
-        const err = await res.json()
-        toast.error(err.error || 'Failed to create client')
+        const err = await res.json().catch(() => ({}))
+        toast.error(err.error || err.details || 'Failed to create client')
       }
-    } catch (error) {
-      toast.error('Failed to create client')
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to create client')
     } finally {
       setSubmitting(false)
     }
@@ -347,9 +370,10 @@ export default function ClientsPage() {
 
   const handleOpenEditModal = (client: ClientItem) => {
     setEditingClient(client)
+    setEditLogoError(false)
     setEditFormData({
       companyName: client.companyName,
-      slogan: client.slogan,
+      slogan: client.slogan || '',
       industry: client.industry,
       location: client.location,
       email: client.email,
@@ -374,18 +398,23 @@ export default function ClientsPage() {
 
     setSubmitting(true)
     try {
-      const [city, country] = editFormData.location.split(', ')
+      const parts = editFormData.location ? editFormData.location.split(',').map(s => s.trim()) : ['New Delhi', 'India']
+      const city = parts[0] || 'New Delhi'
+      const country = parts[1] || 'India'
       const res = await fetch(`/api/clients/${editingClient.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editFormData.contactPerson || editFormData.companyName,
+          contactDesignation: editFormData.contactDesignation,
           companyName: editFormData.companyName,
+          slogan: editFormData.slogan || '',
+          logoUrl: editFormData.logoUrl || '',
           industry: editFormData.industry,
           email: editFormData.email,
           phone: editFormData.phone,
-          city: city || 'New Delhi',
-          country: country || 'India',
+          city,
+          country,
           status: editFormData.status
         })
       })
@@ -394,13 +423,14 @@ export default function ClientsPage() {
         toast.success(`Client account "${editFormData.companyName}" updated successfully!`)
         setShowEditModal(false)
         setEditingClient(null)
+        setEditLogoError(false)
         fetchClients()
       } else {
-        const err = await res.json()
-        toast.error(err.error || 'Failed to update client')
+        const err = await res.json().catch(() => ({}))
+        toast.error(err.error || err.details || 'Failed to update client')
       }
-    } catch (error) {
-      toast.error('Failed to update client')
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update client')
     } finally {
       setSubmitting(false)
     }
@@ -503,7 +533,7 @@ export default function ClientsPage() {
           <div className="space-y-1">
             <span className="text-xs font-bold text-slate-500 block">Lead Opportunities</span>
             <div className="text-2xl font-black text-slate-900 tracking-tight">
-              {clients.filter(c => c.status === 'LEAD').length}
+              {clients.filter(c => c.status === 'ACTIVE').length}
             </div>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-[#FEF08A] text-amber-950 flex items-center justify-center border border-amber-200 shadow-2xs">
@@ -559,7 +589,7 @@ export default function ClientsPage() {
               className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl px-3.5 py-2 pr-8 text-xs font-bold text-slate-700 outline-none cursor-pointer transition-colors"
             >
               <option value="ALL">All Statuses</option>
-              <option value="LEAD">LEAD</option>
+              {/* <option value="LEAD">LEAD</option> */}
               <option value="ACTIVE">ACTIVE</option>
               <option value="INACTIVE">INACTIVE</option>
             </select>
@@ -607,13 +637,13 @@ export default function ClientsPage() {
                           <img 
                             src={client.logoUrl} 
                             alt={client.companyName}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain p-1 relative z-10 bg-white"
                             onError={(e) => {
                               ;(e.target as HTMLElement).style.display = 'none'
                             }}
                           />
                         ) : null}
-                        <div className={`w-full h-full ${client.avatarBg} text-white font-black text-lg flex items-center justify-center ${client.logoUrl ? 'hidden' : ''}`}>
+                        <div className={`absolute inset-0 w-full h-full ${client.avatarBg} text-white font-black text-lg flex items-center justify-center`}>
                           {client.avatarLetter}
                         </div>
                       </div>
@@ -757,13 +787,13 @@ export default function ClientsPage() {
                             <img 
                               src={client.logoUrl} 
                               alt={client.companyName}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain p-0.5 relative z-10 bg-white"
                               onError={(e) => {
                                 ;(e.target as HTMLElement).style.display = 'none'
                               }}
                             />
                           ) : null}
-                          <div className={`w-full h-full ${client.avatarBg} text-white font-black text-xs flex items-center justify-center ${client.logoUrl ? 'hidden' : ''}`}>
+                          <div className={`absolute inset-0 w-full h-full ${client.avatarBg} text-white font-black text-xs flex items-center justify-center`}>
                             {client.avatarLetter}
                           </div>
                         </div>
@@ -846,12 +876,13 @@ export default function ClientsPage() {
                 
                 <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                   <div className="w-12 h-12 rounded-2xl border border-slate-200 bg-white overflow-hidden flex items-center justify-center shrink-0 shadow-2xs relative">
-                    {formData.logoUrl ? (
+                    {formData.logoUrl && !addLogoError ? (
                       <img 
+                        key={formData.logoUrl}
                         src={formData.logoUrl} 
                         alt="Logo preview" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { ;(e.target as HTMLElement).style.display = 'none' }}
+                        className="w-full h-full object-contain p-1"
+                        onError={() => setAddLogoError(true)}
                       />
                     ) : (
                       <Building2 className="w-5 h-5 text-slate-400" />
@@ -874,9 +905,25 @@ export default function ClientsPage() {
                     type="text"
                     placeholder="Or paste Logo Image URL..."
                     value={formData.logoUrl}
-                    onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, logoUrl: e.target.value })
+                      setAddLogoError(false)
+                    }}
                     className="flex-1 min-w-[180px] px-3.5 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
                   />
+
+                  {formData.logoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({ ...formData, logoUrl: '' })
+                        setAddLogoError(false)
+                      }}
+                      className="px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition-colors shrink-0 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -951,10 +998,43 @@ export default function ClientsPage() {
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none bg-white"
                   >
-                    <option value="LEAD">LEAD</option>
+                    
                     <option value="ACTIVE">ACTIVE</option>
                     <option value="INACTIVE">INACTIVE</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block mb-1">Contact Email</label>
+                  <input
+                    type="email"
+                    placeholder="e.g. contact@company.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. +91 11 4100 2000"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1">Location</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. New Delhi, India"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
+                  />
                 </div>
 
               </div>
@@ -1009,12 +1089,13 @@ export default function ClientsPage() {
                 
                 <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                   <div className="w-12 h-12 rounded-2xl border border-slate-200 bg-white overflow-hidden flex items-center justify-center shrink-0 shadow-2xs relative">
-                    {editFormData.logoUrl ? (
+                    {editFormData.logoUrl && !editLogoError ? (
                       <img 
+                        key={editFormData.logoUrl}
                         src={editFormData.logoUrl} 
                         alt="Logo preview" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { ;(e.target as HTMLElement).style.display = 'none' }}
+                        className="w-full h-full object-contain p-1"
+                        onError={() => setEditLogoError(true)}
                       />
                     ) : (
                       <Building2 className="w-5 h-5 text-slate-400" />
@@ -1037,14 +1118,20 @@ export default function ClientsPage() {
                     type="text"
                     placeholder="Or paste Logo Image URL..."
                     value={editFormData.logoUrl}
-                    onChange={(e) => setEditFormData({ ...editFormData, logoUrl: e.target.value })}
+                    onChange={(e) => {
+                      setEditFormData({ ...editFormData, logoUrl: e.target.value })
+                      setEditLogoError(false)
+                    }}
                     className="flex-1 min-w-[180px] px-3.5 py-2 text-xs font-medium border border-slate-200 rounded-xl bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
                   />
 
                   {editFormData.logoUrl && (
                     <button
                       type="button"
-                      onClick={() => setEditFormData({ ...editFormData, logoUrl: '' })}
+                      onClick={() => {
+                        setEditFormData({ ...editFormData, logoUrl: '' })
+                        setEditLogoError(false)
+                      }}
                       className="px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition-colors shrink-0 cursor-pointer"
                     >
                       Clear
@@ -1142,6 +1229,17 @@ export default function ClientsPage() {
                     type="text"
                     value={editFormData.phone}
                     onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1">Location</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. New Delhi, India"
+                    value={editFormData.location}
+                    onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
                   />
                 </div>
