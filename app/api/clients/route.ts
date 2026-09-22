@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Client Name and Company Name are required' }, { status: 400 })
     }
 
-    const client = await prisma.client.create({
+    const client = await (prisma.client.create as any)({
       data: {
         name,
         companyName,
