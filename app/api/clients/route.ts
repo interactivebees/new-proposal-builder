@@ -19,7 +19,23 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json(clients)
+    try {
+      const extraData = await prisma.$queryRaw<{ id: string; logoUrl: string | null; slogan: string | null }[]>`
+        SELECT "id", "logoUrl", "slogan" FROM "Client"
+      `
+      const extraMap = new Map(extraData.map(e => [e.id, e]))
+      const merged = clients.map(c => {
+        const extra = extraMap.get(c.id)
+        return {
+          ...c,
+          logoUrl: extra?.logoUrl || (c as any).logoUrl || null,
+          slogan: extra?.slogan || (c as any).slogan || null
+        }
+      })
+      return NextResponse.json(merged)
+    } catch {
+      return NextResponse.json(clients)
+    }
   } catch (error) {
     console.error('Error fetching clients:', error)
     return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 })
@@ -40,7 +56,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Client Name and Company Name are required' }, { status: 400 })
     }
 
-    const client = await (prisma.client.create as any)({
+    const client = await prisma.client.create({
       data: {
         name,
         companyName,
@@ -52,13 +68,22 @@ export async function POST(req: Request) {
         address: address || null,
         city: city || null,
         country: country || 'India',
-        status: status || 'ACTIVE',
-        logoUrl: logoUrl || null,
-        slogan: slogan || null
+        status: status || 'ACTIVE'
       }
     })
 
-    
+    if (logoUrl || slogan) {
+      try {
+        await prisma.$executeRawUnsafe(
+          `UPDATE "Client" SET "logoUrl" = $1, "slogan" = $2 WHERE "id" = $3`,
+          logoUrl || null,
+          slogan || null,
+          client.id
+        )
+      } catch (sqlErr) {
+        console.warn('Note updating logo/slogan via raw SQL:', sqlErr)
+      }
+    }
 
     if (contactDesignation || name) {
       try {
@@ -77,7 +102,11 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json(client, { status: 201 })
+    return NextResponse.json({
+      ...client,
+      logoUrl: logoUrl || null,
+      slogan: slogan || null
+    }, { status: 201 })
   } catch (error: any) {
     console.error('Error creating client:', error)
     return NextResponse.json({ 
