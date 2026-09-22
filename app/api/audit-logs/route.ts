@@ -2,13 +2,13 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'OWNER') {
-      return NextResponse.json({ error: 'Unauthorized. Owner access required.' }, { status: 403 })
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
+    
     const logs = await prisma.auditLog.findMany({
       orderBy: { createdAt: 'desc' },
       take: 100,

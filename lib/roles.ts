@@ -1,0 +1,10 @@
+export const ROLES = {
+  OWNER: 'OWNER',
+  BUSINESS_EXPERT: 'BUSINESS_EXPERT',
+  SALES_TEAM: 'SALES_TEAM',
+  REVIEWER: 'REVIEWER',
+  CONTENT_CREATOR: 'CONTENT_CREATOR',
+  UNKNOWN: 'UNKNOWN'
+} as const;
+
+export type RoleName = keyof typeof ROLES;

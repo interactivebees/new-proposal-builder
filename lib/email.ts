@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer'
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false,
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -36,7 +36,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
 }
 
 export function generateResetEmailHtml(resetToken: string, userName: string) {
-  const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${resetToken}`
+  const resetUrl = `${process.env.NEXTAUTH_URL || (process.env.NODE_ENV === 'production' ? (() => { throw new Error('NEXTAUTH_URL not set'); })() : 'http://localhost:3000')}/auth/reset-password?token=${resetToken}`
   
   return `
     <!DOCTYPE html>
@@ -73,7 +73,7 @@ export function generateResetEmailHtml(resetToken: string, userName: string) {
         <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
         
         <p style="font-size: 12px; color: #999; margin: 0;">
-          This is an automated email from Proposal Builder. Please do not reply to this message.
+          This is an automated email from ${process.env.NEXT_PUBLIC_APP_NAME || 'Proposal Builder'}. Please do not reply to this message.
         </p>
       </div>
     </body>
@@ -82,7 +82,7 @@ export function generateResetEmailHtml(resetToken: string, userName: string) {
 }
 
 export function generateResetEmailText(resetToken: string, userName: string) {
-  const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${resetToken}`
+  const resetUrl = `${process.env.NEXTAUTH_URL || (process.env.NODE_ENV === 'production' ? (() => { throw new Error('NEXTAUTH_URL not set'); })() : 'http://localhost:3000')}/auth/reset-password?token=${resetToken}`
   
   return `Hello ${userName},
 
@@ -95,5 +95,5 @@ This link will expire in 1 hour.
 
 If you didn't request a password reset, please ignore this email.
 
-- Proposal Builder Team`
+- ${process.env.NEXT_PUBLIC_APP_NAME || 'Proposal Builder'} Team`
 }

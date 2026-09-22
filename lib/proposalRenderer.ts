@@ -472,7 +472,7 @@ export function renderProposalToHTML(
       }
     }
   </style>
-<head>
+</head>
 <body>
   <div class="document-container">
     <div class="header">

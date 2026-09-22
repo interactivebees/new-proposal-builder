@@ -211,8 +211,7 @@ export default function ProposalDetailPage() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
         toast.success('Downloaded DOCX proposal!')
-      } else {
-        toast.success('Generated DOCX proposal export!')
+      } else { toast.error('Failed to export DOCX')
       }
     } catch (error) {
       toast.success('Generated DOCX proposal export!')
@@ -327,13 +326,9 @@ export default function ProposalDetailPage() {
         const newProposal = await res.json()
         toast.success('Proposal duplicated successfully!')
         router.push(`/dashboard/proposals/${newProposal.id}`)
-      } else {
-        toast.success('Proposal duplicated!')
-        setShowDuplicateModal(false)
+      } else { toast.error('Failed to duplicate proposal')
       }
-    } catch (error) {
-      toast.success('Proposal duplicated!')
-      setShowDuplicateModal(false)
+    } catch (error) { toast.error('Failed to duplicate proposal')
     } finally {
       setDuplicating(false)
     }

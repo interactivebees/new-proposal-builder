@@ -40,15 +40,15 @@ interface CompanySettings {
 export default function SettingsPage() {
   const { data: session } = useSession()
   const [settings, setSettings] = useState<CompanySettings>({
-    companyName: 'Interactive Bees Pvt. Ltd.',
+    companyName: '',
     logoUrl: '',
-    address: 'Plot No. 42, Sector 44, Institutional Area, Gurugram, Haryana - 122003',
-    phone: '+91 124 4567890',
-    email: 'contact@interactivebees.com',
-    website: 'https://www.interactivebees.com',
+    address: '',
+    phone: '',
+    email: '',
+    website: '',
     defaultPaymentTerms: '50% advance upon project signoff, 30% upon milestone completion',
     defaultValidityDays: 30,
-    taxRate: 18.0
+    taxRate: 0
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -122,9 +122,12 @@ export default function SettingsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)
-      })
-
-      toast.success('System settings saved successfully!')
+      });
+      if (response.ok) {
+        toast.success('System settings saved successfully!');
+      } else {
+        toast.error('Failed to save settings');
+      }
     } catch (err) {
       toast.error('Failed to save settings')
     } finally {

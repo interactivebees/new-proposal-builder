@@ -32,9 +32,9 @@ function NewProposalForm() {
   const [clientAddress, setClientAddress] = useState('')
   const [clientLogoUrl, setClientLogoUrl] = useState('')
   const [clientId, setClientId] = useState('')
-  const [submittedByName, setSubmittedByName] = useState('Alok Ranjan')
-  const [submittedByEmail, setSubmittedByEmail] = useState('admin@interactivebees.com')
-  const [submittedByDesignation, setSubmittedByDesignation] = useState('Enterprise Sales Director')
+  const [submittedByName, setSubmittedByName] = useState('')
+  const [submittedByEmail, setSubmittedByEmail] = useState('')
+  const [submittedByDesignation, setSubmittedByDesignation] = useState('')
 
   const [clientsList, setClientsList] = useState<any[]>([])
   const [selectedClientKey, setSelectedClientKey] = useState('')
@@ -48,7 +48,7 @@ function NewProposalForm() {
     {
       id: 'section-1',
       title: 'Executive Summary',
-      content: { html: '<p>Interactive Bees Pvt. Ltd. is pleased to present this proposal...</p>', json: {} },
+      content: { html: '<p></p>', json: {} },
       order: 0,
       type: 'text'
     }

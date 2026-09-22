@@ -22,27 +22,27 @@ export default function AIAssistantPage() {
   const [output, setOutput] = useState('')
   const [copied, setCopied] = useState(false)
 
-  const handleGenerate = (type: string) => {
-    setModuleType(type)
+  const handleGenerate = async (type: string) => {
     setGenerating(true)
-    setOutput('')
-
-    setTimeout(() => {
-      let sampleText = ''
-      if (type === 'Executive Summary') {
-        sampleText = `## Executive Summary\n\nInteractive Bees Pvt. Ltd. is pleased to present this comprehensive proposal for ${prompt || 'Enterprise Digital Platform Modernization'}.\n\nOur objective is to engineer a resilient, modern web portal architecture utilizing Next.js, Prisma ORM, and cloud infrastructure. Key benefits include:\n- 99.9% guaranteed platform availability backed by strict SLAs.\n- 50% reduction in user onboarding latency.\n- ISO 27001 compliant end-to-end telemetry encryption.`
-      } else if (type === 'Scope of Work') {
-        sampleText = `## Scope of Work & Deliverables\n\n1. **Phase 1: Discovery & UX Design (Weeks 1-2)**\n   - Interactive Figma prototypes & design tokens.\n2. **Phase 2: Full-Stack Development (Weeks 3-8)**\n   - Modular frontend component development.\n   - Secure RESTful/GraphQL API endpoints.\n3. **Phase 3: QA & Security Penetration Testing (Weeks 9-10)**\n   - Automated end-to-end integration testing & VAPT audit.`
-      } else if (type === 'SLA Clauses') {
-        sampleText = `## Service Level Agreement (SLA)\n\n- **Uptime Guarantee:** 99.9% monthly uptime SLA with 24/7 SIEM monitoring.\n- **Response Time SLA:** Critical (P1) incidents resolved within 2 hours; Major (P2) within 6 hours.\n- **Data Security:** Daily automated CMEK encrypted snapshots with 30-day point-in-time recovery.`
-      } else {
-        sampleText = `## Frequently Asked Questions (FAQs)\n\n**Q: How is project IP ownership transferred?**\n*A: Full source code repository ownership and IP rights are transferred upon project completion and final signoff.*\n\n**Q: What post-launch support is provided?**\n*A: We include a 90-day comprehensive warranty covering all bug fixes and performance tuning at zero added charge.*`
-      }
-
-      setOutput(sampleText)
-      setGenerating(false)
+    setModuleType(type)
+    
+    try {
+      const res = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, type, tone })
+      })
+      if (!res.ok) throw new Error('Failed to generate')
+      const data = await res.json()
+      setOutput(data.text || data.error)
       toast.success(`${type} generated successfully!`)
-    }, 1200)
+    } catch (err) {
+      console.error(err)
+      toast.error('AI generation failed')
+      setOutput('')
+    } finally {
+      setGenerating(false)
+    }
   }
 
   const handleCopy = () => {

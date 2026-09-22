@@ -304,12 +304,10 @@ export default function ProposalsPage() {
         setProposals(prev => prev.filter(p => p.id !== id))
         toast.success('Proposal deleted successfully')
       } else {
-        setProposals(prev => prev.filter(p => p.id !== id))
-        toast.success('Proposal deleted')
+        toast.error('Failed to delete proposal')
       }
     } catch (error) {
-      setProposals(prev => prev.filter(p => p.id !== id))
-      toast.success('Proposal deleted')
+      toast.error('Failed to delete proposal')
     } finally {
       setActionMenuOpen(null)
     }
@@ -752,7 +750,7 @@ export default function ProposalsPage() {
         {/* 5. Pagination & Footer Summary Bar */}
         <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold text-slate-500 bg-slate-50/50">
           <div>
-            Showing 1 to {filteredProposals.length} of 25 proposals
+            Showing {filteredProposals.length > 0 ? 1 : 0} to {filteredProposals.length} of {proposals.length} proposals
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -760,23 +758,7 @@ export default function ProposalsPage() {
               <ChevronLeft className="w-4 h-4" />
             </button>
             
-            <button className="w-7 h-7 rounded-lg bg-[#FFC800] text-slate-950 font-black flex items-center justify-center shadow-2xs">
-              1
-            </button>
-            <button className="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 font-bold transition-colors cursor-pointer">
-              2
-            </button>
-            <button className="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 font-bold transition-colors cursor-pointer">
-              3
-            </button>
-            <span className="px-1 text-slate-400 font-bold">...</span>
-            <button className="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 font-bold transition-colors cursor-pointer">
-              5
-            </button>
-
-            <button className="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer">
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            
           </div>
 
           <div className="relative">

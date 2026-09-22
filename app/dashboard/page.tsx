@@ -623,68 +623,8 @@ export default async function DashboardPage() {
               </div>
 
               {/* Activity Timeline Stream */}
-              <div className="mt-4 space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-                
-                {/* Event 1 */}
-                <div className="relative flex items-start gap-3 pl-1">
-                  <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 z-10 text-[9px] font-bold ring-4 ring-white">
-                    <Users className="w-3 h-3" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-900 leading-snug">
-                      New user added
-                    </p>
-                    <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                      2 hours ago
-                    </p>
-                  </div>
-                </div>
-
-                {/* Event 2 */}
-                <div className="relative flex items-start gap-3 pl-1">
-                  <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0 z-10 text-[9px] font-bold ring-4 ring-white">
-                    <FileText className="w-3 h-3" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-900 leading-snug truncate">
-                      Proposal &quot;ASDC Website Revamp&quot; created
-                    </p>
-                    <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                      5 hours ago
-                    </p>
-                  </div>
-                </div>
-
-                {/* Event 3 */}
-                <div className="relative flex items-start gap-3 pl-1">
-                  <div className="w-5 h-5 rounded-full bg-purple-500 text-white flex items-center justify-center shrink-0 z-10 text-[9px] font-bold ring-4 ring-white">
-                    <Layers className="w-3 h-3" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-900 leading-snug">
-                      Template &quot;IT Services&quot; updated
-                    </p>
-                    <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                      1 day ago
-                    </p>
-                  </div>
-                </div>
-
-                {/* Event 4 */}
-                <div className="relative flex items-start gap-3 pl-1">
-                  <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 z-10 text-[9px] font-bold ring-4 ring-white">
-                    <Settings className="w-3 h-3" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-900 leading-snug">
-                      Settings updated
-                    </p>
-                    <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                      2 days ago
-                    </p>
-                  </div>
-                </div>
-
+              <div className="mt-4 space-y-4 flex flex-col items-center justify-center py-8 text-center">
+                <p className="text-xs font-bold text-slate-400">Activity feed coming soon</p>
               </div>
             </div>
           </div>

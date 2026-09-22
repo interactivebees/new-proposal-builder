@@ -139,25 +139,16 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
       } else if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
         e.preventDefault()
         setSearchModalOpen(true)
+
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  const sampleNotifications = [
-    { id: '1', title: 'New proposal "Centuryply Warranty Portal" submitted', time: '10m ago', unread: true },
-    { id: '2', title: 'Approval granted for "Canon Security Upgrade"', time: '1h ago', unread: true },
-    { id: '3', title: 'Client "Tata Motors Ltd." added to CRM', time: '3h ago', unread: false },
-  ]
+  const sampleNotifications: any[] = []
 
-  const quickSearchLinks = [
-    { title: 'ASDC Website Revamp Proposal', type: 'Proposal', href: '/dashboard/proposals/1' },
-    { title: 'Centuryply Warranty Portal Scope', type: 'Proposal', href: '/dashboard/proposals/2' },
-    { title: 'Canon India Pvt. Ltd.', type: 'Client CRM', href: '/dashboard/clients' },
-    { title: 'Web Portal Development Template', type: 'Template', href: '/dashboard/templates' },
-    { title: 'Enterprise ERP Implementation Template', type: 'Template', href: '/dashboard/templates' },
-  ].filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.type.toLowerCase().includes(searchQuery.toLowerCase()))
+  const quickSearchLinks: any[] = []
 
   const formatRole = (role?: string | null) => {
     if (!role) return 'Owner'
@@ -256,7 +247,7 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                 </div>
                 <span className="text-[10px] text-slate-400 font-medium leading-tight block mt-0.5 max-w-[140px] truncate">
-                  {user?.email || 'admin@interactivebees.com'}
+                  {user?.email || ''}
                 </span>
               </div>
 
@@ -272,7 +263,7 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="px-4 py-2 border-b border-slate-100">
                   <p className="text-xs font-bold text-slate-900">{user?.name || 'Admin'}</p>
-                  <p className="text-[11px] text-slate-400 truncate">{user?.email || 'admin@interactivebees.com'}</p>
+                  <p className="text-[11px] text-slate-400 truncate">{user?.email || ''}</p>
                   <span className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-full">
                     {formatRole(user?.role)}
                   </span>
@@ -324,7 +315,7 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
             <nav className="space-y-1">
               {navItems.map((item) => {
                 if (item.roleRequired && user?.role !== item.roleRequired && user?.role !== 'ADMIN') {
-                  // Keep links accessible for admin demo
+                  return null;
                 }
                 const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href))
                 const Icon = item.icon
@@ -373,8 +364,8 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
 
             {/* Copyright Footer */}
             <div className="px-3 text-[10px] text-slate-400 font-medium space-y-0.5">
-              <p className="font-semibold text-slate-500">Interactive Bees Pvt. Ltd.</p>
-              <p>© 2026 iBees Proposal Builder v1.0.0</p>
+              <p className="font-semibold text-slate-500">Proposal Builder</p>
+              <p>© 2026 Proposal Builder</p>
             </div>
           </div>
         </aside>

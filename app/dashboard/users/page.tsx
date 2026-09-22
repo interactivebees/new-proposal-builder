@@ -56,7 +56,7 @@ const sampleUsersList: UserItem[] = [
     role: 'Sales Team',
     roleColor: 'blue',
     permissions: ['View', 'Edit', 'Create'],
-    company: 'Interactive Bees Pvt. Ltd.',
+    company: '',
     phone: '+91 98568 78601',
     status: 'Active',
     avatarInitials: 'AR',
@@ -188,7 +188,7 @@ export default function UsersPage() {
     email: '',
     role: 'Sales Team',
     company: 'Interactive Bees Pvt. Ltd.',
-    phone: '+91 98000 00000',
+    phone: '',
     status: 'Active' as 'Active' | 'Inactive'
   })
 

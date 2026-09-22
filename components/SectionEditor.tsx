@@ -60,7 +60,7 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
     const newSection: Section = {
       id: newId,
       title: `New Section ${sections.length + 1}`,
-      content: { html: '<p>Start typing your section content...</p>', json: {} },
+      content: { html: '<p></p>', json: {} },
       order: sections.length,
       type: 'text'
     }

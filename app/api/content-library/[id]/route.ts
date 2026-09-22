@@ -10,6 +10,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const { id } = await params
+    const existing = await prisma.contentLibraryItem.findUnique({ where: { id } });
+    if (!existing) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+
     const body = await req.json()
     const { title, category, content, tags } = body
 
