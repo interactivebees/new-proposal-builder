@@ -138,7 +138,6 @@ export default function ProposalDetailPage() {
       return client.contacts.map((contact: any) => ({
         key: `${client.id}:::${contact.id}`,
         clientId: client.id,
-        clientId: client.id,
         contactName: contact.name,
         companyName: client.companyName,
         email: contact.email || client.email || '',
@@ -149,7 +148,6 @@ export default function ProposalDetailPage() {
     }
     return [{
       key: `${client.id}:::main`,
-      clientId: client.id,
       clientId: client.id,
       contactName: client.name,
       companyName: client.companyName,
