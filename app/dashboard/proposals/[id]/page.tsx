@@ -1,137 +1,137 @@
-'use client'
+"use client";
 
-import { useEffect, useState, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
-import Link from 'next/link'
-import { formatDate } from '@/lib/formatDate'
-import toast from 'react-hot-toast'
-import { 
-  Download, 
-  FileText, 
-  FileDown, 
-  Save, 
-  CheckSquare, 
-  ChevronLeft, 
-  Building2, 
-  Mail, 
-  MapPin, 
-  Calendar, 
-  User, 
-  Copy, 
-  Edit3, 
-  DollarSign, 
+import { useEffect, useState, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { formatDate } from "@/lib/formatDate";
+import toast from "react-hot-toast";
+import {
+  Download,
+  FileText,
+  FileDown,
+  Save,
+  CheckSquare,
+  ChevronLeft,
+  Building2,
+  Mail,
+  MapPin,
+  Calendar,
+  User,
+  Copy,
+  Edit3,
+  DollarSign,
   MessageSquare,
   Sparkles,
-  Upload
-} from 'lucide-react'
+  Upload,
+} from "lucide-react";
 
-const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
+const SectionEditor = dynamic(() => import("@/components/SectionEditor"), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center p-12 bg-slate-50 rounded-2xl border border-slate-200">
       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-500" />
     </div>
-  )
-})
+  ),
+});
 
 interface Proposal {
-  id: string
-  title: string
-  content: any
-  clientName?: string
-  clientCompany?: string
-  clientEmail?: string
-  clientAddress?: string
-  clientLogoUrl?: string
-  status: string
-  createdAt: string
+  id: string;
+  title: string;
+  content: any;
+  clientName?: string;
+  clientCompany?: string;
+  clientEmail?: string;
+  clientAddress?: string;
+  clientLogoUrl?: string;
+  status: string;
+  createdAt: string;
   creator?: {
-    name: string
-    email: string
-  }
+    name: string;
+    email: string;
+  };
   pricingItems?: Array<{
-    id: string
-    serviceDescription: string
-    cost: number
-    frequency?: string
-  }>
+    id: string;
+    serviceDescription: string;
+    cost: number;
+    frequency?: string;
+  }>;
   comments?: Array<{
-    id: string
-    content: string
+    id: string;
+    content: string;
     user: {
-      name: string
-    }
-    createdAt: string
-  }>
+      name: string;
+    };
+    createdAt: string;
+  }>;
 }
 
 export default function ProposalDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const proposalId = params.id as string
+  const params = useParams();
+  const router = useRouter();
+  const proposalId = params.id as string;
 
-  const [proposal, setProposal] = useState<Proposal | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(false)
-  const [editedContent, setEditedContent] = useState<any>({})
-  const [editedTitle, setEditedTitle] = useState('')
-  const [editedClientLogoUrl, setEditedClientLogoUrl] = useState('')
-  const [editedClientId, setEditedClientId] = useState('')
-  const [editedClientName, setEditedClientName] = useState('')
-  const [editedClientCompany, setEditedClientCompany] = useState('')
-  const [editedClientEmail, setEditedClientEmail] = useState('')
-  const [editedClientAddress, setEditedClientAddress] = useState('')
-  const [clientsList, setClientsList] = useState<any[]>([])
-  const [selectedClientKey, setSelectedClientKey] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [showDuplicateModal, setShowDuplicateModal] = useState(false)
-  const [duplicating, setDuplicating] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [exporting, setExporting] = useState(false)
-  const [showExportMenu, setShowExportMenu] = useState(false)
-  const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false)
-  const [templateName, setTemplateName] = useState('')
-  const [templateCategory, setTemplateCategory] = useState('Cloud & DevOps')
-  const [savingAsTemplate, setSavingAsTemplate] = useState(false)
+  const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState<any>({});
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedClientLogoUrl, setEditedClientLogoUrl] = useState("");
+  const [editedClientId, setEditedClientId] = useState("");
+  const [editedClientName, setEditedClientName] = useState("");
+  const [editedClientCompany, setEditedClientCompany] = useState("");
+  const [editedClientEmail, setEditedClientEmail] = useState("");
+  const [editedClientAddress, setEditedClientAddress] = useState("");
+  const [clientsList, setClientsList] = useState<any[]>([]);
+  const [selectedClientKey, setSelectedClientKey] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [templateCategory, setTemplateCategory] = useState("Cloud & DevOps");
+  const [savingAsTemplate, setSavingAsTemplate] = useState(false);
 
   // Submit for Approval state
-  const [showApprovalModal, setShowApprovalModal] = useState(false)
-  const [approvalStep, setApprovalStep] = useState('Technical Review')
-  const [assignedReviewer, setAssignedReviewer] = useState('Vikram Mehta (Chief Technical Officer)')
-  const [approvalNotes, setApprovalNotes] = useState('')
-  const [submittingApproval, setSubmittingApproval] = useState(false)
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [approvalStep, setApprovalStep] = useState("Technical Review");
+  const [assignedReviewer, setAssignedReviewer] = useState(
+    "Vikram Mehta (Chief Technical Officer)",
+  );
+  const [approvalNotes, setApprovalNotes] = useState("");
+  const [submittingApproval, setSubmittingApproval] = useState(false);
 
-  const exportMenuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    fetchProposal()
-    fetchClients()
-  }, [proposalId])
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
-        setShowExportMenu(false)
+      if (
+        exportMenuRef.current &&
+        !exportMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowExportMenu(false);
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
+    };
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchClients = async () => {
     try {
-      const res = await fetch('/api/clients')
+      const res = await fetch("/api/clients");
       if (res.ok) {
-        const data = await res.json()
-        setClientsList(data)
+        const data = await res.json();
+        setClientsList(data);
       }
     } catch (err) {
-      console.error('Error fetching clients:', err)
+      console.error("Error fetching clients:", err);
     }
-  }
+  };
 
   const clientOptions = clientsList.flatMap((client) => {
     if (client.contacts && client.contacts.length > 0) {
@@ -140,99 +140,134 @@ export default function ProposalDetailPage() {
         clientId: client.id,
         contactName: contact.name,
         companyName: client.companyName,
-        email: contact.email || client.email || '',
-        address: client.address || client.city || '',
-        logoUrl: client.logoUrl || '',
-        displayText: `${contact.name} — ${client.companyName}`
-      }))
+        email: contact.email || client.email || "",
+        address: client.address || client.city || "",
+        logoUrl: client.logoUrl || "",
+        displayText: `${contact.name} — ${client.companyName}`,
+      }));
     }
-    return [{
-      key: `${client.id}:::main`,
-      clientId: client.id,
-      contactName: client.name,
-      companyName: client.companyName,
-      email: client.email || '',
-      address: client.address || client.city || '',
-      logoUrl: client.logoUrl || '',
-      displayText: `${client.name} — ${client.companyName}`
-    }]
-  })
+    return [
+      {
+        key: `${client.id}:::main`,
+        clientId: client.id,
+        contactName: client.name,
+        companyName: client.companyName,
+        email: client.email || "",
+        address: client.address || client.city || "",
+        logoUrl: client.logoUrl || "",
+        displayText: `${client.name} — ${client.companyName}`,
+      },
+    ];
+  });
 
-  const handleClientSelectChange = (key: string) => {
-    setSelectedClientKey(key)
-    if (!key) return
-    const selectedOpt = clientOptions.find((opt) => opt.key === key)
-    if (selectedOpt) {
-      setEditedClientName(selectedOpt.contactName)
-      setEditedClientCompany(selectedOpt.companyName)
-      setEditedClientEmail(selectedOpt.email)
-      setEditedClientAddress(selectedOpt.address)
-      if (selectedOpt.logoUrl) {
-        setEditedClientLogoUrl(selectedOpt.logoUrl)
-      setEditedClientId(selectedOpt.clientId || '')
+  useEffect(() => {
+    fetchProposal();
+    fetchClients();
+  }, [proposalId]);
+
+  useEffect(() => {
+    if (
+      proposal &&
+      clientOptions.length > 0 &&
+      !selectedClientKey &&
+      editedClientId
+    ) {
+      const match = clientOptions.find(
+        (opt) =>
+          opt.clientId === editedClientId && opt.email === editedClientEmail,
+      );
+      if (match) {
+        setSelectedClientKey(match.key);
+      } else {
+        const fallbackMatch = clientOptions.find(
+          (opt) => opt.clientId === editedClientId,
+        );
+        if (fallbackMatch) setSelectedClientKey(fallbackMatch.key);
       }
     }
-  }
+  }, [
+    proposal,
+    clientOptions,
+    selectedClientKey,
+    editedClientId,
+    editedClientEmail,
+  ]);
+
+  const handleClientSelectChange = (key: string) => {
+    setSelectedClientKey(key);
+    if (!key) return;
+    const selectedOpt = clientOptions.find((opt) => opt.key === key);
+    if (selectedOpt) {
+      setEditedClientName(selectedOpt.contactName);
+      setEditedClientCompany(selectedOpt.companyName);
+      setEditedClientEmail(selectedOpt.email);
+      setEditedClientAddress(selectedOpt.address);
+      if (selectedOpt.logoUrl) {
+        setEditedClientLogoUrl(selectedOpt.logoUrl);
+      }
+      setEditedClientId(selectedOpt.clientId || "");
+    }
+  };
 
   const fetchProposal = async () => {
     try {
-      const res = await fetch(`/api/proposals/${proposalId}`)
+      const res = await fetch(`/api/proposals/${proposalId}`);
       if (res.ok) {
-        const data = await res.json()
-        setProposal(data)
-        setEditedContent(data.content)
-        setEditedTitle(data.title)
-        setEditedClientLogoUrl(data.clientLogoUrl || '')
-        setEditedClientId(data.clientId || '')
-        setEditedClientName(data.clientName || '')
-        setEditedClientCompany(data.clientCompany || '')
-        setEditedClientEmail(data.clientEmail || '')
-        setEditedClientAddress(data.clientAddress || '')
+        const data = await res.json();
+        setProposal(data);
+        setEditedContent(data.content);
+        setEditedTitle(data.title);
+        setEditedClientLogoUrl(data.clientLogoUrl || "");
+        setEditedClientId(data.clientId || "");
+        setEditedClientName(data.clientName || "");
+        setEditedClientCompany(data.clientCompany || "");
+        setEditedClientEmail(data.clientEmail || "");
+        setEditedClientAddress(data.clientAddress || "");
       } else {
-        console.error('Failed to fetch proposal')
+        console.error("Failed to fetch proposal");
       }
     } catch (error) {
-      console.error('Error fetching proposal:', error)
+      console.error("Error fetching proposal:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    setUploading(true)
+    setUploading(true);
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
+      const formData = new FormData();
+      formData.append("file", file);
 
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
       if (res.ok) {
-        const data = await res.json()
-        setEditedClientLogoUrl(data.url)
-        toast.success('Logo uploaded successfully')
+        const data = await res.json();
+        setEditedClientLogoUrl(data.url);
+        toast.success("Logo uploaded successfully");
       } else {
-        toast.error('Failed to upload logo')
+        toast.error("Failed to upload logo");
       }
     } catch (error) {
-      toast.error('Error uploading logo')
+      toast.error("Error uploading logo");
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
   const handleSave = async () => {
-    setSaving(true)
+    setSaving(true);
     try {
       const res = await fetch(`/api/proposals/${proposal?.id || proposalId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: editedTitle,
           content: editedContent,
@@ -241,192 +276,207 @@ export default function ProposalDetailPage() {
           clientName: editedClientName,
           clientCompany: editedClientCompany,
           clientEmail: editedClientEmail,
-          clientAddress: editedClientAddress
-        })
-      })
+          clientAddress: editedClientAddress,
+        }),
+      });
 
       if (res.ok) {
-        await fetchProposal()
-        setEditing(false)
-        toast.success('Proposal saved successfully!')
+        await fetchProposal();
+        setEditing(false);
+        toast.success("Proposal saved successfully!");
       } else {
-        toast.error('Failed to update proposal!')
-          // Do not close editing on error
+        toast.error("Failed to update proposal!");
+        // Do not close editing on error
       }
     } catch (error) {
-      toast.error('Error occurred while saving!')
-        // Do not close editing on error
+      toast.error("Error occurred while saving!");
+      // Do not close editing on error
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleExportDocx = async () => {
-    setExporting(true)
-    setShowExportMenu(false)
+    setExporting(true);
+    setShowExportMenu(false);
     try {
-      const res = await fetch('/api/export/docx', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ proposalId: proposal?.id || proposalId })
-      })
+      const res = await fetch("/api/export/docx", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ proposalId: proposal?.id || proposalId }),
+      });
 
       if (res.ok) {
-        const blob = await res.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${proposal?.title || 'proposal'}.docx`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-        toast.success('Downloaded DOCX proposal!')
-      } else { toast.error('Failed to export DOCX')
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${proposal?.title || "proposal"}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success("Downloaded DOCX proposal!");
+      } else {
+        toast.error("Failed to export DOCX");
       }
     } catch (error) {
-      toast.success('Generated DOCX proposal export!')
+      toast.success("Generated DOCX proposal export!");
     } finally {
-      setExporting(false)
+      setExporting(false);
     }
-  }
+  };
 
   const handleExportPdf = async () => {
-    setExporting(true)
-    setShowExportMenu(false)
+    setExporting(true);
+    setShowExportMenu(false);
     try {
-      const res = await fetch('/api/export/pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ proposalId: proposal?.id || proposalId })
-      })
+      const res = await fetch("/api/export/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ proposalId: proposal?.id || proposalId }),
+      });
 
       if (res.ok) {
-        const blob = await res.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${proposal?.title || 'proposal'}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-        toast.success('Downloaded PDF proposal!')
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${proposal?.title || "proposal"}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success("Downloaded PDF proposal!");
       } else {
         // Fallback to browser print PDF generator
-        window.print()
-        toast.success('Opened PDF Print Dialog!')
+        window.print();
+        toast.success("Opened PDF Print Dialog!");
       }
     } catch (error) {
-      window.print()
-      toast.success('Opened PDF Print Dialog!')
+      window.print();
+      toast.success("Opened PDF Print Dialog!");
     } finally {
-      setExporting(false)
+      setExporting(false);
     }
-  }
+  };
 
   const handleSubmitApproval = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmittingApproval(true)
+    e.preventDefault();
+    setSubmittingApproval(true);
     try {
-      const res = await fetch('/api/approvals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/approvals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           proposalId: proposal?.id || proposalId,
           stepName: approvalStep,
-          comments: approvalNotes || `Submitted for ${approvalStep} to ${assignedReviewer}`
-        })
-      })
+          comments:
+            approvalNotes ||
+            `Submitted for ${approvalStep} to ${assignedReviewer}`,
+        }),
+      });
 
       if (res.ok) {
-        toast.success(`Proposal submitted for ${approvalStep}! Assigned to ${assignedReviewer}`)
-        setShowApprovalModal(false)
-        fetchProposal()
+        toast.success(
+          `Proposal submitted for ${approvalStep}! Assigned to ${assignedReviewer}`,
+        );
+        setShowApprovalModal(false);
+        fetchProposal();
       } else {
-        toast.success(`Proposal submitted for ${approvalStep}! Assigned to ${assignedReviewer}`)
-        setShowApprovalModal(false)
+        toast.success(
+          `Proposal submitted for ${approvalStep}! Assigned to ${assignedReviewer}`,
+        );
+        setShowApprovalModal(false);
       }
     } catch (error) {
-      toast.success(`Proposal submitted for ${approvalStep}!`)
-      setShowApprovalModal(false)
+      toast.success(`Proposal submitted for ${approvalStep}!`);
+      setShowApprovalModal(false);
     } finally {
-      setSubmittingApproval(false)
+      setSubmittingApproval(false);
     }
-  }
+  };
 
   const handleSaveAsTemplate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSavingAsTemplate(true)
+    e.preventDefault();
+    setSavingAsTemplate(true);
     try {
-      const res = await fetch(`/api/proposals/${proposal?.id || proposalId}/save-as-template`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: templateName,
-          category: templateCategory || undefined
-        })
-      })
+      const res = await fetch(
+        `/api/proposals/${proposal?.id || proposalId}/save-as-template`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: templateName,
+            category: templateCategory || undefined,
+          }),
+        },
+      );
 
       if (res.ok) {
-        setShowSaveAsTemplateModal(false)
-        setTemplateName('')
-        toast.success(`Template "${templateName}" saved successfully!`)
+        setShowSaveAsTemplateModal(false);
+        setTemplateName("");
+        toast.success(`Template "${templateName}" saved successfully!`);
       } else {
-        setShowSaveAsTemplateModal(false)
-        toast.success(`Template "${templateName}" saved successfully!`)
+        setShowSaveAsTemplateModal(false);
+        toast.success(`Template "${templateName}" saved successfully!`);
       }
     } catch (error) {
-      setShowSaveAsTemplateModal(false)
-      toast.success(`Template "${templateName}" saved!`)
+      setShowSaveAsTemplateModal(false);
+      toast.success(`Template "${templateName}" saved!`);
     } finally {
-      setSavingAsTemplate(false)
+      setSavingAsTemplate(false);
     }
-  }
+  };
 
   const handleDuplicate = async (newClientData: any) => {
-    setDuplicating(true)
+    setDuplicating(true);
     try {
-      const res = await fetch(`/api/proposals/${proposal?.id || proposalId}/duplicate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newClientData)
-      })
+      const res = await fetch(
+        `/api/proposals/${proposal?.id || proposalId}/duplicate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newClientData),
+        },
+      );
 
       if (res.ok) {
-        const newProposal = await res.json()
-        toast.success('Proposal duplicated successfully!')
-        router.push(`/dashboard/proposals/${newProposal.id}`)
-      } else { toast.error('Failed to duplicate proposal')
+        const newProposal = await res.json();
+        toast.success("Proposal duplicated successfully!");
+        router.push(`/dashboard/proposals/${newProposal.id}`);
+      } else {
+        toast.error("Failed to duplicate proposal");
       }
-    } catch (error) { toast.error('Failed to duplicate proposal')
+    } catch (error) {
+      toast.error("Failed to duplicate proposal");
     } finally {
-      setDuplicating(false)
+      setDuplicating(false);
     }
-  }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'APPROVED':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300'
-      case 'IN_REVIEW':
-      case 'PENDING_APPROVAL':
-        return 'bg-amber-100 text-amber-900 border-amber-300'
-      case 'REJECTED':
-        return 'bg-rose-100 text-rose-800 border-rose-300'
-      case 'SENT':
-        return 'bg-purple-100 text-purple-800 border-purple-300'
+      case "APPROVED":
+        return "bg-emerald-100 text-emerald-800 border-emerald-300";
+      case "IN_REVIEW":
+      case "PENDING_APPROVAL":
+        return "bg-amber-100 text-amber-900 border-amber-300";
+      case "REJECTED":
+        return "bg-rose-100 text-rose-800 border-rose-300";
+      case "SENT":
+        return "bg-purple-100 text-purple-800 border-purple-300";
       default:
-        return 'bg-slate-100 text-slate-800 border-slate-300'
+        return "bg-slate-100 text-slate-800 border-slate-300";
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
       </div>
-    )
+    );
   }
 
   if (!proposal) {
@@ -435,9 +485,12 @@ export default function ProposalDetailPage() {
         <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-amber-600">
           <FileText className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-black text-slate-900 tracking-tight">Proposal Not Found</h2>
+        <h2 className="text-xl font-black text-slate-900 tracking-tight">
+          Proposal Not Found
+        </h2>
         <p className="text-xs text-slate-500 max-w-sm">
-          The requested proposal ID standard could not be found in the current workspace.
+          The requested proposal ID standard could not be found in the current
+          workspace.
         </p>
         <Link
           href="/dashboard/proposals"
@@ -447,19 +500,17 @@ export default function ProposalDetailPage() {
           <span>Back to Proposals</span>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6 pb-16 font-sans">
-      
       {/* Top Warm Hero Header Banner */}
       <div className="bg-gradient-to-r from-[#FFFDF0] via-[#FFF5C6] to-[#FFD84D] rounded-3xl p-6 sm:p-7 border border-amber-300/80 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden">
-        
         {/* Banner Left Details */}
         <div className="space-y-2 z-10 max-w-2xl">
-          <Link 
-            href="/dashboard/proposals" 
+          <Link
+            href="/dashboard/proposals"
             className="inline-flex items-center gap-1 text-xs font-bold text-amber-900 hover:text-amber-950 transition-colors"
           >
             <ChevronLeft className="w-4 h-4 text-amber-800" />
@@ -480,7 +531,9 @@ export default function ProposalDetailPage() {
               </h1>
             )}
 
-            <span className={`px-3 py-1 text-xs font-black rounded-full border shadow-2xs uppercase tracking-wider ${getStatusBadge(proposal.status)}`}>
+            <span
+              className={`px-3 py-1 text-xs font-black rounded-full border shadow-2xs uppercase tracking-wider ${getStatusBadge(proposal.status)}`}
+            >
               {proposal.status}
             </span>
           </div>
@@ -510,7 +563,7 @@ export default function ProposalDetailPage() {
                 className="px-5 py-2.5 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl shadow-2xs transition-all border border-amber-400 flex items-center gap-2 cursor-pointer"
               >
                 <Save className="w-4 h-4 text-slate-950" />
-                <span>{saving ? 'Saving...' : 'Save Proposal'}</span>
+                <span>{saving ? "Saving..." : "Save Proposal"}</span>
               </button>
               <button
                 type="button"
@@ -543,8 +596,8 @@ export default function ProposalDetailPage() {
               <button
                 type="button"
                 onClick={() => {
-                  setTemplateName(proposal.title)
-                  setShowSaveAsTemplateModal(true)
+                  setTemplateName(proposal.title);
+                  setShowSaveAsTemplateModal(true);
                 }}
                 className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs rounded-xl shadow-2xs transition-all border border-slate-200 flex items-center gap-1.5 cursor-pointer"
               >
@@ -571,7 +624,7 @@ export default function ProposalDetailPage() {
                   className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs rounded-xl shadow-2xs transition-all border border-slate-200 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-4 h-4 text-slate-700" />
-                  <span>{exporting ? 'Exporting...' : 'Export'}</span>
+                  <span>{exporting ? "Exporting..." : "Export"}</span>
                 </button>
 
                 {showExportMenu && (
@@ -595,11 +648,9 @@ export default function ProposalDetailPage() {
                   </div>
                 )}
               </div>
-
             </>
           )}
         </div>
-
       </div>
 
       {/* Client Overview Card */}
@@ -618,9 +669,26 @@ export default function ProposalDetailPage() {
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
               Client Name
             </span>
-            <span className="text-xs font-extrabold text-slate-900">
-              {proposal.clientName || 'Interactive Bees Client'}
-            </span>
+            {editing ? (
+              <select
+                value={selectedClientKey}
+                onChange={(e) => handleClientSelectChange(e.target.value)}
+                className="w-full text-xs font-extrabold text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-amber-500 py-1"
+              >
+                <option value="" disabled>
+                  Select Client
+                </option>
+                {clientOptions.map((opt: any) => (
+                  <option key={opt.key} value={opt.key}>
+                    {opt.displayText}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-xs font-extrabold text-slate-900">
+                {proposal.clientName || "Interactive Bees Client"}
+              </span>
+            )}
           </div>
 
           <div className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80">
@@ -628,7 +696,9 @@ export default function ProposalDetailPage() {
               Company
             </span>
             <span className="text-xs font-extrabold text-slate-900">
-              {proposal.clientCompany || 'Century Ply / Enterprise'}
+              {editing
+                ? editedClientCompany || "-"
+                : proposal.clientCompany || "Century Ply / Enterprise"}
             </span>
           </div>
 
@@ -637,7 +707,9 @@ export default function ProposalDetailPage() {
               Client Email
             </span>
             <span className="text-xs font-extrabold text-slate-900 truncate block">
-              {proposal.clientEmail || 'client@centuryply.com'}
+              {editing
+                ? editedClientEmail || "-"
+                : proposal.clientEmail || "client@centuryply.com"}
             </span>
           </div>
 
@@ -646,7 +718,9 @@ export default function ProposalDetailPage() {
               Address
             </span>
             <span className="text-xs font-extrabold text-slate-900 truncate block">
-              {proposal.clientAddress || 'Kolkata, WB, India'}
+              {editing
+                ? editedClientAddress || "-"
+                : proposal.clientAddress || "Kolkata, WB, India"}
             </span>
           </div>
         </div>
@@ -654,7 +728,9 @@ export default function ProposalDetailPage() {
         {/* Client Logo Row */}
         {editing && (
           <div className="pt-2 border-t border-slate-100 flex items-center gap-4">
-            <label className="text-xs font-bold text-slate-700">Upload Client Logo:</label>
+            <label className="text-xs font-bold text-slate-700">
+              Upload Client Logo:
+            </label>
             <input
               type="file"
               accept="image/*"
@@ -683,8 +759,14 @@ export default function ProposalDetailPage() {
         </div>
 
         <SectionEditor
-          sections={editing ? editedContent?.sections || [] : proposal.content?.sections || []}
-          onChange={(sections) => setEditedContent({ ...editedContent, sections })}
+          sections={
+            editing
+              ? editedContent?.sections || []
+              : proposal.content?.sections || []
+          }
+          onChange={(sections) =>
+            setEditedContent({ ...editedContent, sections })
+          }
           readOnly={!editing}
         />
       </div>
@@ -713,15 +795,24 @@ export default function ProposalDetailPage() {
               <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-800">
                 {proposal.pricingItems.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/60">
-                    <td className="py-3.5 px-4 font-bold text-slate-900">{item.serviceDescription}</td>
-                    <td className="py-3.5 px-4">₹{item.cost.toLocaleString('en-IN')}</td>
-                    <td className="py-3.5 px-4 text-slate-600">{item.frequency || 'One-time'}</td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900">
+                      {item.serviceDescription}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      ₹{item.cost.toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600">
+                      {item.frequency || "One-time"}
+                    </td>
                   </tr>
                 ))}
                 <tr className="bg-amber-50/50 font-black text-slate-950">
                   <td className="py-3.5 px-4">Total Value</td>
                   <td className="py-3.5 px-4 text-amber-900">
-                    ₹{proposal.pricingItems.reduce((sum, item) => sum + item.cost, 0).toLocaleString('en-IN')}
+                    ₹
+                    {proposal.pricingItems
+                      .reduce((sum, item) => sum + item.cost, 0)
+                      .toLocaleString("en-IN")}
                   </td>
                   <td className="py-3.5 px-4"></td>
                 </tr>
@@ -740,8 +831,12 @@ export default function ProposalDetailPage() {
                 <CheckSquare className="w-5 h-5 text-amber-900" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900">Submit Proposal for Approval</h3>
-                <p className="text-[11px] font-semibold text-slate-500">Assign to reviewer & select gate stage</p>
+                <h3 className="text-base font-black text-slate-900">
+                  Submit Proposal for Approval
+                </h3>
+                <p className="text-[11px] font-semibold text-slate-500">
+                  Assign to reviewer & select gate stage
+                </p>
               </div>
             </div>
 
@@ -759,7 +854,9 @@ export default function ProposalDetailPage() {
                   <option value="Technical Review">Technical Review</option>
                   <option value="Finance Review">Finance Review</option>
                   <option value="Legal Review">Legal Review</option>
-                  <option value="Management Sign-off">Management Sign-off</option>
+                  <option value="Management Sign-off">
+                    Management Sign-off
+                  </option>
                 </select>
               </div>
 
@@ -772,10 +869,18 @@ export default function ProposalDetailPage() {
                   onChange={(e) => setAssignedReviewer(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-200 rounded-xl focus:border-amber-400 outline-none bg-white"
                 >
-                  <option value="Vikram Mehta (Chief Technical Officer)">Vikram Mehta (Chief Technical Officer)</option>
-                  <option value="Ritu Agarwal (Finance Director)">Ritu Agarwal (Finance Director)</option>
-                  <option value="Deepak Sen (Legal Counsel)">Deepak Sen (Legal Counsel)</option>
-                  <option value="Alok Ranjan (Owner & CEO)">Alok Ranjan (Owner &amp; CEO)</option>
+                  <option value="Vikram Mehta (Chief Technical Officer)">
+                    Vikram Mehta (Chief Technical Officer)
+                  </option>
+                  <option value="Ritu Agarwal (Finance Director)">
+                    Ritu Agarwal (Finance Director)
+                  </option>
+                  <option value="Deepak Sen (Legal Counsel)">
+                    Deepak Sen (Legal Counsel)
+                  </option>
+                  <option value="Alok Ranjan (Owner & CEO)">
+                    Alok Ranjan (Owner &amp; CEO)
+                  </option>
                 </select>
               </div>
 
@@ -805,7 +910,7 @@ export default function ProposalDetailPage() {
                   disabled={submittingApproval}
                   className="px-5 py-2.5 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl border border-amber-400 cursor-pointer disabled:opacity-50"
                 >
-                  {submittingApproval ? 'Submitting...' : 'Submit & Assign'}
+                  {submittingApproval ? "Submitting..." : "Submit & Assign"}
                 </button>
               </div>
             </form>
@@ -821,7 +926,9 @@ export default function ProposalDetailPage() {
               <div className="p-2 bg-amber-100 text-amber-700 rounded-xl">
                 <Sparkles className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-black text-slate-900">Save as Template</h3>
+              <h3 className="text-base font-black text-slate-900">
+                Save as Template
+              </h3>
             </div>
 
             <form onSubmit={handleSaveAsTemplate} className="space-y-4">
@@ -850,7 +957,9 @@ export default function ProposalDetailPage() {
                   <option value="Cloud & DevOps">Cloud &amp; DevOps</option>
                   <option value="Web Development">Web Development</option>
                   <option value="Mobile Apps">Mobile Apps</option>
-                  <option value="Enterprise Solutions">Enterprise Solutions</option>
+                  <option value="Enterprise Solutions">
+                    Enterprise Solutions
+                  </option>
                 </select>
               </div>
 
@@ -867,7 +976,7 @@ export default function ProposalDetailPage() {
                   disabled={savingAsTemplate}
                   className="px-5 py-2 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl border border-amber-400"
                 >
-                  {savingAsTemplate ? 'Saving...' : 'Save Template'}
+                  {savingAsTemplate ? "Saving..." : "Save Template"}
                 </button>
               </div>
             </form>
@@ -884,80 +993,103 @@ export default function ProposalDetailPage() {
           clientsList={clientsList}
         />
       )}
-
     </div>
-  )
+  );
 }
 
-function DuplicateModal({ onClose, onDuplicate, duplicating, clientsList }: any) {
-  const [selectedClientKey, setSelectedClientKey] = useState('')
-  const [clientName, setClientName] = useState('')
-  const [clientCompany, setClientCompany] = useState('')
-  const [clientEmail, setClientEmail] = useState('')
-  const [clientAddress, setClientAddress] = useState('')
-  const [clientLogoUrl, setClientLogoUrl] = useState('')
-  const [clientId, setClientId] = useState('')
-  
+function DuplicateModal({
+  onClose,
+  onDuplicate,
+  duplicating,
+  clientsList,
+}: any) {
+  const [selectedClientKey, setSelectedClientKey] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [clientCompany, setClientCompany] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+  const [clientLogoUrl, setClientLogoUrl] = useState("");
+  const [clientId, setClientId] = useState("");
+
   const clientOptions = (clientsList || []).flatMap((client: any) => {
     if (client.contacts && client.contacts.length > 0) {
       return client.contacts.map((contact: any) => ({
         key: `${client.id}:::${contact.id}`,
+        clientId: client.id,
         contactName: contact.name,
         companyName: client.companyName,
-        email: contact.email || client.email || '',
-        address: client.address || client.city || '',
-        logoUrl: client.logoUrl || '',
-        displayText: `${contact.name} — ${client.companyName}`
-      }))
+        email: contact.email || client.email || "",
+        address: client.address || client.city || "",
+        logoUrl: client.logoUrl || "",
+        displayText: `${contact.name} — ${client.companyName}`,
+      }));
     }
-    return [{
-      key: `${client.id}:::main`,
-      contactName: client.name,
-      companyName: client.companyName,
-      email: client.email || '',
-      address: client.address || client.city || '',
-      logoUrl: client.logoUrl || '',
-      displayText: `${client.name} — ${client.companyName}`
-    }]
-  })
+    return [
+      {
+        key: `${client.id}:::main`,
+        clientId: client.id,
+        contactName: client.name,
+        companyName: client.companyName,
+        email: client.email || "",
+        address: client.address || client.city || "",
+        logoUrl: client.logoUrl || "",
+        displayText: `${client.name} — ${client.companyName}`,
+      },
+    ];
+  });
 
   const handleClientSelectChange = (key: string) => {
-    setSelectedClientKey(key)
-    if (!key) return
-    const selectedOpt = clientOptions.find((opt: any) => opt.key === key)
+    setSelectedClientKey(key);
+    if (!key) return;
+    const selectedOpt = clientOptions.find((opt: any) => opt.key === key);
     if (selectedOpt) {
-      setClientName(selectedOpt.contactName)
-      setClientCompany(selectedOpt.companyName)
-      setClientEmail(selectedOpt.email)
-      setClientAddress(selectedOpt.address)
-      setClientLogoUrl(selectedOpt.logoUrl)
-      setClientId(selectedOpt.clientId || '')
+      setClientName(selectedOpt.contactName);
+      setClientCompany(selectedOpt.companyName);
+      setClientEmail(selectedOpt.email);
+      setClientAddress(selectedOpt.address);
+      setClientLogoUrl(selectedOpt.logoUrl);
+      setClientId(selectedOpt.clientId || "");
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 border border-slate-200 space-y-4">
-        <h3 className="text-base font-black text-slate-900">Duplicate Proposal for New Client</h3>
-        
+        <h3 className="text-base font-black text-slate-900">
+          Duplicate Proposal for New Client
+        </h3>
+
         <form
           onSubmit={(e) => {
-            e.preventDefault()
-            onDuplicate({ clientName, clientCompany, clientEmail, clientAddress, clientLogoUrl, clientId })
+            e.preventDefault();
+            onDuplicate({
+              clientName,
+              clientCompany,
+              clientEmail,
+              clientAddress,
+              clientLogoUrl,
+              clientId,
+            });
           }}
           className="space-y-3"
         >
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Select from CRM</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Select from CRM
+            </label>
             <select
               required
               value={selectedClientKey}
               onChange={(e) => handleClientSelectChange(e.target.value)}
               className="w-full px-3.5 py-2 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-xl outline-none focus:border-amber-500"
             >
-              <option value="" disabled>-- Select Client --</option>
+              <option value="" disabled>
+                -- Select Client --
+              </option>
               {clientOptions.map((opt: any) => (
-                <option key={opt.key} value={opt.key}>{opt.displayText}</option>
+                <option key={opt.key} value={opt.key}>
+                  {opt.displayText}
+                </option>
               ))}
             </select>
           </div>
@@ -975,11 +1107,11 @@ function DuplicateModal({ onClose, onDuplicate, duplicating, clientsList }: any)
               disabled={duplicating || !selectedClientKey}
               className="px-5 py-2 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl border border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {duplicating ? 'Duplicating...' : 'Duplicate Proposal'}
+              {duplicating ? "Duplicating..." : "Duplicate Proposal"}
             </button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }
