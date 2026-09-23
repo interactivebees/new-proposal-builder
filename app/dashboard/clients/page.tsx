@@ -47,118 +47,6 @@ interface ClientItem {
   avatarBg: string
 }
 
-// Detailed sample clients list with Logos & Person Designations
-const sampleClientsList: ClientItem[] = [
-  {
-    id: '1',
-    num: 1,
-    companyName: 'Maruti Suzuki India Limited',
-    slogan: 'Mobility for a Better Tomorrow',
-    status: 'ACTIVE',
-    industry: 'Automotive',
-    location: 'New Delhi, India',
-    email: 'contact@maruti.co.in',
-    phone: '+91 120 452 9000',
-    contactPerson: 'Anil Malhotra',
-    contactDesignation: 'Chief Technology Officer',
-    logoUrl: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=120&auto=format&fit=crop&q=80',
-    proposalsCount: 12,
-    pipelineValue: '₹ 1.2 Cr',
-    avatarLetter: 'M',
-    avatarBg: 'bg-rose-600'
-  },
-  {
-    id: '2',
-    num: 2,
-    companyName: 'Apollo Hospitals Enterprise',
-    slogan: 'Touching Lives',
-    status: 'ACTIVE',
-    industry: 'Healthcare',
-    location: 'Chennai, India',
-    email: 'info@apollohospitals.com',
-    phone: '+91 44 2829 0200',
-    contactPerson: 'Dr. Vikram Reddy',
-    contactDesignation: 'Head of Digital Health',
-    logoUrl: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=120&auto=format&fit=crop&q=80',
-    proposalsCount: 8,
-    pipelineValue: '₹ 75 L',
-    avatarLetter: 'A',
-    avatarBg: 'bg-blue-600'
-  },
-  {
-    id: '3',
-    num: 3,
-    companyName: 'Tata Motors Limited',
-    slogan: 'Connecting Aspirations',
-    status: 'ACTIVE',
-    industry: 'Manufacturing',
-    location: 'Mumbai, India',
-    email: 'contact@tatamotors.com',
-    phone: '+91 22 6665 8282',
-    contactPerson: 'Rajesh Verma',
-    contactDesignation: 'VP Digital Transformation',
-    logoUrl: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=120&auto=format&fit=crop&q=80',
-    proposalsCount: 10,
-    pipelineValue: '₹ 98 L',
-    avatarLetter: 'T',
-    avatarBg: 'bg-indigo-600'
-  },
-  {
-    id: '4',
-    num: 4,
-    companyName: 'Canon India Pvt. Ltd.',
-    slogan: 'Delighting You Always',
-    status: 'ACTIVE',
-    industry: 'Technology',
-    location: 'Gurugram, India',
-    email: 'info@canon.co.in',
-    phone: '+91 124 416 0000',
-    contactPerson: 'Meenakshi Iyer',
-    contactDesignation: 'Head of Information Security',
-    logoUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=120&auto=format&fit=crop&q=80',
-    proposalsCount: 6,
-    pipelineValue: '₹ 60 L',
-    avatarLetter: 'C',
-    avatarBg: 'bg-red-600'
-  },
-  {
-    id: '5',
-    num: 5,
-    companyName: 'Century Plyboard India Ltd.',
-    slogan: 'Strong Inside',
-    status: 'INACTIVE',
-    industry: 'Manufacturing',
-    location: 'Kolkata, India',
-    email: 'digital@centuryply.com',
-    phone: '+91 33 3940 3950',
-    contactPerson: 'Ms. Shabana Rahman',
-    contactDesignation: 'Category Manager (New Age Products)',
-    logoUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=120&auto=format&fit=crop&q=80',
-    proposalsCount: 4,
-    pipelineValue: '₹ 28 L',
-    avatarLetter: 'C',
-    avatarBg: 'bg-slate-800'
-  },
-  {
-    id: '6',
-    num: 6,
-    companyName: 'ASDC (Automotive Skills)',
-    slogan: 'Skilling India for Tomorrow',
-    status: 'LEAD',
-    industry: 'Education',
-    location: 'New Delhi, India',
-    email: 'contact@asdc.org.in',
-    phone: '+91 11 4186 8900',
-    contactPerson: 'Sunil Kumar',
-    contactDesignation: 'Director Events & Media',
-    logoUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=120&auto=format&fit=crop&q=80',
-    proposalsCount: 3,
-    pipelineValue: '₹ 35 L',
-    avatarLetter: 'A',
-    avatarBg: 'bg-purple-600'
-  }
-]
-
 function getStatusBadge(status: string) {
   switch (status) {
     // case 'LEAD':
@@ -769,7 +657,7 @@ export default function ClientsPage() {
                 <th className="py-3.5 px-5">Company &amp; Logo</th>
                 <th className="py-3.5 px-5">Contact &amp; Designation</th>
                 <th className="py-3.5 px-5">Industry</th>
-                <th className="py-3.5 px-5">Location</th>
+                <th className="py-3.5 px-5">Address</th>
                 <th className="py-3.5 px-5">Status</th>
                 <th className="py-3.5 px-5">Proposals</th>
                 <th className="py-3.5 px-5 text-right">Actions</th>
@@ -1027,7 +915,7 @@ export default function ClientsPage() {
                 </div>
 
                 <div>
-                  <label className="block mb-1">Location</label>
+                  <label className="block mb-1">Address</label>
                   <input
                     type="text"
                     placeholder="e.g. New Delhi, India"
@@ -1234,7 +1122,7 @@ export default function ClientsPage() {
                 </div>
 
                 <div>
-                  <label className="block mb-1">Location</label>
+                  <label className="block mb-1">Address</label>
                   <input
                     type="text"
                     placeholder="e.g. New Delhi, India"

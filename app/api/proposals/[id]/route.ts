@@ -6,6 +6,7 @@ import { z } from 'zod'
 const updateProposalSchema = z.object({
   title: z.string().min(1).optional(),
   content: z.any().optional(),
+  clientId: z.string().nullable().optional().or(z.literal('')),
   clientName: z.string().optional(),
   clientCompany: z.string().optional(),
   clientEmail: z.string().email().optional().or(z.literal('')),
@@ -151,7 +152,10 @@ export async function PUT(
     }
 
     const body = await req.json()
-    const validatedData = updateProposalSchema.parse(body)
+    const validatedData: any = updateProposalSchema.parse(body)
+    if (validatedData.clientId === '') {
+      validatedData.clientId = null
+    }
 
     // Create version history before updating
     try {

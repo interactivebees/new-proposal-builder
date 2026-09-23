@@ -272,9 +272,9 @@ export default function ProposalsPage() {
             id: item.id,
             num: index + 1,
             title: item.title,
-            subtitle: item.description || 'Client proposal document',
+            subtitle: item.clientCompany ? `Proposal document for ${item.clientCompany}` : 'Client proposal document',
             clientName: item.clientName || 'Client Entity',
-            clientIndustry: item.industry || 'Corporate',
+            clientIndustry: item.clientCompany || 'Corporate',
             status: item.status || 'DRAFT',
             creatorName: item.creator?.name || 'Admin',
             creatorInitials: item.creator?.name 
@@ -346,6 +346,33 @@ export default function ProposalsPage() {
   const uniqueClients = Array.from(new Set(proposals.map(p => p.clientName)))
   const uniqueCreators = Array.from(new Set(proposals.map(p => p.creatorName)))
 
+
+  const totalProposals = proposals.length
+  const draftCount = proposals.filter(p => !p.status || p.status.toUpperCase().includes('DRAFT')).length
+  const inReviewCount = proposals.filter(p => p.status && (p.status.toUpperCase().includes('REVIEW') || p.status.toUpperCase().includes('PENDING'))).length
+  const approvedCount = proposals.filter(p => p.status && p.status.toUpperCase().includes('APPROVED')).length
+  const rejectedCount = proposals.filter(p => p.status && p.status.toUpperCase().includes('REJECTED')).length
+
+  const handleExportCSV = () => {
+    const headers = ['Title', 'Client Name', 'Industry', 'Status', 'Creator', 'Created At']
+    const csvContent = [
+      headers.join(','),
+      ...filteredProposals.map(p => 
+        `"${p.title.replace(/"/g, '""')}","${p.clientName.replace(/"/g, '""')}","${p.clientIndustry.replace(/"/g, '""')}","${p.status}","${p.creatorName}","${p.createdAt}"`
+      )
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', 'proposals_export.csv')
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <div className="space-y-4 pb-6 font-sans">
       
@@ -391,7 +418,7 @@ export default function ProposalsPage() {
 
           {/* Buttons */}
           <div className="flex items-center gap-3">
-            <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl shadow-2xs transition-all cursor-pointer">
+            <button onClick={handleExportCSV} className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-extrabold text-xs rounded-xl shadow-2xs transition-all cursor-pointer">
               <Download className="w-3.5 h-3.5 text-slate-500" />
               <span>Export List</span>
             </button>
@@ -419,13 +446,12 @@ export default function ProposalsPage() {
               <Link2 className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight">25</div>
+              <div className="text-2xl font-black text-slate-900 tracking-tight">{totalProposals}</div>
               <div className="text-xs font-bold text-slate-500 mt-0.5">Total Proposals</div>
             </div>
           </div>
-          <div className="text-[11px] font-extrabold text-emerald-600 pt-2 flex items-center gap-1">
-            <span>↑ 20%</span>
-            <span className="text-slate-400 font-normal">vs last month</span>
+          <div className="text-[11px] font-medium text-slate-400 pt-2 flex items-center gap-1">
+            <span>Total across workspace</span>
           </div>
         </div>
 
@@ -436,13 +462,12 @@ export default function ProposalsPage() {
               <Inbox className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight">8</div>
+              <div className="text-2xl font-black text-slate-900 tracking-tight">{draftCount}</div>
               <div className="text-xs font-bold text-slate-500 mt-0.5">Draft</div>
             </div>
           </div>
-          <div className="text-[11px] font-extrabold text-emerald-600 pt-2 flex items-center gap-1">
-            <span>↑ 14%</span>
-            <span className="text-slate-400 font-normal">vs last month</span>
+          <div className="text-[11px] font-medium text-slate-400 pt-2 flex items-center gap-1">
+            <span>Currently in draft state</span>
           </div>
         </div>
 
@@ -453,13 +478,12 @@ export default function ProposalsPage() {
               <Hourglass className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight">7</div>
+              <div className="text-2xl font-black text-slate-900 tracking-tight">{inReviewCount}</div>
               <div className="text-xs font-bold text-slate-500 mt-0.5">In Review</div>
             </div>
           </div>
-          <div className="text-[11px] font-extrabold text-slate-500 pt-2 flex items-center gap-1">
-            <span>→ 0%</span>
-            <span className="text-slate-400 font-normal">vs last month</span>
+          <div className="text-[11px] font-medium text-slate-400 pt-2 flex items-center gap-1">
+            <span>Awaiting review</span>
           </div>
         </div>
 
@@ -470,13 +494,12 @@ export default function ProposalsPage() {
               <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight">6</div>
+              <div className="text-2xl font-black text-slate-900 tracking-tight">{approvedCount}</div>
               <div className="text-xs font-bold text-slate-500 mt-0.5">Approved</div>
             </div>
           </div>
-          <div className="text-[11px] font-extrabold text-emerald-600 pt-2 flex items-center gap-1">
-            <span>↑ 33%</span>
-            <span className="text-slate-400 font-normal">vs last month</span>
+          <div className="text-[11px] font-medium text-slate-400 pt-2 flex items-center gap-1">
+            <span>Successfully approved</span>
           </div>
         </div>
 
@@ -487,13 +510,12 @@ export default function ProposalsPage() {
               <XCircle className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
-              <div className="text-2xl font-black text-slate-900 tracking-tight">4</div>
+              <div className="text-2xl font-black text-slate-900 tracking-tight">{rejectedCount}</div>
               <div className="text-xs font-bold text-slate-500 mt-0.5">Rejected</div>
             </div>
           </div>
-          <div className="text-[11px] font-extrabold text-rose-600 pt-2 flex items-center gap-1">
-            <span>↓ 12%</span>
-            <span className="text-slate-400 font-normal">vs last month</span>
+          <div className="text-[11px] font-medium text-slate-400 pt-2 flex items-center gap-1">
+            <span>Needs revision</span>
           </div>
         </div>
 

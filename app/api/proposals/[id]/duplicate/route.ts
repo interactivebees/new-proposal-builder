@@ -21,7 +21,7 @@ export async function POST(
 
     const { id } = await params
     const body = await req.json()
-    const { clientName, clientCompany, clientEmail, clientAddress, clientLogoUrl, title } = body
+    const { clientName, clientCompany, clientEmail, clientAddress, clientLogoUrl, title, clientId } = body
 
     // Get original proposal
     const originalProposal = await prisma.proposal.findUnique({
@@ -50,6 +50,7 @@ export async function POST(
         title: title || `${originalProposal.title} (Copy)`,
         templateId: originalProposal.templateId,
         content: originalProposal.content as any,
+        clientId: clientId || null,
         clientName: clientName || null,
         clientCompany: clientCompany || null,
         clientEmail: clientEmail || null,

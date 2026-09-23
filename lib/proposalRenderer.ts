@@ -52,6 +52,7 @@ export interface ImageAssets {
 const loadImageAsBase64 = async (imageUrl: string): Promise<string | null> => {
   try {
     if (!imageUrl) return null
+    if (imageUrl.startsWith('data:')) return imageUrl
 
     if (imageUrl.startsWith('/uploads/')) {
       const filePath = join(process.cwd(), 'public', imageUrl)
@@ -167,7 +168,19 @@ export function renderProposalToHTML(
 
   const sectionsHTML = sections
     .map((section: Section) => {
-      const html = generateSectionHTML(section)
+      let html = generateSectionHTML(section)
+      
+      if (html && typeof html === 'string' && section.title) {
+        const cleanTitle = section.title.trim().toLowerCase()
+        const firstTagMatch = html.match(/^\s*<(h[1-6]|p)[^>]*>(.*?)<\/\1>\s*/i)
+        if (firstTagMatch) {
+          const innerText = firstTagMatch[2].replace(/<[^>]+>/g, '').trim().toLowerCase()
+          if (innerText === cleanTitle) {
+            html = html.substring(firstTagMatch[0].length)
+          }
+        }
+      }
+
       return html ? `
         <div class="section">
           <h2 class="section-title">${section.title || ''}</h2>

@@ -77,6 +77,13 @@ export default function ProposalDetailPage() {
   const [editedContent, setEditedContent] = useState<any>({})
   const [editedTitle, setEditedTitle] = useState('')
   const [editedClientLogoUrl, setEditedClientLogoUrl] = useState('')
+  const [editedClientId, setEditedClientId] = useState('')
+  const [editedClientName, setEditedClientName] = useState('')
+  const [editedClientCompany, setEditedClientCompany] = useState('')
+  const [editedClientEmail, setEditedClientEmail] = useState('')
+  const [editedClientAddress, setEditedClientAddress] = useState('')
+  const [clientsList, setClientsList] = useState<any[]>([])
+  const [selectedClientKey, setSelectedClientKey] = useState('')
   const [uploading, setUploading] = useState(false)
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
@@ -99,6 +106,7 @@ export default function ProposalDetailPage() {
 
   useEffect(() => {
     fetchProposal()
+    fetchClients()
   }, [proposalId])
 
   useEffect(() => {
@@ -113,6 +121,61 @@ export default function ProposalDetailPage() {
     }
   }, [])
 
+  const fetchClients = async () => {
+    try {
+      const res = await fetch('/api/clients')
+      if (res.ok) {
+        const data = await res.json()
+        setClientsList(data)
+      }
+    } catch (err) {
+      console.error('Error fetching clients:', err)
+    }
+  }
+
+  const clientOptions = clientsList.flatMap((client) => {
+    if (client.contacts && client.contacts.length > 0) {
+      return client.contacts.map((contact: any) => ({
+        key: `${client.id}:::${contact.id}`,
+        clientId: client.id,
+        clientId: client.id,
+        contactName: contact.name,
+        companyName: client.companyName,
+        email: contact.email || client.email || '',
+        address: client.address || client.city || '',
+        logoUrl: client.logoUrl || '',
+        displayText: `${contact.name} — ${client.companyName}`
+      }))
+    }
+    return [{
+      key: `${client.id}:::main`,
+      clientId: client.id,
+      clientId: client.id,
+      contactName: client.name,
+      companyName: client.companyName,
+      email: client.email || '',
+      address: client.address || client.city || '',
+      logoUrl: client.logoUrl || '',
+      displayText: `${client.name} — ${client.companyName}`
+    }]
+  })
+
+  const handleClientSelectChange = (key: string) => {
+    setSelectedClientKey(key)
+    if (!key) return
+    const selectedOpt = clientOptions.find((opt) => opt.key === key)
+    if (selectedOpt) {
+      setEditedClientName(selectedOpt.contactName)
+      setEditedClientCompany(selectedOpt.companyName)
+      setEditedClientEmail(selectedOpt.email)
+      setEditedClientAddress(selectedOpt.address)
+      if (selectedOpt.logoUrl) {
+        setEditedClientLogoUrl(selectedOpt.logoUrl)
+      setEditedClientId(selectedOpt.clientId || '')
+      }
+    }
+  }
+
   const fetchProposal = async () => {
     try {
       const res = await fetch(`/api/proposals/${proposalId}`)
@@ -122,6 +185,11 @@ export default function ProposalDetailPage() {
         setEditedContent(data.content)
         setEditedTitle(data.title)
         setEditedClientLogoUrl(data.clientLogoUrl || '')
+        setEditedClientId(data.clientId || '')
+        setEditedClientName(data.clientName || '')
+        setEditedClientCompany(data.clientCompany || '')
+        setEditedClientEmail(data.clientEmail || '')
+        setEditedClientAddress(data.clientAddress || '')
       } else {
         console.error('Failed to fetch proposal')
       }
@@ -170,7 +238,12 @@ export default function ProposalDetailPage() {
         body: JSON.stringify({
           title: editedTitle,
           content: editedContent,
-          clientLogoUrl: editedClientLogoUrl
+          clientLogoUrl: editedClientLogoUrl,
+          clientId: editedClientId,
+          clientName: editedClientName,
+          clientCompany: editedClientCompany,
+          clientEmail: editedClientEmail,
+          clientAddress: editedClientAddress
         })
       })
 
@@ -179,12 +252,12 @@ export default function ProposalDetailPage() {
         setEditing(false)
         toast.success('Proposal saved successfully!')
       } else {
-        toast.success('Proposal changes updated!')
-        setEditing(false)
+        toast.error('Failed to update proposal!')
+          // Do not close editing on error
       }
     } catch (error) {
-      toast.success('Proposal saved!')
-      setEditing(false)
+      toast.error('Error occurred while saving!')
+        // Do not close editing on error
     } finally {
       setSaving(false)
     }
@@ -525,16 +598,6 @@ export default function ProposalDetailPage() {
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={async () => {
-                  toast.success('Proposal submitted for review!')
-                }}
-                className="px-5 py-2.5 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl shadow-2xs transition-all border border-amber-400 flex items-center gap-2 cursor-pointer"
-              >
-                <CheckSquare className="w-4 h-4 text-slate-950" />
-                <span>Submit for Approval</span>
-              </button>
             </>
           )}
         </div>
@@ -820,6 +883,7 @@ export default function ProposalDetailPage() {
           onClose={() => setShowDuplicateModal(false)}
           onDuplicate={handleDuplicate}
           duplicating={duplicating}
+          clientsList={clientsList}
         />
       )}
 
@@ -827,10 +891,51 @@ export default function ProposalDetailPage() {
   )
 }
 
-function DuplicateModal({ onClose, onDuplicate, duplicating }: any) {
+function DuplicateModal({ onClose, onDuplicate, duplicating, clientsList }: any) {
+  const [selectedClientKey, setSelectedClientKey] = useState('')
   const [clientName, setClientName] = useState('')
   const [clientCompany, setClientCompany] = useState('')
   const [clientEmail, setClientEmail] = useState('')
+  const [clientAddress, setClientAddress] = useState('')
+  const [clientLogoUrl, setClientLogoUrl] = useState('')
+  const [clientId, setClientId] = useState('')
+  
+  const clientOptions = (clientsList || []).flatMap((client: any) => {
+    if (client.contacts && client.contacts.length > 0) {
+      return client.contacts.map((contact: any) => ({
+        key: `${client.id}:::${contact.id}`,
+        contactName: contact.name,
+        companyName: client.companyName,
+        email: contact.email || client.email || '',
+        address: client.address || client.city || '',
+        logoUrl: client.logoUrl || '',
+        displayText: `${contact.name} — ${client.companyName}`
+      }))
+    }
+    return [{
+      key: `${client.id}:::main`,
+      contactName: client.name,
+      companyName: client.companyName,
+      email: client.email || '',
+      address: client.address || client.city || '',
+      logoUrl: client.logoUrl || '',
+      displayText: `${client.name} — ${client.companyName}`
+    }]
+  })
+
+  const handleClientSelectChange = (key: string) => {
+    setSelectedClientKey(key)
+    if (!key) return
+    const selectedOpt = clientOptions.find((opt: any) => opt.key === key)
+    if (selectedOpt) {
+      setClientName(selectedOpt.contactName)
+      setClientCompany(selectedOpt.companyName)
+      setClientEmail(selectedOpt.email)
+      setClientAddress(selectedOpt.address)
+      setClientLogoUrl(selectedOpt.logoUrl)
+      setClientId(selectedOpt.clientId || '')
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
@@ -840,40 +945,23 @@ function DuplicateModal({ onClose, onDuplicate, duplicating }: any) {
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            onDuplicate({ clientName, clientCompany, clientEmail })
+            onDuplicate({ clientName, clientCompany, clientEmail, clientAddress, clientLogoUrl, clientId })
           }}
           className="space-y-3"
         >
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Client Name</label>
-            <input
-              type="text"
+            <label className="block text-xs font-bold text-slate-700 mb-1">Select from CRM</label>
+            <select
               required
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-amber-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Company Name</label>
-            <input
-              type="text"
-              required
-              value={clientCompany}
-              onChange={(e) => setClientCompany(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-amber-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Client Email</label>
-            <input
-              type="email"
-              value={clientEmail}
-              onChange={(e) => setClientEmail(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-amber-500"
-            />
+              value={selectedClientKey}
+              onChange={(e) => handleClientSelectChange(e.target.value)}
+              className="w-full px-3.5 py-2 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded-xl outline-none focus:border-amber-500"
+            >
+              <option value="" disabled>-- Select Client --</option>
+              {clientOptions.map((opt: any) => (
+                <option key={opt.key} value={opt.key}>{opt.displayText}</option>
+              ))}
+            </select>
           </div>
 
           <div className="flex justify-end gap-2.5 pt-3">
@@ -886,8 +974,8 @@ function DuplicateModal({ onClose, onDuplicate, duplicating }: any) {
             </button>
             <button
               type="submit"
-              disabled={duplicating}
-              className="px-5 py-2 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl border border-amber-400"
+              disabled={duplicating || !selectedClientKey}
+              className="px-5 py-2 bg-[#FFC800] hover:bg-[#F5BF00] text-slate-950 font-black text-xs rounded-xl border border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {duplicating ? 'Duplicating...' : 'Duplicate Proposal'}
             </button>

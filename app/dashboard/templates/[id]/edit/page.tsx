@@ -175,6 +175,7 @@ export default function EditTemplatePage() {
 
   const handlePreview = () => {
     toast.success(`Opening preview for template: "${name}"`)
+    window.open(`/api/templates/${templateId}/preview`, '_blank')
   }
 
   const handleAddSectionTop = () => {
