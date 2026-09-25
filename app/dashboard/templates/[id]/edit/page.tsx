@@ -15,6 +15,8 @@ import {
 } from 'lucide-react'
 import { Section } from '@/components/SectionEditor'
 
+
+
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
   ssr: false,
   loading: () => (
@@ -97,6 +99,8 @@ export default function EditTemplatePage() {
   const [description, setDescription] = useState(
     'Comprehensive template for web portal design, development and cloud infrastructure services.'
   )
+  const [header, setHeader] = useState('')
+  const [footer, setFooter] = useState('')
   const [sections, setSections] = useState<Section[]>(DEFAULT_WEB_PORTAL_SECTIONS)
 
   const [loading, setLoading] = useState(true)
@@ -369,7 +373,9 @@ export default function EditTemplatePage() {
           </div>
 
           {/* Section Editor List */}
+          
           <SectionEditor sections={sections} onChange={setSections} />
+          
         </div>
 
         {/* Bottom Actions Bar */}

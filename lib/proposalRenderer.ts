@@ -183,7 +183,7 @@ export function renderProposalToHTML(
 
       return html ? `
         <div class="section">
-          <h2 class="section-title">${section.title || ''}</h2>
+          
           <div class="section-content">${html}</div>
         </div>
       ` : ''
@@ -214,7 +214,7 @@ export function renderProposalToHTML(
     
     @page {
       size: A4;
-      margin: 0;
+      ${options.mode === 'pdf' ? '' : 'margin: 0;'}
     }
     
     body {
@@ -476,6 +476,10 @@ export function renderProposalToHTML(
     }
     
     @media print {
+      .document-container {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
       body {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
@@ -488,11 +492,13 @@ export function renderProposalToHTML(
 </head>
 <body>
   <div class="document-container">
+    ${options.mode !== 'pdf' ? `
     <div class="header">
       <div class="header-right">
         ${logoImg}
       </div>
     </div>
+    ` : ''}
 
     <div class="cover-page">
       <h1 class="proposal-title">${proposal.title}</h1>

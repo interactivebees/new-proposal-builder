@@ -89,36 +89,27 @@ export async function POST(req: NextRequest) {
       
       await page.setContent(html, { waitUntil: 'networkidle0' })
       
-      await page.emulateMediaType('screen')
+      await page.emulateMediaType('print')
 
-      // Inject page size via CSS (not via Puppeteer margins to avoid double margins)
-      await page.evaluate(() => {
-        const style = document.createElement('style')
-        style.textContent = `
-          @page {
-            size: A4;
-            margin: 0;
-          }
-        `
-        document.head.appendChild(style)
-      })
 
       const pdf = await page.pdf({
         format: 'A4',
         printBackground: true,
         displayHeaderFooter: true,
         margin: {
-          top: 15,
-          bottom: 25,
-          left: 20,
-          right: 20,
+          top: images.logoBase64 ? '35mm' : '25mm',
+          bottom: '25mm',
+          left: '12.7mm',
+            right: '12.7mm',
         },
-        footerTemplate: `<div style="width: 100%; font-size: 10px; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 8px; margin: 0 20px;">
+        footerTemplate: `<div style="width: 100%; font-size: 10px; display: flex; justify-content: space-between; border-top: 1px solid #ccc; padding-top: 8px; margin: 0 20px; font-family: Arial, sans-serif;">
           <span>${formattedDate}</span>
           <span>${proposal.title}</span>
           <span class="pageNumber"></span>
         </div>`,
-        headerTemplate: `<div style="width: 100%; font-size: 10px; display: none;"></div>`,
+        headerTemplate: `<div style="width: 100%; display: flex; justify-content: flex-end; align-items: center; padding-right: 20px; font-family: Arial, sans-serif;">
+          ${images.logoBase64 ? `<img src="${images.logoBase64}" style="max-height: 40px; max-width: 120px; object-fit: contain;" />` : ''}
+        </div>`,
       })
 
       const sanitizedFilename = proposal.title.replace(/[^a-zA-Z0-9\s-]/g, '_').replace(/\s+/g, '_').substring(0, 100)

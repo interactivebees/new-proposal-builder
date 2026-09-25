@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { Layers, Plus } from 'lucide-react'
 
+
+
 const SectionEditor = dynamic(() => import('@/components/SectionEditor'), {
   ssr: false,
   loading: () => <div>Loading editor...</div>
@@ -14,6 +16,8 @@ export default function NewTemplatePage() {
   const router = useRouter()
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
+  const [header, setHeader] = useState('')
+  const [footer, setFooter] = useState('')
   const [sections, setSections] = useState<Array<{
     id: string
     title: string
@@ -119,7 +123,9 @@ export default function NewTemplatePage() {
           <p className="text-xs text-slate-500 font-medium mb-4">
             Define the default sections and content structure for proposals created with this template.
           </p>
+          
           <SectionEditor sections={sections} onChange={setSections} />
+          
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-2">

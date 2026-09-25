@@ -7,6 +7,8 @@ import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Highlight from '@tiptap/extension-highlight'
+import { ResizableImage } from 'tiptap-extension-resizable-image'
+import 'tiptap-extension-resizable-image/styles.css'
 import { useEffect } from 'react'
 
 interface ProposalEditorProps {
@@ -38,6 +40,19 @@ export default function ProposalEditor({ content, onChange, readOnly = false }: 
       }),
       Highlight.configure({
         multicolor: true
+      }),
+      ResizableImage.configure({
+        onUpload: async (file: File) => {
+          const formData = new FormData()
+          formData.append('file', file)
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          })
+          if (!response.ok) throw new Error('Failed to upload image')
+          const data = await response.json()
+          return { src: data.url }
+        }
       })
     ],
     content: content?.html || '',

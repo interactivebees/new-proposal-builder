@@ -35,6 +35,8 @@ const SectionEditor = dynamic(() => import("@/components/SectionEditor"), {
   ),
 });
 
+;
+
 interface Proposal {
   id: string;
   title: string;
@@ -750,13 +752,15 @@ export default function ProposalDetailPage() {
               <FileText className="w-4 h-4" />
             </div>
             <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
-              Proposal Sections
+              Proposal Content
             </h2>
           </div>
-          <span className="text-xs font-bold text-amber-900 bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
+          {/* <span className="text-xs font-bold text-amber-900 bg-amber-100 px-3 py-1 rounded-full border border-amber-200">
             TipTap WYSIWYG
-          </span>
+          </span> */}
         </div>
+
+        
 
         <SectionEditor
           sections={
@@ -769,6 +773,8 @@ export default function ProposalDetailPage() {
           }
           readOnly={!editing}
         />
+
+        
       </div>
 
       {/* Pricing Breakdown Table */}

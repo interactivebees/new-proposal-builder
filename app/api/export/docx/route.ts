@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, TabStopType, Header, Footer, PageNumber } from 'docx'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, TabStopType, Header, Footer, PageNumber, ShadingType } from 'docx'
 
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import https from 'https'
 import http from 'http'
+import sizeOf from 'image-size'
 
 // POST /api/export/docx - Export proposal as DOCX
 export async function POST(req: NextRequest) {
@@ -51,6 +52,12 @@ export async function POST(req: NextRequest) {
     // #region ############# HELPER FUNCTIONS (Existing) #############
     const loadImage = async (imageUrl: string): Promise<Buffer | null> => {
       try {
+        if (!imageUrl) return null
+        if (imageUrl.startsWith('data:')) {
+          const base64Data = imageUrl.split(',')[1]
+          if (base64Data) return Buffer.from(base64Data, 'base64')
+          return null
+        }
         if (imageUrl.startsWith('/uploads/')) {
           const filePath = join(process.cwd(), 'public', imageUrl)
           return readFileSync(filePath)
@@ -74,39 +81,12 @@ export async function POST(req: NextRequest) {
 
     const getImageDimensions = (buffer: Buffer): { width: number; height: number } | null => {
       try {
-        if (!buffer || buffer.length < 24) return null
-        
-        const signature = buffer.toString('ascii', 0, 8)
-        
-        if (signature === '\x89PNG\r\n\x1a\n') {
-          const width = buffer.readUInt32BE(16)
-          const height = buffer.readUInt32BE(20)
-          return { width, height }
+        const dimensions = sizeOf(buffer)
+        if (dimensions && dimensions.width && dimensions.height) {
+          return { width: dimensions.width, height: dimensions.height }
         }
-        
-        if (buffer[0] === 0xFF && buffer[1] === 0xD8) {
-          let offset = 2
-          while (offset < buffer.length) {
-            if (buffer[offset] !== 0xFF) break
-            const marker = buffer[offset + 1]
-            if (marker === 0xC0 || marker === 0xC2) {
-              const height = buffer.readUInt16BE(offset + 5)
-              const width = buffer.readUInt16BE(offset + 7)
-              return { width, height }
-            }
-            const length = buffer.readUInt16BE(offset + 2)
-            offset += 2 + length
-          }
-        }
-        
-        if (signature.startsWith('GIF')) {
-          const width = buffer.readUInt16LE(6)
-          const height = buffer.readUInt16LE(8)
-          return { width, height }
-        }
-        
         return null
-      } catch {
+      } catch (e) {
         return null
       }
     }
@@ -118,15 +98,22 @@ export async function POST(req: NextRequest) {
         return { width: 120, height: 40 }
       }
       
-      // Scale to 21% of original (for company logo)
-      const scale = 0.21
-      const scaledWidth = Math.round(dims.width * scale)
-      const scaledHeight = Math.round(dims.height * scale)
+      const MAX_WIDTH = 150
+      const MAX_HEIGHT = 60
       
-      return {
-        width: scaledWidth,
-        height: scaledHeight,
+      let width = dims.width
+      let height = dims.height
+      
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width)
+        width = MAX_WIDTH
       }
+      if (height > MAX_HEIGHT) {
+        width = Math.round((width * MAX_HEIGHT) / height)
+        height = MAX_HEIGHT
+      }
+      
+      return { width, height }
     }
 
     const calculateClientLogoSize = (buffer: Buffer): { width: number; height: number } => {
@@ -136,14 +123,22 @@ export async function POST(req: NextRequest) {
         return { width: 150, height: 75 }
       }
       
-      const scale = 0.5
-      const scaledWidth = Math.round(dims.width * scale)
-      const scaledHeight = Math.round(dims.height * scale)
+      const MAX_WIDTH = 250
+      const MAX_HEIGHT = 100
       
-      return {
-        width: scaledWidth,
-        height: scaledHeight,
+      let width = dims.width
+      let height = dims.height
+      
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width)
+        width = MAX_WIDTH
       }
+      if (height > MAX_HEIGHT) {
+        width = Math.round((width * MAX_HEIGHT) / height)
+        height = MAX_HEIGHT
+      }
+      
+      return { width, height }
     }
 
     const getAlignment = (styleAttr: string): typeof AlignmentType[keyof typeof AlignmentType] => {
@@ -289,13 +284,22 @@ export async function POST(req: NextRequest) {
                     if (fontFamily) newFormatting.font = fontFamily;
                     const bgMatch = style.match(/background-color:\s*([^;]+)/i);
                     if (node.tag === 'mark' || bgMatch) {
-                        let highlightColor = 'yellow';
+                        let hexColor = 'FFFF00'; // Default yellow
                         if (bgMatch) {
                             const bgColor = bgMatch[1].trim();
-                            const hexColor = bgColor.toLowerCase().startsWith('rgb') ? rgbToHex(bgColor) : bgColor.replace('#', '');
-                            if (hexColor) highlightColor = hexColor;
+                            const parsedHex = bgColor.toLowerCase().startsWith('rgb') ? rgbToHex(bgColor) : bgColor.replace('#', '');
+                            if (parsedHex && parsedHex.toLowerCase() !== 'transparent') {
+                                hexColor = parsedHex.toUpperCase();
+                            } else if (parsedHex && parsedHex.toLowerCase() === 'transparent') {
+                                hexColor = '';
+                            }
                         }
-                        newFormatting.highlight = highlightColor;
+                        if (hexColor) {
+                            newFormatting.shading = {
+                                type: ShadingType.CLEAR,
+                                fill: hexColor
+                            };
+                        }
                     }
                     break;
                 }
@@ -523,40 +527,105 @@ export async function POST(req: NextRequest) {
     };
 
 
+
+    const processHtmlBlockAsync = async (html: string): Promise<(Paragraph | Table)[]> => {
+      const children: (Paragraph | Table)[] = [];
+      const imgRegex = /<img([^>]*)>/gi
+      let imgMatch
+      let remainingHtml = html;
+      while ((imgMatch = imgRegex.exec(html)) !== null) {
+        const imgAttrs = imgMatch[1]
+        const srcMatch = imgAttrs.match(/src="([^"]*)"/)
+        const widthMatch = imgAttrs.match(/width="(\d+)"/) || imgAttrs.match(/style="[^"]*width:\s*(\d+)px/i)
+        const heightMatch = imgAttrs.match(/height="(\d+)"/)
+        const alignMatch = imgAttrs.match(/data-align="([^"]+)"/)
+        
+        if (srcMatch) {
+          const imgSrc = srcMatch[1]
+          let width = widthMatch ? parseInt(widthMatch[1]) : 400
+          if (width > 600) width = 600
+          const height = heightMatch ? parseInt(heightMatch[1]) : Math.round(width * 0.75)
+          
+          const alignValue = alignMatch ? alignMatch[1] : 'center'
+          let alignment: any = AlignmentType.CENTER
+          if (alignValue === 'left') alignment = AlignmentType.LEFT
+          else if (alignValue === 'right') alignment = AlignmentType.RIGHT
+
+          const imgBuffer = await loadImage(imgSrc)
+          if (imgBuffer) {
+            children.push(new Paragraph({
+              children: [
+                new ImageRun({
+                  data: imgBuffer,
+                  transformation: { width, height },
+                  type: 'png'
+                })
+              ],
+              alignment: alignment,
+              spacing: { after: 200 }
+            }))
+          }
+        }
+        remainingHtml = remainingHtml.replace(imgMatch[0], '');
+      }
+      
+      const parsedParagraphs = htmlToParagraphs(remainingHtml);
+      children.push(...parsedParagraphs);
+      return children;
+    };
+
     // ################### DOCUMENT ASSEMBLY ######################
+
     const docChildren: (Paragraph | Table)[] = []
     const sessionCompanyName = (session.user as { companyName?: string })?.companyName
     const companyLogoBuffer = companySettings?.logoUrl ? await loadImage(companySettings.logoUrl) : null
 
-    const headerChildren: Paragraph[] = []
+    const proposalContent = proposal.content as any;
+    let customHeaderHtml = '';
+    let customFooterHtml = '';
+    if (proposalContent?.sections && Array.isArray(proposalContent.sections)) {
+      for (const sec of proposalContent.sections) {
+        if (sec.content?.header && !customHeaderHtml) customHeaderHtml = sec.content.header;
+        if (sec.content?.footer && !customFooterHtml) customFooterHtml = sec.content.footer;
+      }
+    } else if (proposalContent?.header || proposalContent?.footer) {
+      customHeaderHtml = proposalContent.header || '';
+      customFooterHtml = proposalContent.footer || '';
+    }
 
-    if (companyLogoBuffer) {
-      const logoSize = calculateImageSize(companyLogoBuffer)
-      headerChildren.push(new Paragraph({
-        children: [
-          new ImageRun({
-            data: companyLogoBuffer,
-            transformation: { width: logoSize.width, height: logoSize.height },
-            type: 'png'
-          })
-        ],
-        alignment: AlignmentType.RIGHT,
-        spacing: { after: 200 },
-        border: {
-          top: { style: BorderStyle.NONE, size: 0 },
-          bottom: { style: BorderStyle.NONE, size: 0 },
-          left: { style: BorderStyle.NONE, size: 0 },
-          right: { style: BorderStyle.NONE, size: 0 }
-        }
-      }))
-    } else if (companySettings?.companyName || sessionCompanyName) {
-      headerChildren.push(new Paragraph({
-        children: [
-          new TextRun({ text: companySettings?.companyName || sessionCompanyName || '', bold: true })
-        ],
-        alignment: AlignmentType.RIGHT,
-        spacing: { after: 0 }
-      }))
+    let headerChildren: (Paragraph | Table)[] = []
+    
+    if (customHeaderHtml) {
+      headerChildren = await processHtmlBlockAsync(customHeaderHtml);
+    } else {
+      if (companyLogoBuffer) {
+        const logoSize = calculateImageSize(companyLogoBuffer)
+        headerChildren.push(new Paragraph({
+          children: [
+            new ImageRun({
+              data: companyLogoBuffer,
+              transformation: { width: logoSize.width, height: logoSize.height },
+              type: 'png'
+            })
+          ],
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 200 },
+          border: {
+            top: { style: BorderStyle.NONE, size: 0 },
+            bottom: { style: BorderStyle.NONE, size: 0 },
+            left: { style: BorderStyle.NONE, size: 0 },
+            right: { style: BorderStyle.NONE, size: 0 }
+          }
+        }))
+      } else if (companySettings?.companyName || sessionCompanyName) {
+        headerChildren.push(new Paragraph({
+          children: [
+            new TextRun({ text: companySettings?.companyName || sessionCompanyName || '', bold: true })
+          ],
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 0 }
+        }))
+      }
     }
 
     const formattedDate = new Intl.DateTimeFormat('en-US', {
@@ -698,14 +767,21 @@ export async function POST(req: NextRequest) {
           while ((imgMatch = imgRegex.exec(sectionContent)) !== null) {
             const imgAttrs = imgMatch[1]
             const srcMatch = imgAttrs.match(/src="([^"]*)"/)
-            const widthMatch = imgAttrs.match(/width="(\d+)"/)
+            const widthMatch = imgAttrs.match(/width="(\d+)"/) || imgAttrs.match(/style="[^"]*width:\s*(\d+)px/i)
             const heightMatch = imgAttrs.match(/height="(\d+)"/)
+            const alignMatch = imgAttrs.match(/data-align="([^"]+)"/)
             
             if (srcMatch) {
               const imgSrc = srcMatch[1]
-              const width = widthMatch ? parseInt(widthMatch[1]) : 400
-              const height = heightMatch ? parseInt(heightMatch[1]) : 300
+              let width = widthMatch ? parseInt(widthMatch[1]) : 400
+              if (width > 600) width = 600 // max width for DOCX page
+              const height = heightMatch ? parseInt(heightMatch[1]) : Math.round(width * 0.75) // estimate height if missing
               
+              const alignValue = alignMatch ? alignMatch[1] : 'center'
+              let alignment: any = AlignmentType.CENTER
+              if (alignValue === 'left') alignment = AlignmentType.LEFT
+              else if (alignValue === 'right') alignment = AlignmentType.RIGHT
+
               const imgBuffer = await loadImage(imgSrc)
               if (imgBuffer) {
                 docChildren.push(new Paragraph({
@@ -716,6 +792,7 @@ export async function POST(req: NextRequest) {
                       type: 'png'
                     })
                   ],
+                  alignment: alignment,
                   spacing: { after: 200 }
                 }))
               }

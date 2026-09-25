@@ -356,15 +356,21 @@ export default function SettingsPage() {
               <label className="block text-xs font-bold text-slate-700">Company Logo</label>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Yellow iBees Logo Box Preview */}
-                <div className="h-28 bg-[#FFC800] rounded-2xl border border-amber-400 p-3 flex flex-col items-center justify-center text-center shadow-2xs">
-                  <span className="font-serif italic font-black text-2xl text-slate-950 block leading-none">
-                    iBees
-                  </span>
-                  <span className="text-[9px] font-bold text-slate-900 block leading-none mt-1">
-                    we believe. we can.
-                  </span>
-                </div>
+                {/* Logo Box Preview */}
+                {settings.logoUrl ? (
+                  <div className="h-28 rounded-2xl border border-slate-200 p-2 flex items-center justify-center shadow-2xs relative overflow-hidden bg-white">
+                    <img src={settings.logoUrl} alt="Company Logo" className="max-h-full max-w-full object-contain" />
+                  </div>
+                ) : (
+                  <div className="h-28 bg-[#FFC800] rounded-2xl border border-amber-400 p-3 flex flex-col items-center justify-center text-center shadow-2xs">
+                    <span className="font-serif italic font-black text-2xl text-slate-950 block leading-none">
+                      iBees
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-900 block leading-none mt-1">
+                      we believe. we can.
+                    </span>
+                  </div>
+                )}
 
                 {/* Upload Logo Box */}
                 <div className="h-28 border-2 border-dashed border-slate-200 hover:border-amber-400 bg-slate-50/50 hover:bg-amber-50/30 rounded-2xl p-3 flex flex-col items-center justify-center text-center transition-all relative">

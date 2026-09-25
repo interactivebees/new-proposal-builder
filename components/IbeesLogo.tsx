@@ -29,8 +29,8 @@ export default function IbeesLogo({ variant = 'header', customLogoUrl, className
   if (variant === 'badge') {
     if (showCustomLogo) {
       return (
-        <div className={`bg-[#FFC800] text-black rounded-xl p-1.5 font-sans flex items-center gap-2 shadow-sm ${className}`}>
-          <img src={customLogoUrl} alt="Logo" className="h-6 max-w-[90px] object-contain rounded-md" onError={() => setLogoError(true)} />
+        <div className={`flex items-center gap-2 ${className}`}>
+          <img src={customLogoUrl} alt="Logo" className="h-7 max-w-[100px] object-contain mix-blend-multiply" onError={() => setLogoError(true)} />
         </div>
       )
     }
@@ -49,14 +49,16 @@ export default function IbeesLogo({ variant = 'header', customLogoUrl, className
 
   return (
     <Link href="/dashboard" className={`flex items-center gap-3 group ${className}`}>
-      {/* Yellow Logo Box / Custom Logo */}
-      <div className="bg-[#FFC800] text-black px-2.5 py-1.5 rounded-xl shadow-md shadow-amber-500/20 flex flex-col justify-center border border-amber-400 group-hover:scale-105 transition-transform shrink-0 min-w-[70px] min-h-[40px] items-center">
-        {showCustomLogo ? (
-          <img src={customLogoUrl} alt="Company Logo" className="h-7 max-w-[120px] object-contain" onError={() => setLogoError(true)} />
-        ) : (
+      {/* Custom Logo or Default Yellow Badge */}
+      {showCustomLogo ? (
+        <div className="flex items-center justify-center shrink-0 min-h-[40px] transition-transform group-hover:scale-105">
+          <img src={customLogoUrl} alt="Company Logo" className="h-8 max-w-[140px] object-contain mix-blend-multiply" onError={() => setLogoError(true)} />
+        </div>
+      ) : (
+        <div className="bg-[#FFC800] text-black px-2.5 py-1.5 rounded-xl shadow-md shadow-amber-500/20 flex flex-col justify-center border border-amber-400 group-hover:scale-105 transition-transform shrink-0 min-w-[70px] min-h-[40px] items-center">
           <DefaultLogoBadge />
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="flex flex-col">
         <span className="text-lg font-black tracking-tight text-slate-900 leading-none">

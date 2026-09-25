@@ -17,7 +17,7 @@ import {
   Tag
 } from 'lucide-react'
 
-const Word365Editor = dynamic(() => import('@/components/Word365Editor'), {
+const DocxEditor = dynamic(() => import('@/components/DocxEditor'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center p-8 bg-slate-50 rounded-xl border border-slate-200">
@@ -232,8 +232,8 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
                 )}
 
                 {/* Rich Text TipTap Editor */}
-                <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
-                  <Word365Editor
+                <div className="overflow-hidden">
+                  <DocxEditor
                     content={section.content}
                     onChange={(content: any) => updateSection(section.id, { content })}
                     readOnly={readOnly}
