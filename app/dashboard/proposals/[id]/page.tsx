@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -135,32 +135,36 @@ export default function ProposalDetailPage() {
     }
   };
 
-  const clientOptions = clientsList.flatMap((client) => {
-    if (client.contacts && client.contacts.length > 0) {
-      return client.contacts.map((contact: any) => ({
-        key: `${client.id}:::${contact.id}`,
-        clientId: client.id,
-        contactName: contact.name,
-        companyName: client.companyName,
-        email: contact.email || client.email || "",
-        address: client.address || client.city || "",
-        logoUrl: client.logoUrl || "",
-        displayText: `${contact.name} — ${client.companyName}`,
-      }));
-    }
-    return [
-      {
-        key: `${client.id}:::main`,
-        clientId: client.id,
-        contactName: client.name,
-        companyName: client.companyName,
-        email: client.email || "",
-        address: client.address || client.city || "",
-        logoUrl: client.logoUrl || "",
-        displayText: `${client.name} — ${client.companyName}`,
-      },
-    ];
-  });
+  const clientOptions = useMemo(
+    () =>
+      clientsList.flatMap((client) => {
+        if (client.contacts && client.contacts.length > 0) {
+          return client.contacts.map((contact: any) => ({
+            key: `${client.id}:::${contact.id}`,
+            clientId: client.id,
+            contactName: contact.name,
+            companyName: client.companyName,
+            email: contact.email || client.email || "",
+            address: client.address || client.city || "",
+            logoUrl: client.logoUrl || "",
+            displayText: `${contact.name} — ${client.companyName}`,
+          }));
+        }
+        return [
+          {
+            key: `${client.id}:::main`,
+            clientId: client.id,
+            contactName: client.name,
+            companyName: client.companyName,
+            email: client.email || "",
+            address: client.address || client.city || "",
+            logoUrl: client.logoUrl || "",
+            displayText: `${client.name} — ${client.companyName}`,
+          },
+        ];
+      }),
+    [clientsList]
+  );
 
   useEffect(() => {
     fetchProposal();
