@@ -158,12 +158,18 @@ export async function DELETE(
   }
 }
 
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+  
     const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
     const body = await request.json()
     const { action, currentPassword, newPassword, isActive } = body
@@ -177,10 +183,10 @@ export async function PATCH(
     // Handle different actions
     if (action === 'toggleStatus') {
       // Only OWNER can toggle status
-      if (!session || session.user?.role !== 'OWNER') {
+      if (session.user.role !== 'OWNER') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }
-      
+
       // Can't deactivate yourself
       if (id === session.user.id) {
         return NextResponse.json({ error: 'You cannot deactivate your own account' }, { status: 400 })
@@ -192,16 +198,16 @@ export async function PATCH(
         data: { isActive: newStatus, tokenVersion: { increment: 1 } },
       })
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: newStatus ? 'User activated' : 'User deactivated',
-        isActive: newStatus 
+        isActive: newStatus
       })
     }
 
     if (action === 'changePassword') {
       // User can change their own password, or OWNER can reset any user's password
-      const isOwnUser = session?.user?.id === id
-      const isOwner = session?.user?.role === 'OWNER'
+      const isOwnUser = session.user.id === id
+      const isOwner = session.user.role === 'OWNER'
 
       if (!isOwnUser && !isOwner) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
@@ -212,7 +218,7 @@ export async function PATCH(
         if (!currentPassword) {
           return NextResponse.json({ error: 'Current password is required' }, { status: 400 })
         }
-        
+
         const isValid = await compare(currentPassword, user.password)
         if (!isValid) {
           return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 })
@@ -227,7 +233,7 @@ export async function PATCH(
       }
 
       const hashedPassword = await hash(newPassword, 10)
-      
+
       await prisma.user.update({
         where: { id },
         data: {

@@ -113,13 +113,12 @@ export async function GET(
       return NextResponse.json({ error: 'Proposal not found' }, { status: 404 })
     }
 
-    // Check access permissions
-    const hasAccess = 
+    
+    const hasAccess =
       proposal.createdBy === session.user.id ||
       session.user.role === 'OWNER' ||
       session.user.role === 'BUSINESS_EXPERT' ||
-      proposal.shares?.some((share: any) => share.sharedWithUserId === session.user.id) ||
-      true // Allow view access for logged-in users
+      proposal.shares?.some((share: any) => share.sharedWithUserId === session.user.id)
 
     if (!hasAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -149,6 +148,16 @@ export async function PUT(
 
     if (!proposal) {
       return NextResponse.json({ error: 'Proposal not found' }, { status: 404 })
+    }
+
+    
+    const canUpdate =
+      proposal.createdBy === session.user.id ||
+      session.user.role === 'OWNER' ||
+      session.user.role === 'BUSINESS_EXPERT'
+
+    if (!canUpdate) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const body = await req.json()

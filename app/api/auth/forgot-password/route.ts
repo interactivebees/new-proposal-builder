@@ -20,18 +20,10 @@ export async function POST(request: NextRequest) {
       select: { id: true, name: true, email: true, isActive: true }
     })
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    if (!user.isActive) {
-      return NextResponse.json(
-        { error: 'Account is deactivated. Please contact admin.' },
-        { status: 403 }
-      )
+    if (!user || !user.isActive) {
+      return NextResponse.json({
+        message: 'If an account with that email exists, a password reset link has been sent.',
+      })
     }
 
     const resetToken = randomBytes(32).toString('hex')
@@ -64,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Password reset link sent to your email',
+      message: 'If an account with that email exists, a password reset link has been sent.',
     })
   } catch (error) {
     console.error('Forgot password error:', error)

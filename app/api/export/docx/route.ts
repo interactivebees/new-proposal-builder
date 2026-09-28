@@ -812,10 +812,10 @@ export async function POST(req: NextRequest) {
         spacing: { before: 200, after: 100 } 
       }));
       proposal.pricingItems.forEach((item: any) => {
-        docChildren.push(new Paragraph({ children: [new TextRun({ text: `${item.serviceDescription}: $${item.cost.toLocaleString()} ${item.frequency || 'one-time'}`, break: 1 })] }));
+        docChildren.push(new Paragraph({ children: [new TextRun({ text: `${item.serviceDescription}: ₹${item.cost.toLocaleString()} ${item.frequency || 'one-time'}`, break: 1 })] }));
       });
       const total = proposal.pricingItems.reduce((sum: number, item: any) => sum + item.cost, 0);
-      docChildren.push(new Paragraph({ children: [new TextRun({ text: `Total: $${total.toLocaleString()}`, bold: true, break: 1 })], spacing: { before: 200 } }));
+      docChildren.push(new Paragraph({ children: [new TextRun({ text: `Total: ₹${total.toLocaleString()}`, bold: true, break: 1 })], spacing: { before: 200 } }));
     }
 
     // ################### DOCUMENT CREATION ######################
