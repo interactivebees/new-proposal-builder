@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
+
 export async function GET() {
   try {
     const session = await auth()
@@ -9,7 +10,14 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const isPrivileged =
+      session.user.role === 'OWNER' || session.user.role === 'BUSINESS_EXPERT'
+
+
+    const where = isPrivileged ? {} : { requestedBy: session.user.id }
+
     const requests = await prisma.approvalRequest.findMany({
+      where,
       orderBy: { updatedAt: 'desc' },
       include: {
         proposal: { select: { id: true, title: true, clientName: true, opportunityValue: true, status: true } },
@@ -51,7 +59,7 @@ export async function POST(req: Request) {
       }
     })
 
-    // Update proposal status to IN_REVIEW or PENDING_APPROVAL
+    // Update proposal status to PENDING_APPROVAL
     await prisma.proposal.update({
       where: { id: proposalId },
       data: { status: 'PENDING_APPROVAL' }
@@ -71,6 +79,14 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    
+    const canAction =
+      session.user.role === 'OWNER' || session.user.role === 'BUSINESS_EXPERT'
+
+    if (!canAction) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const body = await req.json()
     const { id, status, comments } = body
 
@@ -78,12 +94,20 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Approval Request ID and status are required' }, { status: 400 })
     }
 
+    const validStatuses = ['PENDING', 'APPROVED', 'REJECTED', 'IN_REVIEW']
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+    }
+
+
     const updated = await prisma.approvalRequest.update({
       where: { id },
       data: {
         status,
         comments,
-        assignedTo: session.user.id,
+        ...(status === 'APPROVED' || status === 'REJECTED'
+          ? { assignedTo: session.user.id }
+          : {}),
         updatedAt: new Date()
       },
       include: { proposal: true }
