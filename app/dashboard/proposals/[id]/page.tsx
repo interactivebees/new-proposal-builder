@@ -323,7 +323,7 @@ export default function ProposalDetailPage() {
         toast.error("Failed to export DOCX");
       }
     } catch (error) {
-      toast.success("Generated DOCX proposal export!");
+      toast.error("Failed to export DOCX. Please try again.");
     } finally {
       setExporting(false);
     }
@@ -386,14 +386,11 @@ export default function ProposalDetailPage() {
         setShowApprovalModal(false);
         fetchProposal();
       } else {
-        toast.success(
-          `Proposal submitted for ${approvalStep}! Assigned to ${assignedReviewer}`,
-        );
-        setShowApprovalModal(false);
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData?.error || `Failed to submit for ${approvalStep}. Please try again.`);
       }
     } catch (error) {
-      toast.success(`Proposal submitted for ${approvalStep}!`);
-      setShowApprovalModal(false);
+      toast.error("Failed to submit approval. Please try again.");
     } finally {
       setSubmittingApproval(false);
     }
@@ -420,12 +417,13 @@ export default function ProposalDetailPage() {
         setTemplateName("");
         toast.success(`Template "${templateName}" saved successfully!`);
       } else {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData?.error || "Failed to save template. Please try again.");
         setShowSaveAsTemplateModal(false);
-        toast.success(`Template "${templateName}" saved successfully!`);
       }
     } catch (error) {
       setShowSaveAsTemplateModal(false);
-      toast.success(`Template "${templateName}" saved!`);
+      toast.error("Failed to save template. Please try again.");
     } finally {
       setSavingAsTemplate(false);
     }
