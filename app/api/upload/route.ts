@@ -4,7 +4,7 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
-// Simple file upload to local storage (you can replace with AWS S3 later)
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth()

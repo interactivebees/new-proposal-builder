@@ -9,7 +9,7 @@ import https from 'https'
 import http from 'http'
 import sizeOf from 'image-size'
 
-// POST /api/export/docx - Export proposal as DOCX
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth()
