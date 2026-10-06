@@ -651,7 +651,8 @@ export default function ClientsPage() {
       ) : (
         /* List View */
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
-          <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
                 <th className="py-3.5 px-5">Company &amp; Logo</th>
@@ -733,6 +734,7 @@ export default function ClientsPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
