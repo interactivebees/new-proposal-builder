@@ -390,7 +390,7 @@ export default function ProposalDetailPage() {
         fetchProposal();
       } else {
         const errData = await res.json().catch(() => ({}));
-        toast.error(errData?.error || `Failed to submit for ${approvalStep}. Please try again.`);
+        toast.error(errData?.error || `Failed to submit for review. Please try again.`);
       }
     } catch (error) {
       toast.error("Failed to submit approval. Please try again.");
