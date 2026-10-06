@@ -83,8 +83,8 @@ export default function ClientsPage() {
   const [formData, setFormData] = useState({
     companyName: '',
     slogan: '',
-    industry: 'Technology',
-    location: 'New Delhi, India',
+    industry: '',
+    location: '',
     email: '',
     phone: '',
     contactPerson: '',
@@ -98,13 +98,13 @@ export default function ClientsPage() {
     companyName: '',
     slogan: '',
     industry: 'Technology',
-    location: 'New Delhi, India',
+    location: '',
     email: '',
     phone: '',
     contactPerson: '',
     contactDesignation: '',
     logoUrl: '',
-    pipelineValue: '₹ 0',
+    pipelineValue: '',
     status: 'ACTIVE' as 'LEAD' | 'ACTIVE' | 'INACTIVE'
   })
 
@@ -137,7 +137,7 @@ export default function ClientsPage() {
               id: item.id,
               num: index + 1,
               companyName: item.companyName || item.name || 'Enterprise Account',
-              slogan: item.slogan || 'Transforming Enterprise Growth',
+              slogan: item.slogan || '',
               status: (item.status || 'ACTIVE') as any,
               industry: item.industry || 'Technology',
               location: item.city ? (item.country ? `${item.city}, ${item.country}` : `${item.city}, India`) : (item.country || 'New Delhi, India'),
@@ -234,8 +234,8 @@ export default function ClientsPage() {
         setFormData({
           companyName: '',
           slogan: '',
-          industry: 'Technology',
-          location: 'New Delhi, India',
+          industry: '',
+          location: '',
           email: '',
           phone: '',
           contactPerson: '',
@@ -519,7 +519,7 @@ export default function ClientsPage() {
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-3.5">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="w-12 h-12 rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs relative">
                         {client.logoUrl ? (
                           <img 
@@ -536,8 +536,8 @@ export default function ClientsPage() {
                         </div>
                       </div>
 
-                      <div>
-                        <h3 className="font-extrabold text-slate-900 text-sm tracking-tight group-hover:text-amber-800 transition-colors">
+                      <div className="min-w-0">
+                        <h3 className="font-extrabold text-slate-900 text-sm tracking-tight group-hover:text-amber-800 transition-colors line-clamp-2 break-words">
                           {client.companyName}
                         </h3>
                         <p className="text-[11px] font-medium text-slate-400 line-clamp-1">
@@ -686,9 +686,9 @@ export default function ClientsPage() {
                           </div>
                         </div>
 
-                        <div>
-                          <p className="font-extrabold text-slate-900 text-xs">{client.companyName}</p>
-                          <p className="text-[10px] text-slate-400 font-medium">{client.slogan}</p>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-900 text-xs truncate">{client.companyName}</p>
+                          <p className="text-[10px] text-slate-400 font-medium truncate">{client.slogan}</p>
                         </div>
                       </div>
                     </td>
@@ -906,10 +906,13 @@ export default function ClientsPage() {
                 <div>
                   <label className="block mb-1">Phone Number</label>
                   <input
-                    type="text"
+                    type="tel"
                     placeholder="e.g. +91 11 4100 2000"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^\d+\s\-()]/g, '')
+                      setFormData({ ...formData, phone: val })
+                    }}
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
                   />
                 </div>
@@ -1095,7 +1098,6 @@ export default function ClientsPage() {
                     onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as any })}
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none bg-white"
                   >
-                    <option value="LEAD">LEAD</option>
                     <option value="ACTIVE">ACTIVE</option>
                     <option value="INACTIVE">INACTIVE</option>
                   </select>
@@ -1114,9 +1116,12 @@ export default function ClientsPage() {
                 <div>
                   <label className="block mb-1">Phone Number</label>
                   <input
-                    type="text"
+                    type="tel"
                     value={editFormData.phone}
-                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^\d+\s\-()]/g, '')
+                      setEditFormData({ ...editFormData, phone: val })
+                    }}
                     className="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
                   />
                 </div>

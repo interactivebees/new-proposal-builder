@@ -11,7 +11,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const { id } = await params
     const body = await req.json()
-    const { name, companyName, industry, email, phone, website, gstNumber, address, city, country, status, logoUrl, slogan } = body
+    const { name, contactDesignation, companyName, industry, email, phone, website, gstNumber, address, city, country, status, logoUrl, slogan } = body
 
     const client = await prisma.client.update({
       where: { id },
@@ -29,6 +29,35 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         status
       }
     })
+
+    // Upsert primary ClientContact (name + designation)
+    if (name !== undefined || contactDesignation !== undefined) {
+      try {
+        const existingContact = await prisma.clientContact.findFirst({
+          where: { clientId: id }
+        })
+        if (existingContact) {
+          await prisma.clientContact.update({
+            where: { id: existingContact.id },
+            data: {
+              ...(name !== undefined && { name }),
+              ...(contactDesignation !== undefined && { designation: contactDesignation })
+            }
+          })
+        } else if (name) {
+          await prisma.clientContact.create({
+            data: {
+              clientId: id,
+              name,
+              designation: contactDesignation || null,
+              isPrimary: true
+            }
+          })
+        }
+      } catch (contactErr) {
+        console.warn('Error updating ClientContact:', contactErr)
+      }
+    }
 
     if (logoUrl !== undefined || slogan !== undefined) {
       try {
