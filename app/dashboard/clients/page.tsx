@@ -10,7 +10,6 @@ import {
   MoreVertical, 
   Users, 
   UserCheck, 
-  Handshake, 
   Clock, 
   LayoutGrid, 
   List, 
@@ -144,7 +143,7 @@ export default function ClientsPage() {
               email: item.email || '',
               phone: item.phone || '',
               contactPerson: firstContact?.name || item.name || '',
-              contactDesignation: firstContact?.designation || 'Lead Procurement Manager',
+              contactDesignation: firstContact?.designation || '',
               logoUrl: item.logoUrl || '',
               proposalsCount,
               pipelineValue,
@@ -393,8 +392,8 @@ export default function ClientsPage() {
         </button>
       </div>
 
-      {/* Top Metric KPI Stat Cards Row (4 Columns) */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Top Metric KPI Stat Cards Row (3 Columns) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group">
           <div className="space-y-1">
             <span className="text-xs font-bold text-slate-500 block">Total Clients</span>
@@ -414,18 +413,6 @@ export default function ClientsPage() {
           </div>
           <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-2xs">
             <UserCheck className="w-5 h-5 stroke-[2.2]" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-slate-500 block">Lead Opportunities</span>
-            <div className="text-2xl font-black text-slate-900 tracking-tight">
-              {clients.filter(c => c.status === 'ACTIVE').length}
-            </div>
-          </div>
-          <div className="w-11 h-11 rounded-2xl bg-[#FEF08A] text-amber-950 flex items-center justify-center border border-amber-200 shadow-2xs">
-            <Handshake className="w-5 h-5 stroke-[2.2]" />
           </div>
         </div>
 

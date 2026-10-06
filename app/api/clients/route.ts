@@ -91,7 +91,7 @@ export async function POST(req: Request) {
           data: {
             clientId: client.id,
             name: name || companyName,
-            designation: contactDesignation || 'Lead Procurement Manager',
+            designation: contactDesignation || null,
             email: email || null,
             phone: phone || null,
             isPrimary: true
