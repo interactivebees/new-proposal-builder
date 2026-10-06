@@ -40,101 +40,9 @@ interface TemplateItem {
   bannerType: 'cloud' | 'cyber' | 'mobile' | 'marketing' | 'erp' | 'web' | 'it' | 'training'
 }
 
-// Sample 8 Templates
-const sampleTemplatesList: TemplateItem[] = [
-  {
-    id: '1',
-    title: 'Cloud Migration & Infrastructure',
-    category: 'Cloud & DevOps',
-    description: 'Comprehensive template for cloud migration and infrastructure solutions.',
-    creatorName: 'Rahul Verma',
-    creatorInitials: 'RV',
-    usedTimes: 24,
-    createdAt: 'Sep 17, 2026',
-    bannerType: 'cloud'
-  },
-  {
-    id: '2',
-    title: 'Cybersecurity Audit & Compliance SLA',
-    category: 'Cybersecurity',
-    description: 'Template for cybersecurity assessment, compliance and managed security services.',
-    creatorName: 'Ananya Roy',
-    creatorInitials: 'AR',
-    usedTimes: 18,
-    createdAt: 'Sep 17, 2026',
-    bannerType: 'cyber'
-  },
-  {
-    id: '3',
-    title: 'Mobile App Development (iOS & Android)',
-    category: 'Mobile Apps',
-    description: 'End-to-end mobile application development proposal template.',
-    creatorName: 'Priya Sharma',
-    creatorInitials: 'PS',
-    usedTimes: 32,
-    createdAt: 'Sep 17, 2026',
-    bannerType: 'mobile'
-  },
-  {
-    id: '4',
-    title: 'Digital Marketing & Brand Strategy',
-    category: 'Marketing',
-    description: 'Template for digital marketing, brand strategy and growth solutions.',
-    creatorName: 'Monica Gupta',
-    creatorInitials: 'MG',
-    usedTimes: 14,
-    createdAt: 'Sep 17, 2026',
-    bannerType: 'marketing'
-  },
-  {
-    id: '5',
-    title: 'Enterprise ERP Implementation',
-    category: 'Enterprise Solutions',
-    description: 'Proposal template for ERP systems implementation and integration.',
-    creatorName: 'Admin',
-    creatorInitials: 'AD',
-    usedTimes: 27,
-    createdAt: 'Sep 17, 2026',
-    bannerType: 'erp'
-  },
-  {
-    id: '6',
-    title: 'Web Portal & API Ecosystem Revamp',
-    category: 'Web Development',
-    description: 'Modern web portal, Next.js architecture and API ecosystem revamp.',
-    creatorName: 'Admin',
-    creatorInitials: 'AD',
-    usedTimes: 41,
-    createdAt: 'Sep 17, 2026',
-    bannerType: 'web'
-  },
-  {
-    id: '7',
-    title: 'IT Managed Services & Helpdesk SLA',
-    category: 'IT Managed Services',
-    description: 'Complete IT helpdesk, SIEM monitoring and managed SLA contract template.',
-    creatorName: 'Ananya Roy',
-    creatorInitials: 'AR',
-    usedTimes: 19,
-    createdAt: 'Sep 17, 2026',
-    bannerType: 'it'
-  },
-  {
-    id: '8',
-    title: 'Corporate Training & Upskilling Suite',
-    category: 'Training & Skill Dev',
-    description: 'Structure for corporate staff training, LMS setup and workforce upskilling.',
-    creatorName: 'Monica Gupta',
-    creatorInitials: 'MG',
-    usedTimes: 11,
-    createdAt: 'Sep 17, 2026',
-    bannerType: 'training'
-  }
-]
-
 export default function TemplatesPage() {
   const router = useRouter()
-  const [templates, setTemplates] = useState<TemplateItem[]>(sampleTemplatesList)
+  const [templates, setTemplates] = useState<TemplateItem[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
@@ -171,7 +79,7 @@ export default function TemplatesPage() {
             creatorInitials: item.creator?.name
               ? item.creator.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
               : 'AD',
-            usedTimes: item.usedCount || Math.floor(Math.random() * 25) + 6,
+            usedTimes: item._count?.proposals ?? 0,
             createdAt: new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
             bannerType: (['cloud', 'cyber', 'mobile', 'marketing', 'erp', 'web', 'it', 'training'][index % 8]) as any
           }))
@@ -397,8 +305,8 @@ export default function TemplatesPage() {
         </button>
       </div>
 
-      {/* 2. Dashboard KPI Metric Stat Cards Row (4 Columns) */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. Dashboard KPI Metric Stat Cards Row (3 Columns) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         
         {/* Card 1: Total Templates */}
         <div className="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group">
@@ -434,19 +342,6 @@ export default function TemplatesPage() {
           </div>
           <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-2xs">
             <TrendingUp className="w-5 h-5 stroke-[2.2]" />
-          </div>
-        </div>
-
-        {/* Card 4: Top Category */}
-        <div className="bg-white rounded-3xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-slate-500 block">Top Framework</span>
-            <div className="text-base font-black text-slate-900 tracking-tight truncate max-w-[130px]">
-              {uniqueCategories[0] || 'Cloud & DevOps'}
-            </div>
-          </div>
-          <div className="w-11 h-11 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center border border-purple-200 shadow-2xs">
-            <FileText className="w-5 h-5 stroke-[2.2]" />
           </div>
         </div>
 
@@ -516,14 +411,17 @@ export default function TemplatesPage() {
           {filteredTemplates.map((template) => (
             <div
               key={template.id}
-              className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-amber-300/80 transition-all overflow-hidden flex flex-col justify-between group relative"
+              className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-amber-300/80 transition-all flex flex-col justify-between group relative"
             >
-              {/* Graphic Banner Header */}
-              <div className="relative h-28 w-full overflow-hidden">
+              {/* Graphic Banner Background - isolated overflow so it rounds top corners but doesn't trap dropdowns */}
+              <div className="absolute top-0 left-0 right-0 h-28 overflow-hidden rounded-t-3xl z-0">
                 {renderBannerGraphic(template.bannerType)}
+              </div>
 
+              {/* Graphic Banner Header Content */}
+              <div className="relative h-28 w-full z-10">
                 {/* Top Overlay Badge & Action Menu */}
-                <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                   <span className="px-2.5 py-1 text-[10px] font-extrabold bg-white/90 backdrop-blur-xs text-slate-900 rounded-lg shadow-2xs border border-white/50">
                     {template.category}
                   </span>
@@ -573,9 +471,6 @@ export default function TemplatesPage() {
                       {template.title}
                     </Link>
                   </h3>
-                  <p className="text-[11px] font-semibold text-slate-500 line-clamp-2 leading-relaxed">
-                    {template.description}
-                  </p>
                 </div>
 
                 {/* Creator & Usage Info */}

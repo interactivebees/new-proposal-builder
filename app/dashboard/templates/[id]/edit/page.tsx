@@ -187,7 +187,7 @@ export default function EditTemplatePage() {
     const newSec: Section = {
       id: newId,
       title: `New Section ${sections.length + 1}`,
-      content: { html: '<p>Start typing section content...</p>', json: {} },
+      content: { html: '<p></p>', json: {} },
       order: sections.length,
       type: 'text'
     }
@@ -210,26 +210,29 @@ export default function EditTemplatePage() {
       <div className="bg-gradient-to-r from-[#FFFDF0] via-[#FFF5C6] to-[#FFD84D] rounded-3xl p-6 sm:p-7 border border-amber-300/80 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden">
         
         {/* Banner Content Left */}
-        <div className="space-y-2 z-10 max-w-2xl">
-          <Link 
-            href="/dashboard/templates" 
-            className="inline-flex items-center gap-1 text-xs font-bold text-amber-900 hover:text-amber-950 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4 text-amber-800" />
-            <span>Back to Templates</span>
-          </Link>
-
-          <div className="flex items-center gap-3 flex-wrap pt-0.5">
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Edit Template: {name}
-            </h1>
+        <div className="space-y-2 z-10 min-w-0 flex-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link 
+              href="/dashboard/templates" 
+              className="inline-flex items-center gap-1 text-xs font-bold text-amber-900 hover:text-amber-950 transition-colors shrink-0"
+            >
+              <ChevronLeft className="w-4 h-4 text-amber-800" />
+              <span>Back to Templates</span>
+            </Link>
 
             {/* Handwritten 'we believe. we can.' graphic accent */}
-            <div className="relative inline-flex items-center px-3 py-1 bg-amber-100/90 border border-amber-300/90 rounded-md transform -rotate-1 shadow-2xs">
+            <div className="relative inline-flex items-center px-3 py-1 bg-amber-100/90 border border-amber-300/90 rounded-md transform -rotate-1 shadow-2xs shrink-0">
               <span className="font-serif italic text-xs font-black text-amber-950 tracking-tight">
                 we believe. we can.
               </span>
             </div>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider leading-none mb-1">Edit Template</p>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight line-clamp-2 break-words leading-tight">
+              {name}
+            </h1>
           </div>
 
           <p className="text-xs sm:text-sm font-semibold text-slate-700 leading-relaxed">

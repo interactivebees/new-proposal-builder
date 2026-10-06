@@ -99,10 +99,7 @@ export default function ProposalDetailPage() {
 
   // Submit for Approval state
   const [showApprovalModal, setShowApprovalModal] = useState(false);
-  const [approvalStep, setApprovalStep] = useState("Technical Review");
-  const [assignedReviewer, setAssignedReviewer] = useState(
-    "Vikram Mehta (Chief Technical Officer)",
-  );
+
   const [approvalNotes, setApprovalNotes] = useState("");
   const [submittingApproval, setSubmittingApproval] = useState(false);
 
@@ -134,6 +131,8 @@ export default function ProposalDetailPage() {
       console.error("Error fetching clients:", err);
     }
   };
+
+
 
   const clientOptions = useMemo(
     () =>
@@ -376,16 +375,16 @@ export default function ProposalDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           proposalId: proposal?.id || proposalId,
-          stepName: approvalStep,
+          stepName: 'Owner Review',
           comments:
             approvalNotes ||
-            `Submitted for ${approvalStep} to ${assignedReviewer}`,
+            `Submitted for Owner Review`,
         }),
       });
 
       if (res.ok) {
         toast.success(
-          `Proposal submitted for ${approvalStep}! Assigned to ${assignedReviewer}`,
+          `Proposal submitted for review!`,
         );
         setShowApprovalModal(false);
         fetchProposal();
@@ -510,7 +509,7 @@ export default function ProposalDetailPage() {
   return (
     <div className="space-y-6 pb-16 font-sans">
       {/* Top Warm Hero Header Banner */}
-      <div className="bg-gradient-to-r from-[#FFFDF0] via-[#FFF5C6] to-[#FFD84D] rounded-3xl p-6 sm:p-7 border border-amber-300/80 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#FFFDF0] via-[#FFF5C6] to-[#FFD84D] rounded-3xl p-6 sm:p-7 border border-amber-300/80 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative">
         {/* Banner Left Details */}
         <div className="space-y-2 z-10 max-w-2xl">
           <Link
@@ -843,54 +842,12 @@ export default function ProposalDetailPage() {
                   Submit Proposal for Approval
                 </h3>
                 <p className="text-[11px] font-semibold text-slate-500">
-                  Assign to reviewer & select gate stage
+                  Submit this proposal for final review.
                 </p>
               </div>
             </div>
 
             <form onSubmit={handleSubmitApproval} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Approval Stage Gate *
-                </label>
-                <select
-                  value={approvalStep}
-                  onChange={(e) => setApprovalStep(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-200 rounded-xl focus:border-amber-400 outline-none bg-white"
-                >
-                  <option value="Sales Review">Sales Review</option>
-                  <option value="Technical Review">Technical Review</option>
-                  <option value="Finance Review">Finance Review</option>
-                  <option value="Legal Review">Legal Review</option>
-                  <option value="Management Sign-off">
-                    Management Sign-off
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Assign Reviewer *
-                </label>
-                <select
-                  value={assignedReviewer}
-                  onChange={(e) => setAssignedReviewer(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs font-bold border border-slate-200 rounded-xl focus:border-amber-400 outline-none bg-white"
-                >
-                  <option value="Vikram Mehta (Chief Technical Officer)">
-                    Vikram Mehta (Chief Technical Officer)
-                  </option>
-                  <option value="Ritu Agarwal (Finance Director)">
-                    Ritu Agarwal (Finance Director)
-                  </option>
-                  <option value="Deepak Sen (Legal Counsel)">
-                    Deepak Sen (Legal Counsel)
-                  </option>
-                  <option value="Alok Ranjan (Owner & CEO)">
-                    Alok Ranjan (Owner &amp; CEO)
-                  </option>
-                </select>
-              </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">

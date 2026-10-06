@@ -210,26 +210,7 @@ export default function SectionEditor({ sections, onChange, readOnly = false }: 
             {/* Expanded Section Body & TipTap Editor */}
             {isExpanded && (
               <div className="p-4 sm:p-5 bg-white border-t border-slate-100 space-y-4">
-                {!readOnly && (
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs font-bold text-slate-700 shrink-0">
-                      Section Type
-                    </label>
-                    <select
-                      value={section.type === 'text' ? 'Rich Content' : section.type}
-                      onChange={(e) => {
-                        const val = e.target.value === 'Rich Content' ? 'text' : e.target.value
-                        updateSection(section.id, { type: val as any })
-                      }}
-                      className="px-3 py-1.5 text-xs font-bold text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-amber-500 outline-none cursor-pointer"
-                    >
-                      <option value="Rich Content">Rich Content</option>
-                      <option value="pricing">Pricing Table</option>
-                      <option value="timeline">Timeline</option>
-                      <option value="custom">Custom Block</option>
-                    </select>
-                  </div>
-                )}
+
 
                 {/* Rich Text TipTap Editor */}
                 <div className="overflow-hidden">
