@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate",
     "db:seed": "tsx prisma/seed-dummy-data.ts",
     "db:seed-docx": "tsx prisma/seed-from-docx.ts",
     "db:seed-century": "tsx prisma/seed-century-ply.ts",
