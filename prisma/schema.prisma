@@ -65,6 +65,7 @@ model User {
   requestedApprovals ApprovalRequest[] @relation("RequestedBy")
   reviewedApprovals  ApprovalRequest[] @relation("AssignedTo")
   auditLogs         AuditLog[]
+  documents         Document[]
 }
 
 model Client {
@@ -281,4 +282,17 @@ model AuditLog {
   details   String?
   ipAddress String?
   createdAt DateTime @default(now())
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  title       String   @default("Untitled Document")
+  content     String?  @db.Text
+  contentJson String?  @db.Text
+  status      String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  wordCount   Int      @default(0)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

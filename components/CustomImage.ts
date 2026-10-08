@@ -3,14 +3,30 @@ import { ReactNodeViewRenderer } from '@tiptap/react'
 import ResizableImage from './ResizableImage'
 
 export const CustomImage = Image.extend({
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      inline: false,
+      allowBase64: true,
+      HTMLAttributes: {},
+      resize: false,
+    }
+  },
   addAttributes() {
     return {
       ...this.parent?.(),
       width: {
         default: null,
         parseHTML: element => {
-          const w = element.style.width
+          const w = element.style.width || element.getAttribute('width')
           return w ? parseInt(w, 10) : null
+        },
+      },
+      height: {
+        default: null,
+        parseHTML: element => {
+          const h = element.style.height || element.getAttribute('height')
+          return h ? parseInt(h, 10) : null
         },
       },
       align: {
@@ -20,10 +36,11 @@ export const CustomImage = Image.extend({
     }
   },
   renderHTML({ HTMLAttributes }) {
-    const { align, width, ...rest } = HTMLAttributes
+    const { align, width, height, ...rest } = HTMLAttributes
 
     let style = ''
     if (width) style += `width: ${width}px; `
+    if (height) style += `height: ${height}px; `
     
     if (align === 'center') {
       style += 'display: block; margin-left: auto; margin-right: auto; '

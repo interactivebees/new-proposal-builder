@@ -124,6 +124,7 @@ export default function DashboardNavigation({ user, children }: DashboardNavigat
     { name: 'Approvals Engine', href: '/dashboard/approvals', icon: CheckSquare },
     { name: 'Reports & Analytics', href: '/dashboard/reports', icon: BarChart3 },
     { name: 'AI Assistant', href: '/dashboard/ai-assistant', icon: Sparkles },
+    { name: 'Doc Editor', href: '/dashboard/doc-editor', icon: FileText },
     { name: 'Users', href: '/dashboard/users', icon: Users, roleRequired: 'OWNER' },
     { name: 'Roles & Permissions', href: '/dashboard/roles', icon: ShieldCheck, roleRequired: 'OWNER' },
     { name: 'Audit Logs', href: '/dashboard/audit-logs', icon: FileSpreadsheet, roleRequired: 'OWNER' },

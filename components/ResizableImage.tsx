@@ -57,11 +57,9 @@ export default function ResizableImage(props: NodeViewProps) {
           break
         case 's':
           newHeight = startHeight + dy
-          newWidth = newHeight * aspectRatio
           break
         case 'n':
           newHeight = startHeight - dy
-          newWidth = newHeight * aspectRatio
           break
         case 'se':
           newWidth = startWidth + dx
@@ -84,13 +82,7 @@ export default function ResizableImage(props: NodeViewProps) {
       newWidth = Math.max(30, Math.round(newWidth))
       newHeight = Math.max(30, Math.round(newHeight))
 
-      if (isCorner) {
-        updateAttributes({ width: newWidth })
-      } else if (position === 'e' || position === 'w') {
-        updateAttributes({ width: newWidth })
-      } else {
-        updateAttributes({ width: newWidth })
-      }
+      updateAttributes({ width: newWidth, height: newHeight })
     }
 
     const handleMouseUp = () => {
@@ -119,18 +111,22 @@ export default function ResizableImage(props: NodeViewProps) {
       <div
         ref={containerRef}
         className="relative inline-block group"
-        style={{ width: node.attrs.width ? `${node.attrs.width}px` : 'auto' }}
+        style={{ 
+          width: node.attrs.width ? `${node.attrs.width}px` : 'auto',
+          height: node.attrs.height ? `${node.attrs.height}px` : 'auto'
+        }}
       >
         <img
           src={node.attrs.src}
           alt={node.attrs.alt}
           draggable={false}
-          className="max-w-full select-none"
+          className="select-none"
           style={{
             width: '100%',
-            height: 'auto',
+            height: '100%',
             outline: selected ? '2px solid #2563eb' : 'none',
             outlineOffset: '1px',
+            display: 'block'
           }}
         />
 
