@@ -1212,7 +1212,6 @@ export default function StandaloneDocxEditor({ content, onChange, readOnly = fal
           <EditorContent 
             editor={headerEditor} 
             className={`w-full focus:outline-none tiptap-docx-editor-content header-footer-editor min-h-[40px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}
-            style={{ fontFamily: selectedFont === 'Default font' ? 'inherit' : selectedFont }}
           />
         </div>
 
@@ -1225,7 +1224,6 @@ export default function StandaloneDocxEditor({ content, onChange, readOnly = fal
           <EditorContent 
             editor={editor} 
             className={`w-full flex-grow focus:outline-none tiptap-docx-editor-content min-h-[400px] ${isDarkMode ? 'text-slate-200' : 'text-slate-900'}`}
-            style={{ fontFamily: selectedFont === 'Default font' ? 'inherit' : selectedFont }}
           />
         </div>
 
@@ -1241,7 +1239,6 @@ export default function StandaloneDocxEditor({ content, onChange, readOnly = fal
           <EditorContent 
             editor={footerEditor} 
             className={`w-full focus:outline-none tiptap-docx-editor-content header-footer-editor min-h-[40px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}
-            style={{ fontFamily: selectedFont === 'Default font' ? 'inherit' : selectedFont }}
           />
         </div>
       </div>

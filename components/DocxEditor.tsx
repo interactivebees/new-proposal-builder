@@ -630,7 +630,6 @@ export default function DocxEditor({ content, onChange, readOnly = false }: Word
         <EditorContent 
           editor={editor} 
           className={`w-full flex-grow focus:outline-none tiptap-docx-editor-content`}
-          style={{ fontFamily: selectedFont === 'Default font' ? 'inherit' : selectedFont }}
         />
       </div>
 
