@@ -13,15 +13,11 @@ import {
   Mail, 
   Globe, 
   MapPin, 
-  CreditCard, 
-  Calendar, 
-  Percent, 
   KeyRound, 
   Check, 
   Image as ImageIcon,
   ChevronRight,
-  Sparkles,
-  Sliders
+  Sparkles
 } from 'lucide-react'
 
 interface CompanySettings {
@@ -490,82 +486,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Card Section 4: Default Proposal Settings */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200">
-              <Sliders className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-slate-900 tracking-tight">
-                Default Proposal Settings
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">
-                Set up default terms, validity period and tax configuration for new proposals.
-              </p>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-            
-            {/* Payment Terms (Span 6) */}
-            <div className="md:col-span-6 space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <CreditCard className="w-3.5 h-3.5 text-slate-400" />
-                <span>Payment Terms</span>
-              </label>
-              <select
-                value={settings.defaultPaymentTerms}
-                onChange={(e) => setSettings({ ...settings, defaultPaymentTerms: e.target.value })}
-                className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-slate-200 rounded-2xl outline-none cursor-pointer focus:border-amber-500"
-              >
-                <option value="50% advance upon project signoff, 30% upon milestone completion">
-                  50% advance upon project signoff, 30% upon milestone completion
-                </option>
-                <option value="Net 30 Days">Net 30 Days</option>
-                <option value="100% Advance">100% Advance</option>
-                <option value="50% Advance, 50% On Delivery">50% Advance, 50% On Delivery</option>
-              </select>
-            </div>
-
-            {/* Validity Days (Span 3) */}
-            <div className="md:col-span-3 space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                <span>Validity Days</span>
-              </label>
-              <select
-                value={settings.defaultValidityDays}
-                onChange={(e) => setSettings({ ...settings, defaultValidityDays: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-slate-200 rounded-2xl outline-none cursor-pointer focus:border-amber-500"
-              >
-                <option value={15}>15 Days</option>
-                <option value={30}>30 Days</option>
-                <option value={60}>60 Days</option>
-                <option value={90}>90 Days</option>
-              </select>
-            </div>
-
-            {/* Tax Rate (%) (Span 3) */}
-            <div className="md:col-span-3 space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Percent className="w-3.5 h-3.5 text-slate-400" />
-                <span>Tax Rate (%)</span>
-              </label>
-              <select
-                value={settings.taxRate}
-                onChange={(e) => setSettings({ ...settings, taxRate: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 text-xs font-semibold bg-white border border-slate-200 rounded-2xl outline-none cursor-pointer focus:border-amber-500"
-              >
-                <option value={0}>0% (Tax Exempt)</option>
-                <option value={18}>18% (Standard GST)</option>
-                <option value={12}>12% (Reduced Tax)</option>
-                <option value={5}>5% (Special Rate)</option>
-              </select>
-            </div>
-
-          </div>
-        </div>
 
         {/* Bottom Form Action Bar */}
         <div className="flex items-center justify-end gap-3 pt-2">
