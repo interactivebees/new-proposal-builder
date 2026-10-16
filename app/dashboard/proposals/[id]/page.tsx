@@ -94,7 +94,22 @@ export default function ProposalDetailPage() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const ALL_TEMPLATE_CATEGORIES = [
+    'Cloud & DevOps',
+    'Cybersecurity',
+    'Enterprise Solutions',
+    'General',
+    'IT Managed Services',
+    'Marketing',
+    'Mobile Apps',
+    'Software Development',
+    'Training & Skill Dev',
+    'Web Development'
+  ];
+  const [categoriesList, setCategoriesList] = useState<string[]>(ALL_TEMPLATE_CATEGORIES);
   const [templateCategory, setTemplateCategory] = useState("Cloud & DevOps");
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
   const [savingAsTemplate, setSavingAsTemplate] = useState(false);
 
   // Submit for Approval state
@@ -119,6 +134,22 @@ export default function ProposalDetailPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const fetchTemplateCategories = async () => {
+    try {
+      const res = await fetch("/api/templates");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const fetchedCats = data.map((t: any) => t.category).filter(Boolean);
+          const combined = Array.from(new Set([...ALL_TEMPLATE_CATEGORIES, ...fetchedCats])).sort((a, b) => a.localeCompare(b));
+          setCategoriesList(combined);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching template categories:", err);
+    }
+  };
 
   const fetchClients = async () => {
     try {
@@ -200,17 +231,23 @@ export default function ProposalDetailPage() {
 
   const handleClientSelectChange = (key: string) => {
     setSelectedClientKey(key);
-    if (!key) return;
+    if (!key) {
+      setEditedClientId("");
+      setEditedClientName("");
+      setEditedClientCompany("");
+      setEditedClientEmail("");
+      setEditedClientAddress("");
+      setEditedClientLogoUrl("");
+      return;
+    }
     const selectedOpt = clientOptions.find((opt) => opt.key === key);
     if (selectedOpt) {
-      setEditedClientName(selectedOpt.contactName);
-      setEditedClientCompany(selectedOpt.companyName);
-      setEditedClientEmail(selectedOpt.email);
-      setEditedClientAddress(selectedOpt.address);
-      if (selectedOpt.logoUrl) {
-        setEditedClientLogoUrl(selectedOpt.logoUrl);
-      }
       setEditedClientId(selectedOpt.clientId || "");
+      setEditedClientName(selectedOpt.contactName || "");
+      setEditedClientCompany(selectedOpt.companyName || "");
+      setEditedClientEmail(selectedOpt.email || "");
+      setEditedClientAddress(selectedOpt.address || "");
+      setEditedClientLogoUrl(selectedOpt.logoUrl || "");
     }
   };
 
@@ -673,23 +710,30 @@ export default function ProposalDetailPage() {
               Client Name
             </span>
             {editing ? (
-              <select
-                value={selectedClientKey}
-                onChange={(e) => handleClientSelectChange(e.target.value)}
-                className="w-full text-xs font-extrabold text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-amber-500 py-1"
-              >
-                <option value="" disabled>
-                  Select Client
-                </option>
-                {clientOptions.map((opt: any) => (
-                  <option key={opt.key} value={opt.key}>
-                    {opt.displayText}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-1.5">
+                <select
+                  value={selectedClientKey}
+                  onChange={(e) => handleClientSelectChange(e.target.value)}
+                  className="w-full text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-lg outline-none focus:border-amber-500 py-1 px-1.5"
+                >
+                  <option value="">-- No Client Selected --</option>
+                  {clientOptions.map((opt: any) => (
+                    <option key={opt.key} value={opt.key}>
+                      {opt.displayText}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={editedClientName}
+                  onChange={(e) => setEditedClientName(e.target.value)}
+                  placeholder="Client contact person"
+                  className="w-full text-xs font-extrabold text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-amber-500 py-1 px-2"
+                />
+              </div>
             ) : (
               <span className="text-xs font-extrabold text-slate-900">
-                {proposal.clientName || "Interactive Bees Client"}
+                {proposal.clientName || "-"}
               </span>
             )}
           </div>
@@ -698,33 +742,57 @@ export default function ProposalDetailPage() {
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
               Company
             </span>
-            <span className="text-xs font-extrabold text-slate-900">
-              {editing
-                ? editedClientCompany || "-"
-                : proposal.clientCompany || "Century Ply / Enterprise"}
-            </span>
+            {editing ? (
+              <input
+                type="text"
+                value={editedClientCompany}
+                onChange={(e) => setEditedClientCompany(e.target.value)}
+                placeholder="Company name"
+                className="w-full text-xs font-extrabold text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-amber-500 py-1 px-2 mt-1"
+              />
+            ) : (
+              <span className="text-xs font-extrabold text-slate-900">
+                {proposal.clientCompany || "-"}
+              </span>
+            )}
           </div>
 
           <div className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
               Client Email
             </span>
-            <span className="text-xs font-extrabold text-slate-900 truncate block">
-              {editing
-                ? editedClientEmail || "-"
-                : proposal.clientEmail || "client@centuryply.com"}
-            </span>
+            {editing ? (
+              <input
+                type="email"
+                value={editedClientEmail}
+                onChange={(e) => setEditedClientEmail(e.target.value)}
+                placeholder="client@example.com"
+                className="w-full text-xs font-extrabold text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-amber-500 py-1 px-2 mt-1"
+              />
+            ) : (
+              <span className="text-xs font-extrabold text-slate-900 truncate block">
+                {proposal.clientEmail || "-"}
+              </span>
+            )}
           </div>
 
           <div className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
               Address
             </span>
-            <span className="text-xs font-extrabold text-slate-900 truncate block">
-              {editing
-                ? editedClientAddress || "-"
-                : proposal.clientAddress || "Kolkata, WB, India"}
-            </span>
+            {editing ? (
+              <input
+                type="text"
+                value={editedClientAddress}
+                onChange={(e) => setEditedClientAddress(e.target.value)}
+                placeholder="Address"
+                className="w-full text-xs font-extrabold text-slate-900 bg-white border border-slate-200 rounded-lg outline-none focus:border-amber-500 py-1 px-2 mt-1"
+              />
+            ) : (
+              <span className="text-xs font-extrabold text-slate-900 truncate block">
+                {proposal.clientAddress || "-"}
+              </span>
+            )}
           </div>
         </div>
 
@@ -912,20 +980,38 @@ export default function ProposalDetailPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Category
+                  Category *
                 </label>
                 <select
-                  value={templateCategory}
-                  onChange={(e) => setTemplateCategory(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs font-semibold border border-slate-200 rounded-xl focus:border-amber-500 outline-none bg-white"
+                  value={isCustomCategory ? "__CUSTOM__" : templateCategory}
+                  onChange={(e) => {
+                    if (e.target.value === "__CUSTOM__") {
+                      setIsCustomCategory(true);
+                    } else {
+                      setIsCustomCategory(false);
+                      setTemplateCategory(e.target.value);
+                    }
+                  }}
+                  className="w-full px-3.5 py-2.5 text-xs font-semibold border border-slate-200 rounded-xl focus:border-amber-500 outline-none bg-white cursor-pointer"
                 >
-                  <option value="Cloud & DevOps">Cloud &amp; DevOps</option>
-                  <option value="Web Development">Web Development</option>
-                  <option value="Mobile Apps">Mobile Apps</option>
-                  <option value="Enterprise Solutions">
-                    Enterprise Solutions
-                  </option>
+                  {categoriesList.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="__CUSTOM__">+ Add Custom Category...</option>
                 </select>
+
+                {isCustomCategory && (
+                  <input
+                    type="text"
+                    placeholder="Enter custom category name"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className="mt-2 w-full px-3.5 py-2 text-xs font-semibold border border-amber-300 rounded-xl focus:border-amber-500 outline-none"
+                    required
+                  />
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-2">

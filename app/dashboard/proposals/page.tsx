@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { 
@@ -17,11 +17,12 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
-  CheckSquare,
-  Square,
   Trash2,
   ExternalLink,
   Filter,
+  RotateCcw,
+  X,
+  Check,
   Cloud,
   Smartphone,
   BarChart3,
@@ -45,6 +46,7 @@ interface ProposalItem {
   creatorName: string
   creatorInitials: string
   createdAt: string
+  rawDate?: Date
   iconType: 'cloud' | 'app' | 'chart' | 'portal' | 'web' | 'security' | 'warranty' | 'layout' | 'doc' | 'marketing'
 }
 
@@ -126,6 +128,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Ananya Roy',
     creatorInitials: 'AR',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'cloud'
   },
   {
@@ -139,6 +142,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Monica Gupta',
     creatorInitials: 'MG',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'app'
   },
   {
@@ -152,6 +156,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Admin',
     creatorInitials: 'A',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'chart'
   },
   {
@@ -165,6 +170,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Monica Gupta',
     creatorInitials: 'MG',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'portal'
   },
   {
@@ -178,6 +184,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Ananya Roy',
     creatorInitials: 'AR',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'web'
   },
   {
@@ -191,6 +198,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Monica Gupta',
     creatorInitials: 'MG',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'security'
   },
   {
@@ -204,6 +212,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Ananya Roy',
     creatorInitials: 'AR',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'warranty'
   },
   {
@@ -217,6 +226,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Monica Gupta',
     creatorInitials: 'MG',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'layout'
   },
   {
@@ -230,6 +240,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Monica Gupta',
     creatorInitials: 'MG',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'doc'
   },
   {
@@ -243,6 +254,7 @@ const sampleProposalsList: ProposalItem[] = [
     creatorName: 'Admin',
     creatorInitials: 'A',
     createdAt: 'Sep 17, 2026',
+    rawDate: new Date('2026-09-17'),
     iconType: 'marketing'
   }
 ]
@@ -254,9 +266,24 @@ export default function ProposalsPage() {
   const [selectedStatus, setSelectedStatus] = useState('ALL')
   const [selectedClient, setSelectedClient] = useState('ALL')
   const [selectedCreator, setSelectedCreator] = useState('ALL')
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [dateRangePreset, setDateRangePreset] = useState('ALL')
+  const [showDateMenu, setShowDateMenu] = useState(false)
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+
+  const dateMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dateMenuRef.current && !dateMenuRef.current.contains(e.target as Node)) {
+        setShowDateMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     fetchProposals()
@@ -273,14 +300,15 @@ export default function ProposalsPage() {
             num: index + 1,
             title: item.title,
             subtitle: item.clientCompany ? `Proposal document for ${item.clientCompany}` : 'Client proposal document',
-            clientName: item.clientName || 'Client Entity',
-            clientIndustry: item.clientCompany || 'Corporate',
+            clientName: item.clientName || '-',
+            clientIndustry: item.clientCompany || '-',
             status: item.status || 'DRAFT',
             creatorName: item.creator?.name || 'Admin',
             creatorInitials: item.creator?.name 
               ? item.creator.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
               : 'A',
             createdAt: new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+            rawDate: new Date(item.createdAt),
             iconType: (['cloud', 'app', 'chart', 'portal', 'web', 'security', 'warranty', 'layout', 'doc', 'marketing'][index % 10]) as any
           }))
           setProposals(mapped)
@@ -313,6 +341,80 @@ export default function ProposalsPage() {
     }
   }
 
+  // Date preset handler
+  const handleSelectPreset = (preset: string) => {
+    setDateRangePreset(preset)
+    const today = new Date()
+    const formatDateYMD = (d: Date) => {
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    if (preset === 'ALL') {
+      setStartDate('')
+      setEndDate('')
+    } else if (preset === 'TODAY') {
+      const todayStr = formatDateYMD(today)
+      setStartDate(todayStr)
+      setEndDate(todayStr)
+    } else if (preset === 'LAST_7_DAYS') {
+      const past = new Date()
+      past.setDate(today.getDate() - 7)
+      setStartDate(formatDateYMD(past))
+      setEndDate(formatDateYMD(today))
+    } else if (preset === 'LAST_30_DAYS') {
+      const past = new Date()
+      past.setDate(today.getDate() - 30)
+      setStartDate(formatDateYMD(past))
+      setEndDate(formatDateYMD(today))
+    } else if (preset === 'THIS_MONTH') {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+      setStartDate(formatDateYMD(firstDay))
+      setEndDate(formatDateYMD(today))
+    } else if (preset === 'LAST_MONTH') {
+      const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+      const lastDay = new Date(today.getFullYear(), today.getMonth(), 0)
+      setStartDate(formatDateYMD(firstDay))
+      setEndDate(formatDateYMD(lastDay))
+    }
+    setShowDateMenu(false)
+  }
+
+  const getDateFilterLabel = () => {
+    if (dateRangePreset === 'TODAY') return 'Today'
+    if (dateRangePreset === 'LAST_7_DAYS') return 'Last 7 Days'
+    if (dateRangePreset === 'LAST_30_DAYS') return 'Last 30 Days'
+    if (dateRangePreset === 'THIS_MONTH') return 'This Month'
+    if (dateRangePreset === 'LAST_MONTH') return 'Last Month'
+    if (startDate && endDate) return `${startDate} → ${endDate}`
+    if (startDate) return `From ${startDate}`
+    if (endDate) return `Until ${endDate}`
+    return 'Select Date Range'
+  }
+
+  // Active filter state and reset handler
+  const hasActiveFilters = 
+    searchQuery !== '' || 
+    selectedStatus !== 'ALL' || 
+    selectedClient !== 'ALL' || 
+    selectedCreator !== 'ALL' || 
+    startDate !== '' || 
+    endDate !== '' ||
+    dateRangePreset !== 'ALL'
+
+  const handleResetFilters = () => {
+    setSearchQuery('')
+    setSelectedStatus('ALL')
+    setSelectedClient('ALL')
+    setSelectedCreator('ALL')
+    setStartDate('')
+    setEndDate('')
+    setDateRangePreset('ALL')
+    setShowDateMenu(false)
+  }
+
   // Filtered proposal list logic
   const filteredProposals = proposals.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -322,29 +424,29 @@ export default function ProposalsPage() {
     const matchesStatus = selectedStatus === 'ALL' || p.status === selectedStatus
     const matchesClient = selectedClient === 'ALL' || p.clientName === selectedClient
     const matchesCreator = selectedCreator === 'ALL' || p.creatorName === selectedCreator
-    return matchesSearch && matchesStatus && matchesClient && matchesCreator
+
+    // Date range matching
+    let matchesDate = true
+    if (startDate || endDate) {
+      const pTime = p.rawDate ? p.rawDate.getTime() : new Date(p.createdAt).getTime()
+      if (!isNaN(pTime)) {
+        if (startDate) {
+          const sTime = new Date(`${startDate}T00:00:00`).getTime()
+          if (pTime < sTime) matchesDate = false
+        }
+        if (endDate) {
+          const eTime = new Date(`${endDate}T23:59:59`).getTime()
+          if (pTime > eTime) matchesDate = false
+        }
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesClient && matchesCreator && matchesDate
   })
 
-  // Checkbox handlers
-  const handleSelectAll = () => {
-    if (selectedIds.length === filteredProposals.length) {
-      setSelectedIds([])
-    } else {
-      setSelectedIds(filteredProposals.map(p => p.id))
-    }
-  }
-
-  const handleToggleSelect = (id: string) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter(item => item !== id))
-    } else {
-      setSelectedIds([...selectedIds, id])
-    }
-  }
-
   // Extract unique clients and creators for filter dropdowns
-  const uniqueClients = Array.from(new Set(proposals.map(p => p.clientName)))
-  const uniqueCreators = Array.from(new Set(proposals.map(p => p.creatorName)))
+  const uniqueClients = Array.from(new Set(proposals.map(p => p.clientName).filter(Boolean))).sort((a, b) => a.localeCompare(b))
+  const uniqueCreators = Array.from(new Set(proposals.map(p => p.creatorName).filter(Boolean))).sort((a, b) => a.localeCompare(b))
 
 
   const totalProposals = proposals.length
@@ -547,12 +649,12 @@ export default function ProposalsPage() {
               className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2 pr-8 text-xs font-bold text-slate-700 outline-none cursor-pointer transition-colors"
             >
               <option value="ALL">All Statuses</option>
-              <option value="PENDING_APPROVAL">Pending Approval</option>
               <option value="APPROVED">Approved</option>
-              <option value="IN_REVIEW">In Review</option>
               <option value="DRAFT">Draft</option>
-              <option value="SENT">Sent</option>
+              <option value="IN_REVIEW">In Review</option>
+              <option value="PENDING_APPROVAL">Pending Approval</option>
               <option value="REJECTED">Rejected</option>
+              <option value="SENT">Sent</option>
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
@@ -587,17 +689,131 @@ export default function ProposalsPage() {
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Select Date Range Button */}
-          <button className="flex items-center gap-2 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition-colors cursor-pointer">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-            <span>Select Date Range</span>
-          </button>
+          {/* Select Date Range Button & Popover */}
+          <div className="relative" ref={dateMenuRef}>
+            <button 
+              type="button"
+              onClick={() => setShowDateMenu(!showDateMenu)}
+              className={`flex items-center gap-2 px-3.5 py-2 border rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                startDate || endDate || dateRangePreset !== 'ALL'
+                  ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-2xs'
+                  : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
+              }`}
+            >
+              <Calendar className={`w-3.5 h-3.5 ${startDate || endDate || dateRangePreset !== 'ALL' ? 'text-amber-600' : 'text-slate-400'}`} />
+              <span>{getDateFilterLabel()}</span>
+              {(startDate || endDate || dateRangePreset !== 'ALL') && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setStartDate('')
+                    setEndDate('')
+                    setDateRangePreset('ALL')
+                  }}
+                  className="p-0.5 hover:bg-amber-200/80 rounded-full"
+                  title="Clear date filter"
+                >
+                  <X className="w-3 h-3 text-amber-800" />
+                </span>
+              )}
+            </button>
 
-          {/* Filters Action Button */}
-          <button className="flex items-center gap-2 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition-colors ml-auto lg:ml-0 cursor-pointer">
-            <Filter className="w-3.5 h-3.5 text-slate-500" />
-            <span>Filters</span>
-          </button>
+            {showDateMenu && (
+              <div className="absolute right-0 sm:left-0 top-11 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-3.5 z-40 space-y-3 animate-in fade-in slide-in-from-top-1 text-left">
+                <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider pb-1 border-b border-slate-100">
+                  Quick Presets
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
+                  {[
+                    { id: 'ALL', label: 'All Time' },
+                    { id: 'TODAY', label: 'Today' },
+                    { id: 'LAST_7_DAYS', label: 'Last 7 Days' },
+                    { id: 'LAST_30_DAYS', label: 'Last 30 Days' },
+                    { id: 'THIS_MONTH', label: 'This Month' },
+                    { id: 'LAST_MONTH', label: 'Last Month' },
+                  ].map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleSelectPreset(preset.id)}
+                      className={`px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer ${
+                        dateRangePreset === preset.id && !startDate && !endDate
+                          ? 'bg-amber-100 text-amber-950 font-extrabold'
+                          : 'hover:bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="text-[11px] font-black text-slate-400 uppercase tracking-wider pt-2 border-t border-slate-100">
+                  Custom Range
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">Start Date</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => {
+                        setStartDate(e.target.value)
+                        setDateRangePreset('CUSTOM')
+                      }}
+                      className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">End Date</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => {
+                        setEndDate(e.target.value)
+                        setDateRangePreset('CUSTOM')
+                      }}
+                      className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStartDate('')
+                      setEndDate('')
+                      setDateRangePreset('ALL')
+                      setShowDateMenu(false)
+                    }}
+                    className="text-[11px] font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                  >
+                    Clear Date
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowDateMenu(false)}
+                    className="px-3 py-1 bg-[#FFC800] hover:bg-[#e6b400] text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Reset Filters Option Button */}
+          {hasActiveFilters && (
+            <button 
+              type="button"
+              onClick={handleResetFilters}
+              className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all cursor-pointer animate-in fade-in"
+              title="Reset all filters"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
+              <span>Reset Filters</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -607,19 +823,7 @@ export default function ProposalsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-200/80 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                <th className="py-3 px-3.5 w-10 text-center">
-                  <button 
-                    onClick={handleSelectAll}
-                    className="p-1 rounded text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
-                  >
-                    {selectedIds.length === filteredProposals.length && filteredProposals.length > 0 ? (
-                      <CheckSquare className="w-4 h-4 text-amber-500" />
-                    ) : (
-                      <Square className="w-4 h-4 text-slate-300" />
-                    )}
-                  </button>
-                </th>
-                <th className="py-3 px-2 text-center w-10">#</th>
+                <th className="py-3 pl-6 pr-3 text-center w-12">#</th>
                 <th className="py-3 px-4">Title</th>
                 <th className="py-3 px-4">Client</th>
                 <th className="py-3 px-4">Status</th>
@@ -631,7 +835,7 @@ export default function ProposalsPage() {
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredProposals.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
                     No matching proposals found.
                   </td>
                 </tr>
@@ -640,31 +844,14 @@ export default function ProposalsPage() {
                   const badge = getStatusBadge(item.status)
                   const iconInfo = getTitleIcon(item.iconType)
                   const IconComp = iconInfo.Icon
-                  const isSelected = selectedIds.includes(item.id)
 
                   return (
                     <tr 
                       key={item.id} 
-                      className={`hover:bg-amber-50/20 transition-colors group ${
-                        isSelected ? 'bg-amber-50/40' : ''
-                      }`}
+                      className="hover:bg-amber-50/20 transition-colors group"
                     >
-                      {/* Checkbox */}
-                      <td className="py-3.5 px-3.5 text-center">
-                        <button 
-                          onClick={() => handleToggleSelect(item.id)}
-                          className="p-1 rounded text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
-                        >
-                          {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-amber-500" />
-                          ) : (
-                            <Square className="w-4 h-4 text-slate-300 group-hover:text-slate-400" />
-                          )}
-                        </button>
-                      </td>
-
                       {/* Row Index */}
-                      <td className="py-3.5 px-2 font-bold text-slate-400 text-center">
+                      <td className="py-3.5 pl-6 pr-3 font-bold text-slate-400 text-center">
                         {item.num}
                       </td>
 
@@ -729,7 +916,7 @@ export default function ProposalsPage() {
                             href={`/dashboard/proposals/${item.id}`}
                             className="px-3 py-1.5 bg-slate-100 hover:bg-[#FFC800] text-slate-800 hover:text-slate-950 font-bold rounded-xl text-[11px] transition-colors border border-slate-200/60 shadow-2xs"
                           >
-                            View &amp; Edit
+                            View 
                           </Link>
 
                           {/* 3-Dots Options Button */}
